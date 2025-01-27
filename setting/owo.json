@@ -74,7 +74,7 @@
 
 		"join_owo_giveaway": {
 			"mode": true,
-			"server_id_blacklist": []
+			"channel_id_blacklist": []
 		},
 
 		"channel": {
