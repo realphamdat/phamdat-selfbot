@@ -5,7 +5,7 @@ class Giveaway:
 		self.client = client
 
 	async def join_owo_giveaway(self, message):
-		if message.channel.id not in self.client.data.config.join_owo_giveaway['server_id_blacklist'] and message.id not in self.client.data.discord.ga_joined and self.client.others.message(message, True, False, [], []) and message.embeds and "New Giveaway" in str(message.embeds[0].author.name) and len(message.components) > 0:
+		if message.channel.id not in self.client.data.config.join_owo_giveaway['channel_id_blacklist'] and message.id not in self.client.data.discord.ga_joined and self.client.others.message(message, True, False, [], []) and message.embeds and "New Giveaway" in str(message.embeds[0].author.name) and len(message.components) > 0:
 			try:
 				button = message.components[0].children[0]
 				await button.click()
