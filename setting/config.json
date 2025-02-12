@@ -1,0 +1,9 @@
+{
+    "api": "https://realphamdat.pythonanywhere.com/check",
+    "key": "Phandat Selfbot",
+    "template": "assets/template.json",
+    "owo": {
+        "mode": true,
+        "directory": "setting/owo.json"
+    }
+}
