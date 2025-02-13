@@ -1,4 +1,5 @@
 git+https://github.com/dolfies/discord.py-self.git
+inquirer
 numpy
 Pillow
 brotli
