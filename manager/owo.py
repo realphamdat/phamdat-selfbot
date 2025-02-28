@@ -16,6 +16,7 @@ class OwOManager:
 			"History (File - Discord)",
 			"Command",
 			"Sleep after certain time",
+			"Detect problem (Banned - No cowoncy)",
 			"Captcha (Detect - Solve - Pause)",
 			"Get OwO prefix",
 			"Check OwO status",
@@ -112,6 +113,10 @@ class OwOManager:
 
 		if select_all or "Sleep after certain time" in select:
 			self.sleep(token, config)
+			print()
+
+		if select_all or "Detect problem (Banned - No cowoncy)" in select:
+			self.problem(token, config)
 			print()
 
 		if select_all or "Captcha (Detect - Solve - Pause)" in select:
@@ -245,6 +250,10 @@ class OwOManager:
 					break
 				except ValueError:
 					print("Must be a number")
+
+	def problem(self, token, config):
+		config[token]['problem']['banned'] = inquirer.prompt([inquirer.Confirm("", message = "Stop when have been banned", default = config[token]['problem']['banned'])])[""]
+		config[token]['problem']['no_cowoncy'] = inquirer.prompt([inquirer.Confirm("", message = "Stop when run out of cowoncy", default = config[token]['problem']['no_cowoncy'])])[""]
 
 	def captcha(self, token, config):
 		config[token]['captcha']['solve_image_captcha']['mode'] = inquirer.prompt([inquirer.Confirm("", message = "Solve image captcha", default = config[token]['captcha']['solve_image_captcha']['mode'])])[""]
