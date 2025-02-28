@@ -5,7 +5,7 @@ import json
 class Data:
 	def __init__(self, token):
 		self.config = Config(token)
-
+		self.bot = Bot()
 		self.stat = Stat()
 		self.quest = Quest()
 		self.discord = Discord()
@@ -29,6 +29,7 @@ class Config:
 			self.history = data[token]['history']
 			self.command = data[token]['command']
 			self.sleep_after_certain_time = data[token]['sleep_after_certain_time']
+			self.problem = data[token]['problem']
 			self.captcha = data[token]['captcha']
 			self.get_owo_prefix = data[token]['get_owo_prefix']
 			self.check_owo_status = data[token]['check_owo_status']
@@ -44,6 +45,10 @@ class Config:
 			self.notify_caught_animal = data[token]['notify_caught_animal']
 			self.gamble = data[token]['gamble']
 			self.minigame = data[token]['minigame']
+
+class Bot:
+	def __init__(self):
+		self.id = 408785106942164992
 
 class Stat:
 	def __init__(self):

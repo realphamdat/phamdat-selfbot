@@ -3,6 +3,7 @@ import discord
 from modules.owo.data import Data
 from modules.owo.command import Command
 from modules.owo.sleep import Sleep
+from modules.owo.problem import Problem
 from modules.owo.captcha import Captcha
 from modules.owo.giveaway import Giveaway
 from modules.owo.channel import Channel
@@ -29,6 +30,7 @@ class OwOSelfbot(discord.Client):
 		self.data = Data(token)
 		self.command = Command(self)
 		self.sleep = Sleep(self)
+		self.problem = Problem(self)
 		self.captcha = Captcha(self)
 		self.giveaway = Giveaway(self)
 		self.channel = Channel(self)
@@ -50,7 +52,7 @@ class OwOSelfbot(discord.Client):
 	async def on_ready(self):
 		if self.data.selfbot.on_ready:
 			self.data.selfbot.on_ready = False
-			self.bot = self.get_user(408785106942164992)
+			self.bot = self.get_user(self.data.bot.id)
 			self.logger = await self.log.create("owo", self.data.config.history['file']['mode'], self.data.config.history['file']['directory'])
 			await self.others.startup()
 			await self.others.intro()
@@ -59,10 +61,13 @@ class OwOSelfbot(discord.Client):
 	async def on_message(self, message):
 		if self.data.config.command['mode']:
 			await self.command.command(message)
+		if self.data.config.problem['banned']:
+			await self.problem.banned(message)
+		if self.data.config.problem['no_cowoncy']:
+			await self.problem.no_cowoncy(message)
 		await self.captcha.detect_image_captcha(message)
 		await self.captcha.detect_hcaptcha(message)
 		await self.captcha.detect_unknown_captcha(message)
-		await self.captcha.detect_problems(message)
 		if self.data.config.channel['change_when_be_mentioned']:
 			await self.channel.change_when_be_mentioned(message)
 		if self.data.config.channel['change_when_be_challenged'] or self.data.quest.battle_friend:
