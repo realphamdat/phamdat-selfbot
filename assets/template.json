@@ -42,6 +42,11 @@
 			}
 		},
 
+		"problem": {
+			"banned": true,
+			"no_cowoncy": true
+		},
+
 		"captcha": {
 			"solve_image_captcha": {
 				"mode": true,
