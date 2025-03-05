@@ -225,7 +225,7 @@ class Command:
 		if command[1].lower() == "on" or command[1].lower() == "off":
 			setting = command[1].lower() == "on"
 			self.client.data.checking.no_gem = not setting
-			self.client.data.config.gem['mode'] = setting
+			self.client.data.config.use_gem['mode'] = setting
 			self.client.logger.info(f"Use gem: {command[1].lower()}")
 			await self.client.webhook.send(
 				title = f"🛸 CHANGED CONFIG 🛸",
@@ -235,7 +235,7 @@ class Command:
 
 	async def change_sort_gem_mode(self, command):
 		if command[1].lower() == "min" or command[1].lower() == "max":
-			self.client.data.config.gem['sort'] = command[1].lower()
+			self.client.data.config.use_gem['sort'] = command[1].lower()
 			self.client.logger.info(f"Sort gem: {command[1].lower()}")
 			await self.client.webhook.send(
 				title = f"🛸 CHANGED CONFIG 🛸",
@@ -247,7 +247,7 @@ class Command:
 		if command[1].lower() == "on" or command[1].lower() == "off":
 			setting = command[1].lower() == "on"
 			self.client.data.available.special_pet = setting
-			self.client.data.config.gem['star'] = setting
+			self.client.data.config.use_gem['star'] = setting
 			self.client.logger.info(f"Star gem: {command[1].lower()}")
 			await self.client.webhook.send(
 				title = f"🛸 CHANGED CONFIG 🛸",
