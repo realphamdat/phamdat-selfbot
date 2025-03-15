@@ -93,6 +93,7 @@ class Selfbot:
 
 class Cooldown:
 	def __init__(self):
+		self.reset = 0
 		self.daily = 0
 		self.quest = 0
 		self.huntbot = 0
