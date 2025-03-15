@@ -96,7 +96,7 @@
 		"claim_daily": {
 			"mode": true,
 			"reset_UTC_time": {
-				"hour": 8, 
+				"hour": 7, 
 				"minute": 0,
 				"second": 0,
 				"microsecond": 0
