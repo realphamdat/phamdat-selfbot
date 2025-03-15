@@ -7,6 +7,6 @@
 
   <p>Discord server: https://discord.gg/26wKfR6jHD</p>
   <p>Github repository: https://github.com/realphamdat/phamdat-selfbot</p>
-  <p>Youtube video tutorial: https://youtu.be/DgA7Fml79MI?si=iRpGgMnwUprb53Qy</p>
-
+  <p>Youtube video: https://youtu.be/VMMkEhuahdg</p>
+  <p>Bot-Hosting 24/7: https://bot-hosting.net/?aff=1191703681637290086</p>
 </div>
