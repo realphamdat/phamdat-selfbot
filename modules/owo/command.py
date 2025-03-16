@@ -28,8 +28,6 @@ class Command:
 				await self.help()
 			if command[0].lower() == "stat":
 				await self.stat_selfbot()
-			if command[0].lower() == "setting":
-				await self.show_setting()
 
 			if command[0].lower() == "say" and "-" in message.content and len(command) >= 2:
 				await self.say_text(message)
@@ -66,7 +64,6 @@ class Command:
 
 `help`
 `stat`
-`setting`
 
 `say` + `-text`
 `give` + `<@user_id>` + `amount` 
@@ -127,26 +124,6 @@ class Command:
 			description = stat,
 			color = discord.Colour.random()
 		)
-
-	async def show_setting(self):
-		await self.client.webhook.send(
-			title = f"🔥 CONFIRM `YES` IN 10S 🔥",
-			description = "**Send setting via webhook including __token__, __TwoCaptcha API__, __webhook url__, ...**",
-			color = discord.Colour.random()
-		)
-		try:
-			await self.client.wait_for("message", check = lambda message: message.content.lower() in ['yes', 'y'] and message.author.id in self.client.data.config.command['target'], timeout = 10)
-		except asyncio.TimeoutError:
-			pass
-		else:
-			with open(self.client.data.config.directory) as file:
-				config = json.load(file)
-			self.client.logger.info(config[self.client.data.config.token])
-			await self.client.webhook.send(
-				title = f"💾 SETTING 💾",
-				description = config[self.client.data.config.token],
-				color = discord.Colour.random()
-			)
 
 	async def say_text(self, message):
 		text = message.content.split("-")[1]
