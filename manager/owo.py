@@ -310,7 +310,7 @@ class OwOManager:
 			except ValueError:
 				print("Must be a number")
 		config[token]['channel']['change_when_be_mentioned'] = inquirer.prompt([inquirer.Confirm("", message = "Change channel when be mentioned", default = config[token]['channel']['change_when_be_mentioned'])])[""]
-		config[token]['channel']['change_when_be_challenged'] = inquirer.prompt([inquirer.Confirm("", message = "Change channel when be challenged", default = config[token]['channel']['change_when_be_challenged'])])[""]
+		config[token]['channel']['accept_challenge'] = inquirer.prompt([inquirer.Confirm("", message = "Accept challenge", default = config[token]['channel']['accept_challenge'])])[""]
 
 	def vote_topgg(self, token, config):
 		config[token]['vote_topgg']['mode'] = inquirer.prompt([inquirer.Confirm("", message = "Vote OwO top.gg", default = config[token]['vote_topgg']['mode'])])[""]
