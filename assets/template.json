@@ -85,7 +85,7 @@
 		"channel": {
 			"id_list": [1267227844489248848],
 			"change_when_be_mentioned": true,
-			"change_when_be_challenged": true
+			"accept_challenge": true
 		},
 
 		"vote_topgg": {
