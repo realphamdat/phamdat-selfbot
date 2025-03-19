@@ -41,7 +41,7 @@ class Channel:
 				)
 				await self.change_channel()
 
-	async def change_when_be_challenged(self, message):
+	async def accept_challenge(self, message):
 		if self.client.data.available.selfbot and self.client.others.message(message, True, False, [f'<@{self.client.user.id}>'], []) and message.embeds and "owo ab" in message.embeds[0].description:
 			self.client.logger.info(f"Someone challenges")
 			await self.client.webhook.send(

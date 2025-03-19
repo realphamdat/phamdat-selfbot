@@ -70,8 +70,8 @@ class OwOSelfbot(discord.Client):
 		await self.captcha.detect_unknown_captcha(message)
 		if self.data.config.channel['change_when_be_mentioned']:
 			await self.channel.change_when_be_mentioned(message)
-		if self.data.config.channel['change_when_be_challenged'] or self.data.quest.battle_friend:
-			await self.channel.change_when_be_challenged(message)
+		if self.data.config.channel['accept_challenge'] or self.data.quest.battle_friend:
+			await self.channel.accept_challenge(message)
 		if self.data.config.do_quest['mode']:
 			await self.quest.quest_progress(message)
 		if (self.data.config.use_gem['mode'] or self.gem.glitch_available()) and not self.data.checking.no_gem:
