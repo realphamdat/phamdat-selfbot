@@ -9,7 +9,7 @@ class Others:
 		self.client = client
 
 	def message(self, message, is_owo, in_channel, all_content, any_content):
-		if not is_owo or message.author.id == self.client.bot.id:
+		if not is_owo or message.author.id == self.client.data.bot.id:
 			if not in_channel or message.channel.id == self.client.data.discord.channel_id:
 				if not all_content or all(text in message.content for text in all_content):
 					if not any_content or any(text in message.content for text in any_content):
@@ -17,7 +17,7 @@ class Others:
 
 	async def startup(self):
 		try:
-			await self.client.bot.create_dm()
+			await self.client.data.bot.create_dm()
 			self.client.logger.info(f"Created OwO dm")
 		except:
 			self.client.logger.error(f"Couldn't create OwO dm")

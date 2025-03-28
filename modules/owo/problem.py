@@ -5,7 +5,7 @@ class Problem:
 		self.client = client
 	
 	async def banned(self, message):
-		if self.client.others.message(message, True, False, ['You have been banned'], []) and (str(self.client.user.name) in message.content or message.channel.id == self.client.bot.dm_channel.id):
+		if self.client.others.message(message, True, False, ['You have been banned'], []) and (str(self.client.user.name) in message.content or message.channel.id == self.client.data.bot.dm_channel.id):
 			await self.client.notification.notify()
 			self.client.logger.warning(f"!!! You have been banned !!!")
 			await self.client.webhook.send(

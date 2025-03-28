@@ -10,7 +10,7 @@ class Captcha:
 		self.client = client
 
 	async def detect_image_captcha(self, message):
-		if not self.client.data.available.captcha and self.client.others.message(message, True, False, ['⚠️'], []) and (message.channel.id == self.client.bot.dm_channel.id or str(self.client.user.name) in message.content) and message.attachments:
+		if not self.client.data.available.captcha and self.client.others.message(message, True, False, ['⚠️'], []) and (message.channel.id == self.client.data.bot.dm_channel.id or str(self.client.user.name) in message.content) and message.attachments:
 			real_message = re.sub(r"[^0-9a-zA-Z]", "", message.content)
 			if "letter" not in real_message:
 				return
@@ -109,11 +109,11 @@ class Captcha:
 		else:
 			await self.client.notification.notify()
 		if result:
-			await self.client.bot.send(result['code'])
+			await self.client.data.bot.send(result['code'])
 			self.client.logger.info(f"Sent {result['code']}")
 			self.client.data.stat.sent_message += 1
 			try:
-				captcha_verification = await self.client.wait_for("message", check = lambda message: message.channel.id == self.client.bot.dm_channel.id and any(text in message.content for text in ['👍', '🚫']), timeout = 10)
+				captcha_verification = await self.client.wait_for("message", check = lambda message: message.channel.id == self.client.data.bot.dm_channel.id and any(text in message.content for text in ['👍', '🚫']), timeout = 10)
 				if "👍" in captcha_verification.content:
 					self.client.logger.info(f"Solved Image Captcha successfully")
 					await self.client.webhook.send(
@@ -180,7 +180,7 @@ class Captcha:
 		retry_times = 0
 		while retry_times < int(self.client.data.config.error_retry_times):
 			async with ClientSession() as session:
-				oauth = f"https://discord.com/api/v9/oauth2/authorize?response_type=code&redirect_uri=https%3A%2F%2Fowobot.com%2Fapi%2Fauth%2Fdiscord%2Fredirect&scope=identify%20guilds%20email%20guilds.members.read&client_id={self.client.bot.id}"
+				oauth = f"https://discord.com/api/v9/oauth2/authorize?response_type=code&redirect_uri=https%3A%2F%2Fowobot.com%2Fapi%2Fauth%2Fdiscord%2Fredirect&scope=identify%20guilds%20email%20guilds.members.read&client_id={self.client.data.bot.id}"
 				payload = {"permissions": "0", "authorize": True}
 				headers = {
 					'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64; rv:109.0) Gecko/20100101 Firefox/111.0',
@@ -193,7 +193,7 @@ class Captcha:
 					'X-Debug-Options': 'bugReporterEnabled',
 					'Origin': 'https://discord.com',
 					'Connection': 'keep-alive',
-					'Referer': f"https://discord.com//oauth2/authorize?response_type=code&redirect_uri=https%3A%2F%2Fowobot.com%2Fapi%2Fauth%2Fdiscord%2Fredirect&scope=identify%20guilds%20email%20guilds.members.read&client_id={self.client.bot.id}",
+					'Referer': f"https://discord.com//oauth2/authorize?response_type=code&redirect_uri=https%3A%2F%2Fowobot.com%2Fapi%2Fauth%2Fdiscord%2Fredirect&scope=identify%20guilds%20email%20guilds.members.read&client_id={self.client.data.bot.id}",
 					'Sec-Fetch-Dest': 'empty',
 					'Sec-Fetch-Mode': 'cors',
 					'Sec-Fetch-Site': 'same-origin',

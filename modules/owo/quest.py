@@ -199,8 +199,8 @@ class Quest:
 	async def action_someone(self):
 		if self.client.data.available.selfbot:
 			action = random.choice(self.client.data.config.do_quest['action'])
-			await self.client.data.discord.channel.send(f"{self.client.data.discord.prefix}{action} <@{self.client.bot.id}>")
-			self.client.logger.info(f"Sent {self.client.data.discord.prefix}{action} <@{self.client.bot.id}>")
+			await self.client.data.discord.channel.send(f"{self.client.data.discord.prefix}{action} <@{self.client.data.bot.id}>")
+			self.client.logger.info(f"Sent {self.client.data.discord.prefix}{action} <@{self.client.data.bot.id}>")
 			self.client.data.stat.sent_message += 1
 
 	async def battle_friend(self, client):
