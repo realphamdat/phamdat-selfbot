@@ -19,7 +19,7 @@ class Webhook:
 						if thumnail:
 							embed.set_thumbnail(url = thumnail)
 						embed.timestamp = datetime.datetime.now()
-						embed.set_footer(text = self.client.bot, icon_url = self.client.bot.avatar)
+						embed.set_footer(text = self.client.data.bot, icon_url = self.client.data.bot.avatar)
 						await webhook.send(content = content, embed = embed)
 					else:
 						await webhook.send(content = content)

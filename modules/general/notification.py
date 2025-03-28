@@ -12,6 +12,6 @@ class Notification:
 		try:
 			os.startfile(os.path.dirname(__file__) + self.client.data.config.notification['play_music']['directory'])
 			self.client.logger.info(f"Played music")
-		except:
-			self.client.logger.error(f"Couldn't play music")
+		except Exception as e:
+			self.client.logger.error(f"Couldn't play music | {e}")
 			pass
