@@ -74,8 +74,19 @@ class Task:
 
 	@tasks.loop(hours = 12)
 	async def vote_topgg(self):
-		if self.client.data.config.vote_topgg['mode']:
-			await self.client.topgg.vote_topgg()
+		if self.client.data.available.selfbot and self.client.data.config.vote_topgg['mode']:
+				try:
+					await self.client.data.discord.channel.send(f"{self.client.data.discord.prefix}vote")
+					self.client.logger.info(f"Sent {self.client.data.discord.prefix}vote")
+					vote_message = await self.client.wait_for("message", check = lambda message: self.client.others.message(message, True, True, [], ['vote is available!', 'vote is available in', 'for voting!']), timeout = 10)
+					if "vote is available!" in vote_message.message:
+						await self.client.topgg.vote_topgg()
+					else:
+						self.client.logger.info(f"Voted {self.client.data.bot.display_name}")
+						return
+				except asyncio.TimeoutError:
+					self.client.logger.error(f"Couldn't get vote message")
+				await self.vote_topgg()
 		self.client.data.current_task_loop.vote_topgg += 1
 
 	@tasks.loop(minutes = 1)
