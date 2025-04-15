@@ -23,18 +23,21 @@ class Captcha:
 			self.client.data.checking.captcha_attempt = 0
 
 	async def detect_captcha(self, message):
-		if self.client.others.message(message, True, False, ['⚠️'], []):
-			self.client.data.available.captcha = True
-			self.client.data.available.selfbot = False
-			real_message = re.sub(r"[^0-9a-zA-Z]", "", message.content)
-			if self.client.data.available.captcha:
-				return
-			if (message.channel.id == self.client.data.bot.dm_channel.id or str(self.client.user.name) in message.content) and message.attachments and "letter" in real_message:
-				await self.detect_image_captcha(message, real_message)
-			elif self.client.others.message(message, True, False, [f'<@{self.client.user.id}>'], []) and "link" in real_message:
-				await self.detect_hcaptcha(message, real_message)
-			else:
-				await self.detect_unknown_captcha(message)
+		if not self.client.others.message(message, True, False, ['⚠️'], []):
+			return
+		if not ((message.channel.id == self.client.data.bot.dm_channel.id or self.client.others.message(message, True, False, [str(self.client.user.name)], [])) and message.attachments) or self.client.others.message(message, True, False, [f'<@{self.client.user.id}>'], []):
+			return
+		self.client.data.available.captcha = True
+		self.client.data.available.selfbot = False
+		real_message = re.sub(r"[^0-9a-zA-Z]", "", message.content)
+		if self.client.data.available.captcha:
+			return
+		if "letter" in real_message:
+			await self.detect_image_captcha(message, real_message)
+		elif "link" in real_message:
+			await self.detect_hcaptcha(message, real_message)
+		else:
+			await self.detect_unknown_captcha(message)
 
 	async def detect_image_captcha(self, message, real_message):
 			self.client.logger.warning(f"!!! Image Captcha appears !!!")
