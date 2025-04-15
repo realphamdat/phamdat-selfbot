@@ -65,9 +65,7 @@ class OwOSelfbot(discord.Client):
 			await self.problem.banned(message)
 		if self.data.config.problem['no_cowoncy']:
 			await self.problem.no_cowoncy(message)
-		await self.captcha.detect_image_captcha(message)
-		await self.captcha.detect_hcaptcha(message)
-		await self.captcha.detect_unknown_captcha(message)
+		await self.captcha.detect_captcha(message)
 		if self.data.config.channel['change_when_be_mentioned']:
 			await self.channel.change_when_be_mentioned(message)
 		if self.data.config.channel['accept_challenge'] or self.data.quest.battle_friend:
