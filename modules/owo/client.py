@@ -65,6 +65,7 @@ class OwOSelfbot(discord.Client):
 			await self.problem.banned(message)
 		if self.data.config.problem['no_cowoncy']:
 			await self.problem.no_cowoncy(message)
+		await self.captcha.solved_captcha(message)
 		await self.captcha.detect_captcha(message)
 		if self.data.config.channel['change_when_be_mentioned']:
 			await self.channel.change_when_be_mentioned(message)
