@@ -148,7 +148,6 @@ class Command:
 
 	async def balance(self):
 		balance = "\n**"
-		print(self.client.data.config.captcha['solve_image_captcha']['twocaptcha'])
 		balance += self.balance_filter(self.client.data.config.captcha['solve_image_captcha']['twocaptcha'], "Image Captcha")
 		balance += "\n"
 		balance += self.balance_filter(self.client.data.config.captcha['solve_hcaptcha']['twocaptcha'], "HCaptcha")
