@@ -8,6 +8,7 @@ import glob
 import numpy
 import time
 import datetime
+
 from PIL import Image
 
 class Huntbot:
