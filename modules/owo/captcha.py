@@ -9,13 +9,33 @@ class Captcha:
 	def __init__(self, client):
 		self.client = client
 
-	async def detect_image_captcha(self, message):
-		if not self.client.data.available.captcha and self.client.others.message(message, True, False, ['⚠️'], []) and (message.channel.id == self.client.data.bot.dm_channel.id or str(self.client.user.name) in message.content) and message.attachments:
-			real_message = re.sub(r"[^0-9a-zA-Z]", "", message.content)
-			if "letter" not in real_message:
-				return
+	async def solved_captcha(self, message):
+		if message.channel.id == self.client.data.bot.dm_channel.id and "👍" in message.content:
+			self.client.logger.info(f"Resume selfbot")
+			await self.client.webhook.send(
+				title = "🌈 RESUME SELFBOT 🌈",
+				color = discord.Colour.random()
+			)
+			self.client.data.stat.solved_captcha += 1
+			self.client.data.available.captcha = False
+			self.client.data.available.selfbot = True
+			self.client.data.checking.captcha_attempt = 0
+
+	async def detect_captcha(self, message):
+		if self.client.others.message(message, True, False, ['⚠️'], []):
 			self.client.data.available.captcha = True
 			self.client.data.available.selfbot = False
+			real_message = re.sub(r"[^0-9a-zA-Z]", "", message.content)
+			if self.client.data.available.captcha:
+				return
+			if (message.channel.id == self.client.data.bot.dm_channel.id or str(self.client.user.name) in message.content) and message.attachments and "letter" in real_message:
+				await self.detect_image_captcha(message, real_message)
+			elif self.client.others.message(message, True, False, [f'<@{self.client.user.id}>'], []) and "link" in real_message:
+				await self.detect_hcaptcha(message, real_message)
+			else:
+				await self.detect_unknown_captcha(message)
+
+	async def detect_image_captcha(self, message, real_message):
 			self.client.logger.warning(f"!!! Image Captcha appears !!!")
 			await self.client.webhook.send(
 				content = self.client.data.discord.mention,
@@ -32,12 +52,6 @@ class Captcha:
 				await self.client.notification.notify()
 
 	async def detect_hcaptcha(self, message):
-		if not self.client.data.available.captcha and self.client.others.message(message, True, False, ['⚠️', f'<@{self.client.user.id}>'], []):
-			real_message = re.sub(r"[^a-zA-Z]", "", message.content)
-			if "link" not in real_message:
-				return
-			self.client.data.available.captcha = True
-			self.client.data.available.selfbot = False
 			self.client.logger.warning(f"!!! HCaptcha appears !!!")
 			await self.client.webhook.send(
 				content = self.client.data.discord.mention,
@@ -51,15 +65,7 @@ class Captcha:
 				await self.client.notification.notify()
 
 	async def detect_unknown_captcha(self, message):
-		if not self.client.data.available.captcha and self.client.others.message(message, True, False, ['⚠️', f'<@{self.client.user.id}>'], []) and not message.attachments:
-			real_message = re.sub(r"[^a-zA-Z]", "", message.content)
-			if "verify" not in real_message:
-				return
-			if any(text in message.content for text in ['letter', 'link']):
-				return
 			await self.client.notification.notify()
-			self.client.data.available.captcha = True
-			self.client.data.available.selfbot = False
 			self.client.logger.warning(f"!!! Unknown Captcha !!!")
 			await self.client.webhook.send(
 				content = self.client.data.discord.mention,
