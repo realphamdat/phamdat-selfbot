@@ -2,6 +2,8 @@ import discord
 import asyncio
 import json
 
+from twocaptcha import TwoCaptcha
+
 class Command:
 	def __init__(self, client):
 		self.client = client
@@ -28,6 +30,8 @@ class Command:
 				await self.help()
 			if command[0].lower() == "stat":
 				await self.stat_selfbot()
+			if command[0].lower() == "balance":
+				await self.balance()
 
 			if command[0].lower() == "say" and "-" in message.content and len(command) >= 2:
 				await self.say_text(message)
@@ -64,6 +68,7 @@ class Command:
 
 `help`
 `stat`
+`balance`
 
 `say` + `-text`
 `give` + `<@user_id>` + `amount` 
@@ -122,6 +127,34 @@ class Command:
 		await self.client.webhook.send(
 			title = f"📊 STAT 📊",
 			description = stat,
+			color = discord.Colour.random()
+		)
+
+	def balance_filter(api_keys, label):
+		output = f"{label}\n"
+		for api_key in api_keys:
+			try:
+				twocaptcha = TwoCaptcha(**{
+					"server": "2captcha.com",
+					"apiKey": str(api_key),
+					"defaultTimeout": 300,
+					"pollingInterval": 5
+				})
+				balance = twocaptcha.balance()
+				output += f"Balance: {balance}$ ({api_key})\n"
+			except Exception as e:
+				output += f"Error: {str(e)} ({api_key})\n"
+		return output
+
+	async def balance(self):
+		balance = ""
+		balance += self.balance_filter(self.client.data.config.captcha['solve_image_captcha']['twocaptcha'], "Image Captcha")
+		balance += "\n"
+		balance += self.balance_filter(self.client.data.config.captcha['solve_hcaptcha']['twocaptcha'], "HCaptcha")
+		self.client.logger.info(balance)
+		await self.client.webhook.send(
+			title = f"🏦 BALANCE 🏦",
+			description = balance,
 			color = discord.Colour.random()
 		)
 
