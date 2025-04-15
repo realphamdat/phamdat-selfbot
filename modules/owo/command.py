@@ -130,7 +130,7 @@ class Command:
 			color = discord.Colour.random()
 		)
 
-	def balance_filter(api_keys, label):
+	def balance_filter(self, api_keys, label):
 		output = f"{label}\n"
 		for api_key in api_keys:
 			try:
@@ -147,10 +147,12 @@ class Command:
 		return output
 
 	async def balance(self):
-		balance = ""
+		balance = "\n**"
+		print(self.client.data.config.captcha['solve_image_captcha']['twocaptcha'])
 		balance += self.balance_filter(self.client.data.config.captcha['solve_image_captcha']['twocaptcha'], "Image Captcha")
 		balance += "\n"
 		balance += self.balance_filter(self.client.data.config.captcha['solve_hcaptcha']['twocaptcha'], "HCaptcha")
+		balance += "**"
 		self.client.logger.info(balance)
 		await self.client.webhook.send(
 			title = f"🏦 BALANCE 🏦",
