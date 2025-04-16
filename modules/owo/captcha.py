@@ -137,10 +137,6 @@ class Captcha:
 						thumnail = image
 					)
 					twocaptcha.report(result['captchaId'], True)
-					self.client.data.stat.solved_captcha += 1
-					self.client.data.available.captcha = False
-					self.client.data.available.selfbot = True
-					self.client.data.checking.captcha_attempt = 0
 					if self.client.data.config.captcha['solve_image_captcha']['sleep_after_solve']:
 						await self.client.sleep.sleep_after_certain_time(True)
 				elif "🚫" in captcha_verification.content:
@@ -299,10 +295,6 @@ class Captcha:
 								color = discord.Colour.random()
 							)
 							twocaptcha.report(result['captchaId'], True)
-							self.client.data.stat.solved_captcha += 1
-							self.client.data.available.captcha = False
-							self.client.data.available.selfbot = True
-							self.client.data.checking.captcha_attempt = 0
 							if self.client.data.config.captcha['solve_hcaptcha']['sleep_after_solve']:
 								await self.client.sleep.sleep_after_certain_time(True)
 						else:
