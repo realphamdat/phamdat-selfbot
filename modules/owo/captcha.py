@@ -22,7 +22,6 @@ class Captcha:
 			self.client.data.stat.solved_captcha += 1
 			self.client.data.available.captcha = False
 			self.client.data.available.selfbot = True
-			self.client.data.checking.captcha_attempt = 0
 
 	async def detect_captcha(self, message):
 		if not self.client.others.message(message, True, False, ['⚠️'], []):
