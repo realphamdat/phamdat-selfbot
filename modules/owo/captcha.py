@@ -27,11 +27,11 @@ class Captcha:
 			return
 		if not ((message.channel.id == self.client.data.bot.dm_channel.id or self.client.others.message(message, True, False, [str(self.client.user.name)], [])) and message.attachments) or self.client.others.message(message, True, False, [f'<@{self.client.user.id}>'], []):
 			return
+		if self.client.data.available.captcha:
+			return
 		self.client.data.available.captcha = True
 		self.client.data.available.selfbot = False
 		real_message = re.sub(r"[^0-9a-zA-Z]", "", message.content)
-		if self.client.data.available.captcha:
-			return
 		if "letter" in real_message:
 			await self.detect_image_captcha(message, real_message)
 		elif "link" in real_message:
