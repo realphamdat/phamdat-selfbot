@@ -11,6 +11,8 @@ class Captcha:
 		self.client = client
 
 	async def solved_captcha(self, message):
+		if self.client.data.config.captcha['solve_image_captcha']['mode'] or self.client.data.config.captcha['solve_hcaptcha']['mode']:
+			return
 		if message.channel.id == self.client.data.bot.dm_channel.id and "👍" in message.content:
 			self.client.logger.info(f"Resume selfbot")
 			await self.client.webhook.send(
