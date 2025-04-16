@@ -35,7 +35,7 @@ class Captcha:
 		if "letter" in real_message:
 			await self.detect_image_captcha(message, real_message)
 		elif "link" in real_message:
-			await self.detect_hcaptcha(message, real_message)
+			await self.detect_hcaptcha(message)
 		else:
 			await self.detect_unknown_captcha(message)
 
