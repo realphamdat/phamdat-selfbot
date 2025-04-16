@@ -11,8 +11,6 @@ class Captcha:
 		self.client = client
 
 	async def solved_captcha(self, message):
-		if self.client.data.config.captcha['solve_image_captcha']['mode'] or self.client.data.config.captcha['solve_hcaptcha']['mode']:
-			return
 		if message.channel.id == self.client.data.bot.dm_channel.id and "👍" in message.content:
 			self.client.logger.info(f"Resume selfbot")
 			await self.client.webhook.send(
@@ -22,6 +20,7 @@ class Captcha:
 			self.client.data.stat.solved_captcha += 1
 			self.client.data.available.captcha = False
 			self.client.data.available.selfbot = True
+			self.client.data.checking.captcha_attempt = 0
 
 	async def detect_captcha(self, message):
 		if not self.client.others.message(message, True, False, ['⚠️'], []):
@@ -90,6 +89,8 @@ class Captcha:
 			})
 			retry_times = 0
 			while retry_times < int(self.client.data.config.error_retry_times):
+				if not self.client.data.available.captcha:
+					return
 				try:
 					balance = twocaptcha.balance()
 					self.client.logger.info(f"TwoCaptcha API ({api_key}) currently have {balance}$")
@@ -120,6 +121,8 @@ class Captcha:
 		else:
 			await self.client.notification.notify()
 		if result:
+			if not self.client.data.available.captcha:
+				return
 			await self.client.data.bot.send(result['code'])
 			self.client.logger.info(f"Sent {result['code']}")
 			self.client.data.stat.sent_message += 1
@@ -163,6 +166,8 @@ class Captcha:
 	async def submit_oauth(self, res):
 		retry_times = 0
 		while retry_times < int(self.client.data.config.error_retry_times):
+			if not self.client.data.available.captcha:
+				return
 			response = await res.json()
 			locauri = response.get("location")
 			headers = {
@@ -190,6 +195,8 @@ class Captcha:
 	async def get_oauth(self):
 		retry_times = 0
 		while retry_times < int(self.client.data.config.error_retry_times):
+			if not self.client.data.available.captcha:
+				return
 			async with ClientSession() as session:
 				oauth = f"https://discord.com/api/v9/oauth2/authorize?response_type=code&redirect_uri=https%3A%2F%2Fowobot.com%2Fapi%2Fauth%2Fdiscord%2Fredirect&scope=identify%20guilds%20email%20guilds.members.read&client_id={self.client.data.bot.id}"
 				payload = {"permissions": "0", "authorize": True}
@@ -250,6 +257,8 @@ class Captcha:
 			})
 			retry_times = 0
 			while retry_times < int(self.client.data.config.error_retry_times):
+				if not self.client.data.available.captcha:
+					return
 				try:
 					balance = twocaptcha.balance()
 					self.client.logger.info(f"TwoCaptcha API ({api_key}) currently have {balance}$")
@@ -297,6 +306,8 @@ class Captcha:
 							if self.client.data.config.captcha['solve_hcaptcha']['sleep_after_solve']:
 								await self.client.sleep.sleep_after_certain_time(True)
 						else:
+							if not self.client.data.available.captcha:
+								return
 							self.client.logger.info(f"Solved HCaptcha failed")
 							await self.client.webhook.send(
 								content = self.client.data.discord.mention,
