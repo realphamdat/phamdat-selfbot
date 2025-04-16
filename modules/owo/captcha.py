@@ -25,7 +25,7 @@ class Captcha:
 	async def detect_captcha(self, message):
 		if not self.client.others.message(message, True, False, ['⚠️'], []):
 			return
-		if not ((message.channel.id == self.client.data.bot.dm_channel.id or self.client.others.message(message, True, False, [str(self.client.user.name)], [])) and message.attachments) or self.client.others.message(message, True, False, [f'<@{self.client.user.id}>'], []):
+		if not (((message.channel.id == self.client.data.bot.dm_channel.id or self.client.others.message(message, True, False, [str(self.client.user.name)], [])) and message.attachments) or self.client.others.message(message, True, False, [f'<@{self.client.user.id}>'], [])):
 			return
 		if self.client.data.available.captcha:
 			return
