@@ -1,4 +1,4 @@
-git+https://github.com/dolfies/discord.py-self.git
+git+https://github.com/realphamdat/discord.py-self.git
 inquirer
 numpy
 Pillow
