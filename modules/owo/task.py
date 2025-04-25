@@ -51,7 +51,7 @@ class Task:
 			await self.client.sleep.sleep_after_certain_time()
 		self.client.data.current_task_loop.sleep_after_certain_time += 1
 
-	@tasks.loop(minutes = 1)
+	@tasks.loop(minutes = 10)
 	async def check_twocaptcha_balance(self):
 		if self.client.data.config.captcha['pause_if_twocaptcha_balance_is_low']['mode']:
 			if self.client.data.config.captcha['solve_image_captcha']['mode']:
