@@ -185,7 +185,7 @@ class Command:
 		member = await self.client.get_channel(message.channel.id).guild.fetch_member(self.client.user.id)
 		nickname = member.nick if member.nick else member.display_name
 		try:
-			give_cowoncy_message = await self.client.wait_for("message", check = lambda message: self.give_cowoncy(message, str(nickname)), timeout = 10)
+			give_cowoncy_message = await self.client.wait_for("message", check = lambda message: self.give_cowoncy_filter(message, str(nickname)), timeout = 10)
 			if self.client.others.message(give_cowoncy_message, True, False, [f'<@{self.client.user.id}>', '... *but... why?*'], []):
 				self.client.logger.info(f"Can't give cowoncy to yourself")
 			elif self.client.others.message(give_cowoncy_message, True, False, [str(nickname), 'you can only send'], []):
