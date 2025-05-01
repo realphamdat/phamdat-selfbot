@@ -53,7 +53,7 @@ class OwOSelfbot(discord.Client):
 		if self.data.selfbot.on_ready:
 			self.data.selfbot.on_ready = False
 			self.data.bot = self.get_user(self.data.bot.id)
-			self.logger = await self.log.create("owo", self.data.config.history['file']['mode'], self.data.config.history['file']['directory'])
+			self.logger = await self.log.create("owo", self.data.config.history['color_console'], self.data.config.history['file']['mode'], self.data.config.history['file']['directory'])
 			await self.others.startup()
 			await self.others.intro()
 			await self.task.start()
