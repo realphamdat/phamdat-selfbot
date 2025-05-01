@@ -28,11 +28,11 @@ class Log:
 	def __init__(self, client):
 		self.client = client
 
-	async def create(self, name, file_mode, file_directory):
+	async def create(self, name, color_console, file_mode, file_directory):
 		logger = logging.getLogger(f"[{name.upper()}] - {str(self.client.user.name)}")
 		logger.setLevel(logging.DEBUG)
 		console_handler = logging.StreamHandler()
-		console_handler.setFormatter(CustomFormatter())
+		console_handler.setFormatter(CustomFormatter(is_file = color_console))
 		logger.addHandler(console_handler)
 		if file_mode:
 			file = f"{file_directory}{str(self.client.user.name)}.txt"
