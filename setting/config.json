@@ -1,7 +1,6 @@
 {
     "api": "https://realphamdat.pythonanywhere.com/check",
-    "key": "Phamdat Selfbot",
-    "template": "assets/template.json",
+    "key": "Phamdat Selfbot"
     "owo": {
         "mode": true,
         "directory": "setting/owo.json"
