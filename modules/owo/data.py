@@ -23,7 +23,7 @@ class Config:
 		with open(self.directory) as file:
 			data = json.load(file)
 			self.token = token
-			self.error_retry_times = data[token]['error_retry_times']
+			self.error_retry_times = data[token]['error']['retry_times']
 			self.emoji = data[token]['emoji']
 			self.notification = data[token]['notification']
 			self.history = data[token]['history']
