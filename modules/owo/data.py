@@ -18,7 +18,7 @@ class Data:
 
 class Config:
 	def __init__(self, token):
-		self.directory = "assets/owo.json"
+		self.directory = "setting/owo.json"
 		with open(self.directory) as file:
 			data = json.load(file)
 			self.token = token
