@@ -14,7 +14,7 @@ class Data:
 		self.checking = Checking()
 		self.available = Available()
 		self.current_task_loop = Current_Task_Loop()
-		self.current_gamble_bet = Current_Gamble_Bet(self)
+		self.current_gamble_bet = Current_Gamble_Bet(self.config)
 
 class Config:
 	def __init__(self, token):
@@ -89,7 +89,9 @@ class Selfbot:
 		self.on_ready = True
 		self.turn_on_time = time.time()
 		self.work_time = random.randint(int(config.sleep_after_certain_time['work']['min']), int(config.sleep_after_certain_time['work']['max']))
-		self.random_messages = []
+		with open("quotes.txt", "r", encoding = "utf-8") as f:
+			self.random_messages = [line.strip() for line in f if line.strip()]
+
 
 class Cooldown:
 	def __init__(self):
@@ -138,8 +140,7 @@ class Current_Task_Loop:
 		self.others_minigame = 0
 
 class Current_Gamble_Bet:
-	def __init__(self, client):
-		self.client = client
-		self.slot = int(self.client.config.gamble['slot']['bet'])
-		self.coinflip = int(self.client.config.gamble['coinflip']['bet'])
-		self.blackjack = int(self.client.config.gamble['blackjack']['bet'])
+	def __init__(self, config):
+		self.slot = int(config.gamble['slot']['bet'])
+		self.coinflip = int(config.gamble['coinflip']['bet'])
+		self.blackjack = int(config.gamble['blackjack']['bet'])
