@@ -29,15 +29,9 @@ class Grind:
 			self.client.logger.info(f"Sent {self.client.data.discord.prefix}{say}")
 			self.client.data.stat.sent_message += 1
 
-	async def send_quote(self):
+	async def send_random_messages(self):
 		if self.client.data.available.selfbot:
-			try:
-				response = requests.get(self.client.data.config.grind['quote']['api'])
-				if response.status_code == 200:
-					json_data = response.json()
-					quote = reduce(lambda d, p: d[int(p) if p.isdigit() else p.strip("'")], re.findall(r'\[(.*?)\]', self.client.data.config.grind['quote']['path']), json_data)
-					await self.client.data.discord.channel.send(f"`{quote}`")
-					self.client.logger.info(f"Sent {quote[0:30]}...")
-					self.client.data.stat.sent_message += 1
-			except requests.exceptions.ConnectionError:
-				self.client.logger.error(f"Couldn't connect {self.client.data.config.grind['quote']['api']}")
+			random_messages = random.choice(self.client.data.selfbot.random_messages)
+			await self.client.data.discord.channel.send(f"`{random_messages}`")
+			self.client.logger.info(f"Sent {random_messages[0:30]}...")
+			self.client.data.stat.sent_message += 1
