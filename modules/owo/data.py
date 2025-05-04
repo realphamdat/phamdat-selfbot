@@ -89,7 +89,7 @@ class Selfbot:
 		self.on_ready = True
 		self.turn_on_time = time.time()
 		self.work_time = random.randint(int(config.sleep_after_certain_time['work']['min']), int(config.sleep_after_certain_time['work']['max']))
-		with open("quotes.txt", "r", encoding = "utf-8") as f:
+		with open(config.grind['random_messages']['directory'], "r", encoding = "utf-8") as f:
 			self.random_messages = [line.strip() for line in f if line.strip()]
 
 
