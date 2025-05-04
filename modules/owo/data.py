@@ -89,6 +89,7 @@ class Selfbot:
 		self.on_ready = True
 		self.turn_on_time = time.time()
 		self.work_time = random.randint(int(config.sleep_after_certain_time['work']['min']), int(config.sleep_after_certain_time['work']['max']))
+		self.random_messages = []
 
 class Cooldown:
 	def __init__(self):
