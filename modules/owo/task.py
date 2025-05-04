@@ -115,8 +115,8 @@ class Task:
 			if (self.client.data.config.grind['battle']['mode'] or self.client.data.quest.battle) and not self.client.data.checking.block_battle:
 				await self.client.grind.send_battle()
 			await asyncio.sleep(random.randint(5, 10))
-			if self.client.data.config.grind['quote']['mode']:
-				await self.client.grind.send_quote()
+			if self.client.data.config.grind['random_messages']['mode']:
+				await self.client.grind.send_random_messages()
 		except Exception as e:
 			self.client.logger.error(f"Grind Has The Error | {str(e)}")
 			await self.client.webhook.send(
