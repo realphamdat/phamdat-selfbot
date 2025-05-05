@@ -205,6 +205,17 @@ class Command:
 		except asyncio.TimeoutError:
 			self.client.logger.error(f"Couldn't get send cowoncy message")
 
+	async def change_sleep_mode(self, command):
+		if command[1].lower() == "on" or command[1].lower() == "off":
+			setting = command[1].lower() == "on"
+			self.client.data.config.sleep_after_certain_time['mode'] = setting
+			self.client.logger.info(f"Sleep mode: {command[1].lower()}")
+			await self.client.webhook.send(
+				title = f"🛸 CHANGED CONFIG 🛸",
+				description = f"**{self.client.data.config.emoji['arrow']}Huntbot upgrade mode: {command[1].lower()}**",
+				color = discord.Colour.random()
+			)
+
 	async def change_do_quest_mode(self, command):
 		if command[1].lower() == "on" or command[1].lower() == "off":
 			setting = command[1].lower() == "on"
@@ -217,18 +228,6 @@ class Command:
 				description = f"**{self.client.data.config.emoji['arrow']}Do quest: {command[1].lower()}**",
 				color = discord.Colour.random()
 			)
-
-	async def change_huntbot_upgrade_mode(self, command):
-		if command[1].lower() == "on" or command[1].lower() == "off":
-			setting = command[1].lower() == "on"
-			self.client.data.config.sleep_after_certain_time['mode'] = setting
-			self.client.logger.info(f"Sleep mode: {command[1].lower()}")
-			await self.client.webhook.send(
-				title = f"🛸 CHANGED CONFIG 🛸",
-				description = f"**{self.client.data.config.emoji['arrow']}Huntbot upgrade mode: {command[1].lower()}**",
-				color = discord.Colour.random()
-			)
-
 
 	async def change_huntbot_upgrade_mode(self, command):
 		if command[1].lower() == "on" or command[1].lower() == "off":
