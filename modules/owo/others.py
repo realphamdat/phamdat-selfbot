@@ -22,7 +22,7 @@ class Others:
 		except:
 			self.client.logger.error(f"Couldn't create OwO dm")
 			pass
-		mentioner_id = set(self.client.data.config.history['discord']['target'])
+		mentioner_id = set(self.client.data.config.history['discord']['mentioner_id'])
 		mentioner_id.add(self.client.user.id)
 		self.client.data.discord.mention = ''.join(f"<@{x}>" for x in mentioner_id)
 		await self.client.channel.get_channel()

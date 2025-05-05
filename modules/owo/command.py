@@ -16,7 +16,7 @@ class Command:
 			return(list(command))
 
 	async def command(self, message):
-		if message.author.id in self.client.data.config.command['target'] or message.author.id == self.client.user.id:
+		if message.author.id in self.client.data.config.command['owner_id'] or message.author.id == self.client.user.id:
 			command = self.filter_command(message)
 			if not command:
 				return
@@ -38,6 +38,9 @@ class Command:
 
 			if command[0].lower() == "give" and len(command) >= 3:
 				await self.give_cowoncy(message, command)
+
+			if command[0].lower() == "sleep_mode" and len(command) >= 2:
+				await self.change_sleep_mode(command)
 
 			if command[0].lower() == "do_quest" and len(command) >= 2:
 				await self.change_do_quest_mode(command)
@@ -72,6 +75,9 @@ class Command:
 
 `say` + `-text`
 `give` + `<@user_id>` + `amount` 
+
+`sleep_mode` + `on/off`
+
 `do_quest` + `on/off`
 
 `huntbot_upgrade_mode` + `on/off`
@@ -148,9 +154,9 @@ class Command:
 
 	async def balance(self):
 		balance = "\n**"
-		balance += self.balance_filter(self.client.data.config.captcha['solve_image_captcha']['twocaptcha'], "Image Captcha")
+		balance += self.balance_filter(self.client.data.config.captcha['solve_image_captcha']['twocaptcha_api'], "Image Captcha")
 		balance += "\n"
-		balance += self.balance_filter(self.client.data.config.captcha['solve_hcaptcha']['twocaptcha'], "HCaptcha")
+		balance += self.balance_filter(self.client.data.config.captcha['solve_hcaptcha']['twocaptcha_api'], "HCaptcha")
 		balance += "**"
 		self.client.logger.info(balance)
 		await self.client.webhook.send(
@@ -211,6 +217,18 @@ class Command:
 				description = f"**{self.client.data.config.emoji['arrow']}Do quest: {command[1].lower()}**",
 				color = discord.Colour.random()
 			)
+
+	async def change_huntbot_upgrade_mode(self, command):
+		if command[1].lower() == "on" or command[1].lower() == "off":
+			setting = command[1].lower() == "on"
+			self.client.data.config.sleep_after_certain_time['mode'] = setting
+			self.client.logger.info(f"Sleep mode: {command[1].lower()}")
+			await self.client.webhook.send(
+				title = f"🛸 CHANGED CONFIG 🛸",
+				description = f"**{self.client.data.config.emoji['arrow']}Huntbot upgrade mode: {command[1].lower()}**",
+				color = discord.Colour.random()
+			)
+
 
 	async def change_huntbot_upgrade_mode(self, command):
 		if command[1].lower() == "on" or command[1].lower() == "off":

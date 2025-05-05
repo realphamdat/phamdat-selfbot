@@ -55,9 +55,9 @@ class Task:
 	async def check_twocaptcha_balance(self):
 		if self.client.data.config.captcha['pause_if_twocaptcha_balance_is_low']['mode']:
 			if self.client.data.config.captcha['solve_image_captcha']['mode']:
-				await self.client.captcha.check_twocaptcha_balance(self.client.data.config.captcha['solve_image_captcha']['twocaptcha'])
+				await self.client.captcha.check_twocaptcha_balance(self.client.data.config.captcha['solve_image_captcha']['twocaptcha_api'])
 			if self.client.data.config.captcha['solve_hcaptcha']['mode']:
-				await self.client.captcha.check_twocaptcha_balance(self.client.data.config.captcha['solve_hcaptcha']['twocaptcha'])
+				await self.client.captcha.check_twocaptcha_balance(self.client.data.config.captcha['solve_hcaptcha']['twocaptcha_api'])
 		self.client.data.current_task_loop.check_twocaptcha_balance += 1
 
 	@tasks.loop(minutes = 1)
@@ -159,10 +159,11 @@ class Task:
 	@tasks.loop(seconds = random.randint(300, 600))
 	async def pray_curse(self):
 		if self.client.data.config.minigame['pray_curse']['mode'] and (not self.client.data.quest.pray or not self.client.data.quest.curse) and not self.client.data.checking.block_pray_curse:
+			target = random.choice(self.client.data.config.minigame['pray_curse']['target'])
 			if self.client.data.config.minigame['pray_curse']['type'].lower() == "pray":
-				await self.client.minigame.pray(self.client.data.config.minigame['pray_curse']['target'])
+				await self.client.minigame.pray(target)
 			else:
-				await self.client.minigame.curse(self.client.data.config.minigame['pray_curse']['target'])
+				await self.client.minigame.curse(target)
 		self.client.data.current_task_loop.pray_curse += 1
 
 	@tasks.loop(seconds = random.randint(60, 120))

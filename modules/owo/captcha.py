@@ -80,7 +80,7 @@ class Captcha:
 
 	async def solve_image_captcha(self, image, captcha, lenghth, wrong_answer):
 		result = None
-		for api_key in self.client.data.config.captcha['solve_image_captcha']['twocaptcha']:
+		for api_key in self.client.data.config.captcha['solve_image_captcha']['twocaptcha_api']:
 			twocaptcha = TwoCaptcha(**{
 						"server": "2captcha.com",
 						"apiKey": str(api_key),
@@ -244,7 +244,7 @@ class Captcha:
 			"User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64; rv:109.0) Gecko/20100101 Firefox/111.0"
 		}
 		result = None
-		for api_key in self.client.data.config.captcha['solve_hcaptcha']['twocaptcha']:
+		for api_key in self.client.data.config.captcha['solve_hcaptcha']['twocaptcha_api']:
 			twocaptcha = TwoCaptcha(**{
 						"server": "2captcha.com",
 						"apiKey": str(api_key),
