@@ -212,7 +212,7 @@ class Command:
 			self.client.logger.info(f"Sleep mode: {command[1].lower()}")
 			await self.client.webhook.send(
 				title = f"🛸 CHANGED CONFIG 🛸",
-				description = f"**{self.client.data.config.emoji['arrow']}Huntbot upgrade mode: {command[1].lower()}**",
+				description = f"**{self.client.data.config.emoji['arrow']}Sleep mode: {command[1].lower()}**",
 				color = discord.Colour.random()
 			)
 
