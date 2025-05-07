@@ -10,7 +10,7 @@ class Notification:
 
 	async def play_music(self):
 		try:
-			os.startfile(os.getcwd() + self.client.data.config.notification['play_music']['directory'])
+			os.startfile(os.getcwd() + "/assets/music.mp3")
 			self.client.logger.info(f"Played music")
 		except Exception as e:
 			self.client.logger.error(f"Couldn't play music | {e}")
