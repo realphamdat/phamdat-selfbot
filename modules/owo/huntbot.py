@@ -17,7 +17,7 @@ class Huntbot:
 
 	async def solve_huntbot_captcha(self, captcha):
 		checks = []
-		check_images = glob.glob(self.client.data.config.huntbot['directory'])
+		check_images = glob.glob("assets/huntbot/**/*.png")
 		for check_image in sorted(check_images):
 			img = Image.open(check_image)
 			checks.append((img, img.size, check_image.split(".")[0].split(os.sep)[-1]))

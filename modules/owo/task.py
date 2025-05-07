@@ -115,7 +115,7 @@ class Task:
 			if (self.client.data.config.grind['battle']['mode'] or self.client.data.quest.battle) and not self.client.data.checking.block_battle:
 				await self.client.grind.send_battle()
 			await asyncio.sleep(random.randint(5, 10))
-			if self.client.data.config.grind['random_messages']['mode']:
+			if self.client.data.config.grind['random_messages']:
 				await self.client.grind.send_random_messages()
 		except Exception as e:
 			self.client.logger.error(f"Grind Has The Error | {str(e)}")
@@ -159,11 +159,12 @@ class Task:
 	@tasks.loop(seconds = random.randint(300, 600))
 	async def pray_curse(self):
 		if self.client.data.config.minigame['pray_curse']['mode'] and (not self.client.data.quest.pray or not self.client.data.quest.curse) and not self.client.data.checking.block_pray_curse:
+			channel = self.client.get_channel(int(random.choice(self.client.data.config.minigame['pray_curse']['channel_id'])))
 			target = random.choice(self.client.data.config.minigame['pray_curse']['target'])
 			if self.client.data.config.minigame['pray_curse']['type'].lower() == "pray":
-				await self.client.minigame.pray(target)
+				await self.client.minigame.pray(channel, target)
 			else:
-				await self.client.minigame.curse(target)
+				await self.client.minigame.curse(channel, target)
 		self.client.data.current_task_loop.pray_curse += 1
 
 	@tasks.loop(seconds = random.randint(60, 120))

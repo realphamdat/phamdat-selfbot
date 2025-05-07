@@ -44,6 +44,55 @@ class Config:
 			self.notify_caught_animal = data[token]['notify_caught_animal']
 			self.gamble = data[token]['gamble']
 			self.minigame = data[token]['minigame']
+		self.analyse_data()
+
+	def analyse_data(self):
+		items = [
+			self.error_retry_times,
+			self.history['discord']['mentioner_id'],
+			self.command['owner_id'],
+			self.sleep_after_certain_time['sleep']['min'],
+			self.sleep_after_certain_time['sleep']['max'],
+			self.sleep_after_certain_time['work']['min'],
+			self.sleep_after_certain_time['work']['max'],
+			self.captcha['solve_image_captcha']['attempt'],
+			self.captcha['solve_hcaptcha']['attempt'],
+			(self.captcha['pause_if_twocaptcha_balance_is_low']['amount'], True),
+			self.check_owo_status['wait_time'],
+			self.join_owo_giveaway['channel_id_blacklist'],
+			self.channel['id_list'],
+			self.claim_daily['reset_UTC_time']['hour'],
+			self.claim_daily['reset_UTC_time']['minute'],
+			self.claim_daily['reset_UTC_time']['second'],
+			self.claim_daily['reset_UTC_time']['microsecond'],
+			self.do_quest['channel_id'],
+			self.gamble['slot']['bet'],
+			self.gamble['slot']['rate'],
+			self.gamble['slot']['max'],
+			self.gamble['coinflip']['bet'],
+			self.gamble['coinflip']['rate'],
+			self.gamble['coinflip']['max'],
+			self.gamble['blackjack']['bet'],
+			self.gamble['blackjack']['rate'],
+			self.gamble['blackjack']['max'],
+			self.minigame['pray_curse']['channel_id'],
+			self.minigame['pray_curse']['target'],
+		]
+		for item in items:
+			if isinstance(item, tuple):
+				self.filter_number_data(item[0], item[1])
+			else:
+				self.filter_number_data(item)
+
+	def filter_number_data(self, data, float_type = False):
+		try:
+			if float_type:
+				data = float(data)
+			elif isinstance(data, list):
+				data = [int(i) for i in data]
+			else:
+				data = int(data)
+		except Exception as e: print(f"Error: {e}")
 
 class Bot:
 	def __init__(self):
@@ -89,7 +138,7 @@ class Selfbot:
 		self.on_ready = True
 		self.turn_on_time = time.time()
 		self.work_time = random.randint(int(config.sleep_after_certain_time['work']['min']), int(config.sleep_after_certain_time['work']['max']))
-		with open(config.grind['random_messages']['directory'], "r", encoding = "utf-8") as f:
+		with open("assets/random_messages.txt", "r", encoding = "utf-8") as f:
 			self.random_messages = [line.strip() for line in f if line.strip()]
 
 

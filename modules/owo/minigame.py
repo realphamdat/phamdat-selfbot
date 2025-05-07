@@ -6,16 +6,16 @@ class Minigame:
 	def __init__(self, client):
 		self.client = client
 
-	async def pray(self, user_id):
+	async def pray(self, channel, target):
 		if self.client.data.available.selfbot:
-			await self.client.data.discord.channel.send(f"{self.client.data.discord.prefix}pray {user_id}")
-			self.client.logger.info(f"Sent {self.client.data.discord.prefix}pray {user_id}")
+			await channel.send(f"{self.client.data.discord.prefix}pray {target}")
+			self.client.logger.info(f"Sent {self.client.data.discord.prefix}pray {target}")
 			self.client.data.stat.sent_message += 1
 
-	async def curse(self, user_id):
+	async def curse(self, channel, target):
 		if self.client.data.available.selfbot:
-			await self.client.data.discord.channel.send(f"{self.client.data.discord.prefix}curse {user_id}")
-			self.client.logger.info(f"Sent {self.client.data.discord.prefix}curse {user_id}")
+			await channel.send(f"{self.client.data.discord.prefix}curse {target}")
+			self.client.logger.info(f"Sent {self.client.data.discord.prefix}curse {target}")
 			self.client.data.stat.sent_message += 1
 
 	async def send_run(self):
