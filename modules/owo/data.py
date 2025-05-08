@@ -44,48 +44,6 @@ class Config:
 			self.notify_caught_animal = data[token]['notify_caught_animal']
 			self.gamble = data[token]['gamble']
 			self.minigame = data[token]['minigame']
-		self.analyse_data()
-
-	def analyse_data(self):
-		self.filter_number_data(self.error_retry_times)
-		self.filter_number_data(self.history['discord']['mentioner_id'])
-		self.filter_number_data(self.command['owner_id'])
-		self.filter_number_data(self.sleep_after_certain_time['sleep']['min'])
-		self.filter_number_data(self.sleep_after_certain_time['sleep']['max'])
-		self.filter_number_data(self.sleep_after_certain_time['work']['min'])
-		self.filter_number_data(self.sleep_after_certain_time['work']['max'])
-		self.filter_number_data(self.captcha['solve_image_captcha']['attempt'])
-		self.filter_number_data(self.captcha['solve_hcaptcha']['attempt'])
-		self.filter_number_data(self.captcha['pause_if_twocaptcha_balance_is_low']['amount'], True)
-		self.filter_number_data(self.check_owo_status['wait_time'])
-		self.filter_number_data(self.join_owo_giveaway['channel_id_blacklist'])
-		self.filter_number_data(self.channel['id_list'])
-		self.filter_number_data(self.claim_daily['reset_UTC_time']['hour'])
-		self.filter_number_data(self.claim_daily['reset_UTC_time']['minute'])
-		self.filter_number_data(self.claim_daily['reset_UTC_time']['second'])
-		self.filter_number_data(self.claim_daily['reset_UTC_time']['microsecond'])
-		self.filter_number_data(self.do_quest['channel_id'])
-		self.filter_number_data(self.gamble['slot']['bet'])
-		self.filter_number_data(self.gamble['slot']['rate'])
-		self.filter_number_data(self.gamble['slot']['max'])
-		self.filter_number_data(self.gamble['coinflip']['bet'])
-		self.filter_number_data(self.gamble['coinflip']['rate'])
-		self.filter_number_data(self.gamble['coinflip']['max'])
-		self.filter_number_data(self.gamble['blackjack']['bet'])
-		self.filter_number_data(self.gamble['blackjack']['rate'])
-		self.filter_number_data(self.gamble['blackjack']['max'])
-		self.filter_number_data(self.minigame['pray_curse']['channel_id'])
-		self.filter_number_data(self.minigame['pray_curse']['target'])
-
-	def filter_number_data(self, data, float_type = False):
-		try:
-			if float_type:
-				data = float(data)
-			elif isinstance(data, list):
-				data = [int(i) for i in data]
-			else:
-				data = int(data)
-		except Exception as e: print(f"Error: {e}")
 
 class Bot:
 	def __init__(self):
