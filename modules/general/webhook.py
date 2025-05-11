@@ -23,6 +23,5 @@ class Webhook:
 						await webhook.send(content = content, embed = embed)
 					else:
 						await webhook.send(content = content)
-			except discord.errors.HTTPException:
-				self.client.logger.error(f"Invalid webhook url")
-				pass
+			except Exception as e:
+				self.client.logger.error(f"{e}")
