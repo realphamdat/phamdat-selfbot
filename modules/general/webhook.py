@@ -24,4 +24,4 @@ class Webhook:
 					else:
 						await webhook.send(content = content)
 			except Exception as e:
-				self.client.logger.error(f"{e}")
+				self.client.logger.error(f"Couldn't send webhook | {e}")

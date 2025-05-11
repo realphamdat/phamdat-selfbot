@@ -14,4 +14,3 @@ class Notification:
 			self.client.logger.info(f"Played music")
 		except Exception as e:
 			self.client.logger.error(f"Couldn't play music | {e}")
-			pass
