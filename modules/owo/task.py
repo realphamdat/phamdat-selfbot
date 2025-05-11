@@ -33,7 +33,6 @@ class Task:
 					continue
 			try:
 				task.start()
-				await asyncio.sleep(random.randint(5, 10))
 			except RuntimeError:
 				pass
 
