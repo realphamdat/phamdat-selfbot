@@ -92,6 +92,8 @@ class Gamble:
 								self.client.logger.info(f"Blackjack turn has {my_blackjack_point} points (Hit)")
 							except IndexError:
 								pass
+							except Exception as e:
+								self.client.logger.error(f"Couldn't get blackjack point | {e}")
 						else:
 							await blackjack_message.add_reaction('🛑')
 							self.client.logger.info(f"Blackjack turn has {my_blackjack_point} points (Stand)")
