@@ -1,4 +1,4 @@
-git+https://github.com/realphamdat/discord.py-self.git
+git+https://github.com/realphamdat/discord.py-self@master#egg=discord.py-self[voice,speed]
 inquirer
 numpy
 Pillow
