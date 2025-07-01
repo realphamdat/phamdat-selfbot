@@ -1,32 +1,18 @@
 {
 	"owo": {
-		"error": {
-			"retry_times": 3
-		},
-
-		"emoji": {
-			"arrow": "<a:Arrow:1065047400714088479>"
-		},
-
 		"notification": {
 			"play_music": true
 		},
 
-		"history": {
-			"file": {
-				"mode": true,
-				"color_console": true
-			},
-			"discord": {
-				"mode": true,
-				"mentioner_id": [1191703681637290086],
-				"webhook_url": "https://discord.com/api/webhooks/..."
-			}
+		"system": {
+			"error_retry": 3,
+			"file_log": true
 		},
 
-		"command": {
-			"mode": true,
-			"owner_id": [1191703681637290086]
+		"discord": {
+			"owner_id": [1191703681637290086],
+			"webhook_url": "leave blank to disable webhook https://discord.com/api/webhooks/...",
+			"self_command": true
 		},
 
 		"sleep_after_certain_time": {
@@ -41,39 +27,32 @@
 			}
 		},
 
-		"problem": {
+		"stop_with_problem": {
 			"banned": true,
 			"no_cowoncy": true
 		},
 
 		"captcha": {
-			"solve_image_captcha": {
-				"mode": true,
-				"attempt": 3,
-				"sleep_after_solve": true,
-				"twocaptcha_api": ["abc123"]
+			"api_key": {
+				"twocaptcha": ["your_2captcha_api_key_1", "your_2captcha_api_key_2"],
+				"capmonster": ["your_capmonster_api_key_1", "your_capmonster_api_key_2"]
 			},
-			"solve_hcaptcha": {
-				"mode": true,
-				"attempt": 3,
-				"sleep_after_solve": true,
-				"twocaptcha_api": ["abc123"]
-			},
-			"pause_if_twocaptcha_balance_is_low": {
+			"api_priority": ["twocaptcha", "capmonster"],
+			"image_captcha": true,
+			"hcaptcha": true,
+			"sleep_after_solve": true,
+			"pause_if_twocaptcha_balance_low": {
 				"mode": true,
 				"amount": 0.01
 			}
 		},
 
-		"get_owo_prefix": {
-			"mode": false,
-			"default": "owo"
-		},
-
-		"check_owo_status": {
+		"stop_if_owo_offline": {
 			"mode": true,
-			"wait_time": 3600,
-			"message": ["h", "hunt", "b", "battle", "cuddle", "hug", "kiss", "lick", "nom", "pat", "poke", "slap", "stare", "highfive", "bite", "greet", "punch", "handholding", "tickle", "kill", "hold", "pats", "wave", "boop", "snuggle", "bully"]
+			"wait_time": {
+				"min": 1800,
+				"max": 3600
+			}
 		},
 
 		"join_owo_giveaway": {
@@ -81,15 +60,15 @@
 			"channel_id_blacklist": []
 		},
 
-		"channel": {
-			"id_list": [1267227844489248848],
-			"change_when_be_mentioned": true,
-			"accept_challenge": true
+		"get_owo_prefix": {
+			"mode": false,
+			"default": "owo"
 		},
 
-		"vote_topgg": {
-			"mode": false,
-			"display": false
+		"channel": {
+			"id_list": [1267227844489248848],
+			"change_when_mentioned": true,
+			"accept_challenge": true
 		},
 
 		"claim_daily": {
@@ -104,25 +83,20 @@
 
 		"do_quest": {
 			"mode": true,
-			"safe": true,
-			"channel_id": [1267227844489248848],
-			"action": ["cuddle", "hug", "kiss", "lick", "nom", "pat", "poke", "slap", "stare", "highfive", "bite", "greet", "punch", "handholding", "tickle", "kill", "hold", "pats", "wave", "boop", "snuggle", "bully"]
+			"safe_process": true,
+			"channel_id": [1267227844489248848]
 		},
 
 		"grind": {
-			"owo": {
-				"mode": true,
-				"message": ["owo", "uwu"]
-			},
-			"hunt": {
-				"mode": true,
-				"message": ["h", "hunt"]
-			},
-			"battle": {
-				"mode": true,
-				"message": ["b", "battle"]
-			},
-			"random_messages": true
+			"owo/uwu": true,
+			"hunt": true,
+			"battle": true,
+			"random_messages": true,
+			"delay": 1,
+			"cooldown": {
+				"min": 15,
+				"max": 20
+			}
 		},
 
 		"huntbot": {
@@ -135,97 +109,23 @@
 
 		"use_gem": {
 			"mode": false,
-			"sort": "max",
-			"star": true,
-			"open_box": true,
-			"open_crate": true,
-			"open_flootbox": true,
-			"use_gem_when_glitch_available": true
+			"couple": true,
+			"best": false,
+			"star": false,
+			"use_gem_on_glitch": true
 		},
 
-		"sell_sac_animal": {
-			"mode": false,
-			"type": "sell",
-			"rank": "all"
-		},
-
-		"notify_caught_animal": {
-			"mode": true,
-			"tier": {
-				"common": {
-					"mode": false,
-					"name": ["bee", "bug", "snail", "beetle", "butterfly"],
-					"emoji": "<:common:416520037713838081>"
-				},
-				"uncommon": {
-					"mode": false,
-					"name": ["baby_chick", "mouse2", "rooster", "rabbit2", "chipmunk"],
-					"emoji": "<:uncommon:416520056269176842>"
-				},
-				"rare": {
-					"mode": false,
-					"name": ["sheep", "pig2", "cow2", "dog2", "cat2"],
-					"emoji": "<:rare:416520066629107712>"
-				},
-				"epic": {
-					"mode": false,
-					"name": ["crocodile", "tiger2", "penguin", "elephant", "whale"],
-					"emoji": "<:epic:416520722987614208>"
-				},
-				"patreon": {
-					"mode": false,
-					"name": ["pbird", "pdolphin", "pogre", "pscorpion", "ptiger"],
-					"emoji": "<:patreon:449705754522419222>"
-				},
-				"special": {
-					"mode": false,
-					"name": [],
-					"emoji": "<:special:427935192137859073>"
-				},
-				"mythic": {
-					"mode": false,
-					"name": ["dragon", "unicorn", "snowman2", "ghost", "dove"],
-					"emoji": "<:mythic:416520808501084162>"
-				},
-				"legendary": {
-					"mode": true,
-					"name": ["gdeer", "gfox", "glion", "gowl", "gsquid"],
-					"emoji": "<a:legendary:417955061801680909>"
-				},
-				"gem": {
-					"mode": true,
-					"name": ["gcamel", "gfish", "gpanda", "gshrimp", "gspider"],
-					"emoji": "<a:gem:510023576489951232>"
-				},
-				"bot": {
-					"mode": true,
-					"name": ["dinobot", "giraffbot", "hedgebot", "lobbot", "slothbot"],
-					"emoji": "<a:botrank:716545289497870407>"
-				},
-				"cpatreon": {
-					"mode": false,
-					"name": [],
-					"emoji": "<a:cpatreon:483053960337293321>"
-				},
-				"fabled": {
-					"mode": true,
-					"name": ["dboar", "deagle", "dfrog", "dgorilla", "dwolf"],
-					"emoji": "<a:fabled:438857004493307907>"
-				},
-				"glitch": {
-					"mode": true,
-					"name": ["glitchflamingo", "glitchotter", "glitchparrot", "glitchraccoon", "glitchzebra"],
-					"emoji": "<a:distorted:728812986147274835>"
-				},
-				"hidden": {
-					"mode": true,
-					"name": ["hkoala", "hlizard","hmonkey", "hsnake", "hsquid"],
-					"emoji": "<a:hidden:459203677438083074>"
-				}
-			}
+		"inventory_opener": {
+			"box": true,
+			"crate": true,
+			"flootbox": true
 		},
 
 		"gamble": {
+			"lottery": {
+				"mode": false,
+				"amount": 1
+			},
 			"slot": {
 				"mode": false,
 				"bet": 1,
@@ -243,21 +143,22 @@
 				"bet": 1,
 				"rate": 2,
 				"max": 250000
+			},
+			"delay": 1,
+			"cooldown": {
+				"min": 600,
+				"max": 1200
 			}
 		},
 
-		"minigame": {
-			"pray_curse": {
-				"mode": false,
-				"type": "pray",
-				"channel_id": [1267227844489248848],
-				"target": [1191703681637290086]
-			},
-			"others": {
-				"run": false,
-				"pup": false,
-				"piku": false,
-				"common_ring": false
+		"pray_curse": {
+			"mode": false,
+			"type": "pray",
+			"channel_id": [1267227844489248848],
+			"target": [1191703681637290086],
+			"cooldown": {
+				"min": 300,
+				"max": 600
 			}
 		}
 	}
