@@ -1,7 +1,8 @@
 git+https://github.com/dolfies/discord.py-self.git
 
+google-generativeai
 2captcha-python
-capmonster-python
+nopecha
 Pillow
 opencv-python
 numpy
@@ -12,6 +13,7 @@ multidict
 yarl
 async-timeout
 typing-extensions
+tzlocal
 
 curl_cffi @ https://github.com/lexiforest/curl_cffi/releases/download/v0.11.4/curl_cffi-0.11.4-cp39-abi3-win_amd64.whl ; sys_platform == "win32"
 curl_cffi @ https://github.com/lexiforest/curl_cffi/releases/download/v0.11.4/curl_cffi-0.11.4-cp39-abi3-macosx_11_0_arm64.whl ; sys_platform == "darwin"
