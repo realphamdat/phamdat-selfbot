@@ -47,7 +47,7 @@
 					"twocaptcha": ["twocaptcha_api_key_1", "twocaptcha_api_key_2"],
 					"nopecha": ["nopecha_api_key_1", "nopecha_api_key_2"]
 				},
-				"api_priority": ["twocaptcha", "nopecha"]
+				"api_priority": ["Priority from top down. Only APIs listed here will be used.", "twocaptcha", "nopecha"]
 			},
 			"sleep_after_solve": true,
 			"pause_if_twocaptcha_balance_low": {
