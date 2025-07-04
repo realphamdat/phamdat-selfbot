@@ -33,13 +33,22 @@
 		},
 
 		"captcha": {
-			"api_key": {
-				"twocaptcha": ["your_2captcha_api_key_1", "your_2captcha_api_key_2"],
-				"capmonster": ["your_capmonster_api_key_1", "your_capmonster_api_key_2"]
+			"image_captcha": {
+				"solve": true,
+				"attempts": 1,
+				"api_key": {
+					"gemini": ["gemini_api_key_1", "gemini_api_key_2"]
+				}
 			},
-			"api_priority": ["twocaptcha", "capmonster"],
-			"image_captcha": true,
-			"hcaptcha": true,
+			"hcaptcha": {
+				"solve": true,
+				"attempts": 10,
+				"api_key": {
+					"twocaptcha": ["twocaptcha_api_key_1", "twocaptcha_api_key_2"],
+					"nopecha": ["nopecha_api_key_1", "nopecha_api_key_2"]
+				},
+				"api_priority": ["twocaptcha", "nopecha"]
+			},
 			"sleep_after_solve": true,
 			"pause_if_twocaptcha_balance_low": {
 				"mode": true,
