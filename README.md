@@ -1,68 +1,86 @@
-# 🐾 OwO Selfbot Guide
-
-A complete setup and usage guide for OwO Selfbot, compatible with PC and Android (Termux).
-
-Live demo: **[GitHub Pages Link Here](https://yourusername.github.io/owo-guide/)**
+## 📞 CONTACT ME
 
 ---
 
-## 📋 Features
-- Clear step-by-step installation
-- Modern UI (HTML, Prism.js, Copy buttons)
-- Runs on PC or Termux Android
-- Designed for minimalism + usability
+## 📄 INFORMATION
+
+- 🔧 [Setup setting](https://realphamdat.pythonanywhere.com)
+- 💬 [Discord server]()
+- 💻 [Github repository](#)
+- 🌐 [Bot-Hosting 24/7 referral](#)
+- ▶️ [Youtube video (Tool & Host)](#)
 
 ---
 
-## 🚀 Quick Start
+## 💳 PAYMENT
 
-### 📁 Clone the Repo
+- 🧪 **Trial**: 1 day / `500 VND`
+- 🔐 **Lifetime** (forever): `100.000 VND`
+- ✅ Chấp nhận mọi phương thức có cùng giá trị (Money, Nitro, Cowoncy, Robux, Youtube, Netflix, ...)
+- 🎁 **Mời 2 người dùng** để nhận **key vĩnh viễn miễn phí**
+
+---
+
+## 🌱 TIPS
+
+- ✅ Nên dùng trong **private server**
+- ✅ Đặt nickname giống username
+- ⛔ Không dùng email dạng `user+1@gmail.com`, `user+2@gmail.com` ... cho tài khoản phụ
+- ⛔ Không tham gia server nào có dùng OwO Selfbot bằng tài khoản chính (kể cả tài khoản của mình)
+
+---
+
+## 💻 COMPUTER INSTALLATION
+
 ```bash
-git clone https://github.com/yourusername/owo-guide.git
-cd owo-guide
+# 1. Tải Selfbot
+git clone https://github.com/realphamdat/phamdat-selfbot.git
+cd phamdat-selfbot
 ```
-
-### 💻 Open the Web Guide
-Open `index.html` in your browser or deploy via GitHub Pages.
-
----
-
-## 💻 Setup Overview
-
-### PC
 ```bash
+# 2. Cài Python & Git nếu chưa có
+# Windows: tải từ https://python.org và https://git-scm.com
+
+# 3. Cài dependencies
 python -m pip install -r requirements.txt
+
+# 4. Chạy bot
 python main.py
 ```
 
-### Android (Termux)
+---
+
+## 🤖 ANDROID (Termux)
+
 ```bash
-pkg update -y && pkg upgrade -y && termux-setup-storage \
-&& pkg install -y python git termux-api \
-&& git clone https://github.com/realphamdat/phamdat-selfbot.git \
-&& cd phamdat-selfbot
+# 1. Cài Termux (từ F-Droid nếu bị chặn trên Play Store)
+
+# 2. Cài các gói cần thiết
+pkg update -y && pkg upgrade -y
+termux-setup-storage
+pkg install -y python git termux-api
+
+# 3. Tải bot
+git clone https://github.com/realphamdat/phamdat-selfbot.git
+cd phamdat-selfbot
+
+# 4. Cài dependencies
 python -m pip install -r requirements.txt
+
+# 5. Chạy bot
 python main.py
 ```
 
-### iOS
-> Coming soon...
+---
+
+## 📱 IOS
+
+> Coming soon ...
 
 ---
 
-## 📦 Project Structure
-```
-📁 owo-guide/
-├── index.html      # Main guide UI
-└── README.md       # This file
-```
+## 📌 GHI CHÚ
 
----
-
-## 📢 Disclaimer
-> This project is for educational purposes only. The author is not responsible for any misuse.
-
----
-
-## 🌐 License
-MIT © [Phạm Thành Đạt](https://github.com/realphamdat)
+- Chỉ dùng với mục đích cá nhân & học tập.
+- Mọi hành vi vi phạm chính sách Discord là **tự chịu trách nhiệm**.
+- Mình **không chịu trách nhiệm** cho bất kỳ thiệt hại nào.
