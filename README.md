@@ -1,8 +1,9 @@
 # 📄 INFORMATION
+
 | Feature   | Link |
 |-----------|------|
 | 🛠️ Setting | [realphamdat.pythonanywhere.com](https://realphamdat.pythonanywhere.com) |
-| 🌍 Discord | [https://discord.gg/26wKfR6jHD](https://discord.gg/26wKfR6jHD) |
+| 🌍 Discord | [discord.gg/26wKfR6jHD](https://discord.gg/26wKfR6jHD) |
 | 💻 GitHub | [github.com/realphamdat/phamdat-selfbot](https://github.com/realphamdat/phamdat-selfbot) |
 | 🎬 Youtube | [Setup](https://youtu.be/63zlmixNa14)・[Host 24/7](https://youtu.be/sLnghrF9ksw) |
 | ☁️ Hosting | [bot-hosting.net (ref)](https://bot-hosting.net/?aff=1191703681637290086) |
@@ -27,6 +28,7 @@
 > ✅ All discounts and bonuses are applied automatically.
 
 ### 🔹Examples
+
 | Buy Days | Discount Price | Final Price | Free Days | Total Days |
 |----------|----------------|-------------|-----------|-------------|
 | 10       | -300           | 29,700      | +1        | 11          |
