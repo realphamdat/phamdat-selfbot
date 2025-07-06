@@ -48,7 +48,7 @@
 | 🚫 Avoid                            |
 |-------------------------------------|
 | Using your **main account**         |
-| Using spammy email (e.g. `+1@...`)  |
+| Using spammy email (`+1@...`)  |
 | Spamming commands too quickly       |
 
 > ⚠️ Following these tips helps avoid **errors** / **rate limits** / **bans**.
