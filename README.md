@@ -1,86 +1,76 @@
-## 📞 CONTACT ME
+# 🚀 PHAMDAT SELF-BOT – TOOL HỖ TRỢ OWO
+
+Chào mừng bạn đến với **Phamdat Selfbot** – công cụ hỗ trợ cho tự động hóa game **OwO** và các tác vụ liên quan. Tối ưu trải nghiệm, tiết kiệm thời gian!
 
 ---
 
-## 📄 INFORMATION
+## 📄 THÔNG TIN HỮU ÍCH
 
-- 🔧 [Setup setting](https://realphamdat.pythonanywhere.com)
-- 💬 [Discord server]()
-- 💻 [Github repository](#)
-- 🌐 [Bot-Hosting 24/7 referral](#)
-- ▶️ [Youtube video (Tool & Host)](#)
-
----
-
-## 💳 PAYMENT
-
-- 🧪 **Trial**: 1 day / `500 VND`
-- 🔐 **Lifetime** (forever): `100.000 VND`
-- ✅ Chấp nhận mọi phương thức có cùng giá trị (Money, Nitro, Cowoncy, Robux, Youtube, Netflix, ...)
-- 🎁 **Mời 2 người dùng** để nhận **key vĩnh viễn miễn phí**
+| Mục | Liên kết |
+| --- | -------- |
+| 🔧 Cài đặt cấu hình | [realphamdat.pythonanywhere.com](https://realphamdat.pythonanywhere.com) |
+| 🧑‍💻 Repository GitHub | [github.com/realphandat/phandat-selfbot](https://github.com/realphandat/phandat-selfbot) |
+| 🌐 Discord Server | [https://discord.gg/26wKfR6jHD](https://discord.gg/26wKfR6jHD) |
+| 📺 Video hướng dẫn | [Tool](https://youtu.be/63zlmixNa14) ・ [Host 24/7](https://youtu.be/sLnghrF9ksw) |
+| 🏠 Bot Hosting 24/7 (referral) | [bot-hosting.net](https://bot-hosting.net/?aff=1191703681637290086) |
 
 ---
 
-## 🌱 TIPS
+## 💸 GIÁ BÁN
 
-- ✅ Nên dùng trong **private server**
-- ✅ Đặt nickname giống username
-- ⛔ Không dùng email dạng `user+1@gmail.com`, `user+2@gmail.com` ... cho tài khoản phụ
-- ⛔ Không tham gia server nào có dùng OwO Selfbot bằng tài khoản chính (kể cả tài khoản của mình)
+**Giá gốc**: `3.000 VND / ngày`
+
+> 🏷️ Phương thức thanh toán linh hoạt qua: `Money, Nitro, Cowoncy, Robux, Youtube, Netflix,...`
 
 ---
 
-## 💻 COMPUTER INSTALLATION
+## 🔥 ƯU ĐÃI LINH HOẠT – CÀNG MUA CÀNG RẺ!
 
+✅ **Mỗi 10 ngày mua**:
+- ➤ Giảm **1%** tổng giá (tối đa đến **50%**)
+- ➤ Tặng thêm **1 ngày sử dụng**
+
+⚡ **Flash Bonus đặc biệt**:
+- 🪙 Mua ≥ **50 ngày** ➜ `+1 ngày bonus`
+- 🪙 Mua ≥ **100 ngày** ➜ `+3 ngày bonus`
+
+> 📌 Ưu đãi **cộng dồn** giúp tiết kiệm tối đa chi phí!
+
+---
+
+## 📊 BẢNG TÍNH GIÁ THAM KHẢO
+
+| Ngày mua | Giảm giá | Giá sau giảm | Tổng ngày dùng |
+|----------|----------|--------------|----------------|
+| 10       | 1%       | 29.700đ      | 11             |
+| 20       | 2%       | 58.800đ      | 22             |
+| 50       | 5%       | 142.500đ     | 56 *(+1 bonus)* |
+| 100      | 10%      | 270.000đ     | 113 *(+3 bonus)* |
+| 300      | 30%      | 630.000đ     | 339            |
+| 500      | **50%**  | **750.000đ** | **576** *(tối đa)* |
+
+---
+
+## 🌿 MẸO SỬ DỤNG AN TOÀN
+
+| ✅ Nên làm | ⛔ Tránh |
+|-----------|---------|
+| Dùng trong **private server** | Không dùng email dạng `user+1@gmail.com`, `user+2@...` |
+| Đặt nickname giống username | Không dùng tài khoản chính trong server có Selfbot |
+| Tắt các tính năng không cần | Không spam quá mức (dễ bị limit) |
+
+---
+
+## 📱 CÀI ĐẶT TRÊN ANDROID (Termux)
+
+> ⚙️ Yêu cầu: Python, Git
+
+**Bước 1:** Tải source và các phần mềm cần thiết  
+- 🔗 [Phamdat Selfbot](https://github.com/realphamdat/phamdat-selfbot)  
+- 🔗 [Tải Git](https://git-scm.com/downloads)  
+- 🔗 [Tải Python](https://www.python.org/downloads)
+
+**Bước 2:** Chạy lệnh cài đặt:
 ```bash
-# 1. Tải Selfbot
-git clone https://github.com/realphamdat/phamdat-selfbot.git
-cd phamdat-selfbot
-```
-```bash
-# 2. Cài Python & Git nếu chưa có
-# Windows: tải từ https://python.org và https://git-scm.com
-
-# 3. Cài dependencies
 python -m pip install -r requirements.txt
-
-# 4. Chạy bot
 python main.py
-```
-
----
-
-## 🤖 ANDROID (Termux)
-
-```bash
-# 1. Cài Termux (từ F-Droid nếu bị chặn trên Play Store)
-
-# 2. Cài các gói cần thiết
-pkg update -y && pkg upgrade -y
-termux-setup-storage
-pkg install -y python git termux-api
-
-# 3. Tải bot
-git clone https://github.com/realphamdat/phamdat-selfbot.git
-cd phamdat-selfbot
-
-# 4. Cài dependencies
-python -m pip install -r requirements.txt
-
-# 5. Chạy bot
-python main.py
-```
-
----
-
-## 📱 IOS
-
-> Coming soon ...
-
----
-
-## 📌 GHI CHÚ
-
-- Chỉ dùng với mục đích cá nhân & học tập.
-- Mọi hành vi vi phạm chính sách Discord là **tự chịu trách nhiệm**.
-- Mình **không chịu trách nhiệm** cho bất kỳ thiệt hại nào.
