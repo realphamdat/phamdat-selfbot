@@ -1,83 +1,72 @@
-# 🚀 PHAMDAT SELF-BOT – OWOBOT SUPPORT TOOL
-
-Welcome to **Phamdat Selfbot** – your automation tool for the **OwO** game. Boost your speed, save your time!
-
----
-
-## 📌 QUICK LINKS
+# 📄 INFORMATION
 
 | Feature        | Link                                                                 |
 |----------------|----------------------------------------------------------------------|
-| 🔧 Setup Tool   | [realphamdat.pythonanywhere.com](https://realphamdat.pythonanywhere.com) |
-| 🧑‍💻 GitHub      | [github.com/realphandat/phandat-selfbot](https://github.com/realphandat/phandat-selfbot) |
-| 🌐 Discord      | [Join Server](https://discord.gg/26wKfR6jHD)                         |
-| 🎥 Tutorials    | [Tool Setup](https://youtu.be/63zlmixNa14) ・ [24/7 Host](https://youtu.be/sLnghrF9ksw) |
-| ☁️ 24/7 Hosting | [bot-hosting.net (ref)](https://bot-hosting.net/?aff=1191703681637290086) |
+| 🛠️ Setting  | [realphamdat.pythonanywhere.com](https://realphamdat.pythonanywhere.com) |
+| 🌍 Discord      | [https://discord.gg/26wKfR6jHD](https://discord.gg/26wKfR6jHD)    
+| 💻 GitHub  | [github.com/realphamdat/phamdat-selfbot](https://github.com/realphamdat/phamdat-selfbot) |                     |
+| 🎬 Youtube    | [Setup](https://youtu.be/63zlmixNa14) ・ [Host 24/7](https://youtu.be/sLnghrF9ksw) |
+| ☁️ Hosting      | [bot-hosting.net (ref)](https://bot-hosting.net/?aff=1191703681637290086) |
 
 ---
 
-## 💰 PRICING
+# 🏦 PAYMENT
 
-- **Base Price**: `3,000 VND / day`
-- 💳 Pay with: `Money, Nitro, Cowoncy, Robux, YouTube, Netflix,...`
+### ❗❗❗ Free 1-week trial ❗❗❗
 
----
+### 🔹Price
+- **3,000 VND / day**
+- Supports any method with the same value:
+  - 💵 Bank / Money
+  - 🎁 Nitro, Robux, Cowoncy
+  - 📺 Netflix, YouTube
+  - ... and more
 
-## 🎁 DEALS & BONUSES
+### 🔹Discounts & Bonuses
 
-**Buy more, save more!**
+- 🧮 **Every 10 days** → 1% off + 1 bonus day  
+- 🎁 **Buy 50+ days** → +2 bonus day  
+- 🎁 **Buy 100+ days** → +5 bonus days  
+- 🔒 **Max discount:** 50%
 
-- 🔟 Every **10 days**:
-  - ➤ **1% off** (up to 50%)
-  - ➤ **+1 bonus day**
-  
-- ⚡ Flash Bonus:
-  - 🪙 Buy **≥ 50 days** ➜ `+1 extra day`
-  - 🪙 Buy **≥ 100 days** ➜ `+3 extra days`
+> ✅ All discounts and bonuses are applied automatically.
 
-> ✅ All bonuses stack!
+### 🔹Examples
 
----
-
-## 🧮 PRICE ESTIMATES
-
-| Days Bought | Discount | Final Price | Total Days |
-|-------------|----------|-------------|------------|
-| 10          | 1%       | 29,700 VND  | 11         |
-| 20          | 2%       | 58,800 VND  | 22         |
-| 50          | 5%       | 142,500 VND | 56 (+1)    |
-| 100         | 10%      | 270,000 VND | 113 (+3)   |
-| 300         | 30%      | 630,000 VND | 339        |
-| 500         | 50%      | 750,000 VND | 576 (max)  |
+| Buy Days | Discount Price | Final Price | Free Days | Total Days |
+|----------|-----| -------------------|-----------|-------------|
+| 10 ✨      | -300 | 29,700            | +1        | 11          |
+| 50 ✨      | -7500 | 142,500           | +10        | 60          |
+| 100 ✨     | -30,000| 270,000           | +30       | 130         |
+| 300 ✨     | -270,000| 630,000           | + 90      | 390         |
+| 500 ✨     | -750,000  | 750,000           | +150      | 650      |
 
 ---
 
-## 🔐 SAFETY TIPS
+# 🔐 TIPS
 
-| ✅ DO                         | ⛔ AVOID                                 |
-|------------------------------|------------------------------------------|
-| Use in **private servers**   | Spam or abuse features                   |
-| Use **same nick as username**| Use main account with selfbot            |
-| Set unique names             | Use emails like `user+1@...`, etc.       |
+| ✅ Recommended                               |
+|------------------------------------|
+| Use in **private servers**         |
+| Set **nickname same as username** |
+| Keep **unique display names**      |
+
+| 🚫 Avoid                             |
+|--------------------------------------|
+| Using your **main account**          |
+| Using spammy email (e.g. `+1@...`)   |
+| Spamming commands too quickly        |
+
+
+> ⚠️ Following these tips helps avoid **errors** / **rate limits** / **bans**.
 
 ---
 
-## 📱 INSTALL ON ANDROID (TERMUX)
+# 📱 USAGE
 
-### Step 1: Download Tools
-- 📦 [Selfbot Source](https://github.com/realphamdat/phamdat-selfbot)
-- 🧰 [Git](https://git-scm.com/downloads)
-- 🐍 [Python](https://www.python.org/downloads)
+## ✅ Install on Android (Termux)
 
-### Step 2: Setup Config
-- Create/export config at:  
-  [realphamdat.pythonanywhere.com](https://realphamdat.pythonanywhere.com)
-- Place config file into the `setting` folder
-
-### Step 3: Run Installation
+### Step 1: Clone the Repo
 ```bash
-python -m pip install -r requirements.txt
-```
-```bash
-python main.py
-```
+git clone https://github.com/realphamdat/phamdat-selfbot
+cd phamdat-selfbot
