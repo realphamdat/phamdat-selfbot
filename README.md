@@ -55,22 +55,27 @@ Chào mừng bạn đến với **Phamdat Selfbot** – công cụ hỗ trợ ch
 
 | ✅ Nên làm | ⛔ Tránh |
 |-----------|---------|
-| Dùng trong **private server** | Không dùng email dạng `user+1@gmail.com`, `user+2@...` |
-| Đặt nickname giống username | Không dùng tài khoản chính trong server có Selfbot |
-| Tắt các tính năng không cần | Không spam quá mức (dễ bị limit) |
+| Dùng trong **private server** | Dùng email dạng `user+1@...`, `user+2@...` |
+| Đặt nickname giống username | Dùng tài khoản chính trong server có Selfbot |
+| Đặt tên tránh trùng lặp với người khác | Không spam quá mức (dễ bị limit) |
 
 ---
 
 ## 📱 CÀI ĐẶT TRÊN ANDROID (Termux)
-
-> ⚙️ Yêu cầu: Python, Git
 
 **Bước 1:** Tải source và các phần mềm cần thiết  
 - 🔗 [Phamdat Selfbot](https://github.com/realphamdat/phamdat-selfbot)  
 - 🔗 [Tải Git](https://git-scm.com/downloads)  
 - 🔗 [Tải Python](https://www.python.org/downloads)
 
-**Bước 2:** Chạy lệnh cài đặt:
+**Bước 2:** Cài đặt cấu hình
+- Chỉnh sửa và xuất file trong [realphamdat.pythonanywhere.com](https://realphamdat.pythonanywhere.com)
+- Gắn file vào folder setting
+
+**Bước 3:** Chạy lệnh cài đặt:
 ```bash
 python -m pip install -r requirements.txt
+```
+```bash
 python main.py
+```
