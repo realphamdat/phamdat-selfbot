@@ -1,78 +1,80 @@
-# 🚀 PHAMDAT SELF-BOT – TOOL HỖ TRỢ OWO
+# 🚀 PHAMDAT SELF-BOT – OWOBOT SUPPORT TOOL
 
-Chào mừng bạn đến với **Phamdat Selfbot** – công cụ hỗ trợ cho tự động hóa game **OwO** và các tác vụ liên quan. Tối ưu trải nghiệm, tiết kiệm thời gian!
-
----
-
-## 📄 THÔNG TIN HỮU ÍCH
-
-| Mục | Liên kết |
-| --- | -------- |
-| 🔧 Cài đặt cấu hình | [realphamdat.pythonanywhere.com](https://realphamdat.pythonanywhere.com) |
-| 🧑‍💻 Repository GitHub | [github.com/realphandat/phandat-selfbot](https://github.com/realphandat/phandat-selfbot) |
-| 🌐 Discord Server | [https://discord.gg/26wKfR6jHD](https://discord.gg/26wKfR6jHD) |
-| 📺 Video hướng dẫn | [Tool](https://youtu.be/63zlmixNa14) ・ [Host 24/7](https://youtu.be/sLnghrF9ksw) |
-| 🏠 Bot Hosting 24/7 (referral) | [bot-hosting.net](https://bot-hosting.net/?aff=1191703681637290086) |
+Welcome to **Phamdat Selfbot** – your automation tool for the **OwO** game. Boost your speed, save your time!
 
 ---
 
-## 💸 GIÁ BÁN
+## 📌 QUICK LINKS
 
-**Giá gốc**: `3.000 VND / ngày`
-
-> 🏷️ Phương thức thanh toán linh hoạt qua: `Money, Nitro, Cowoncy, Robux, Youtube, Netflix,...`
-
----
-
-## 🔥 ƯU ĐÃI LINH HOẠT – CÀNG MUA CÀNG RẺ!
-
-✅ **Mỗi 10 ngày mua**:
-- ➤ Giảm **1%** tổng giá (tối đa đến **50%**)
-- ➤ Tặng thêm **1 ngày sử dụng**
-
-⚡ **Flash Bonus đặc biệt**:
-- 🪙 Mua ≥ **50 ngày** ➜ `+1 ngày bonus`
-- 🪙 Mua ≥ **100 ngày** ➜ `+3 ngày bonus`
-
-> 📌 Ưu đãi **cộng dồn** giúp tiết kiệm tối đa chi phí!
+| Feature        | Link                                                                 |
+|----------------|----------------------------------------------------------------------|
+| 🔧 Setup Tool   | [realphamdat.pythonanywhere.com](https://realphamdat.pythonanywhere.com) |
+| 🧑‍💻 GitHub      | [github.com/realphandat/phandat-selfbot](https://github.com/realphandat/phandat-selfbot) |
+| 🌐 Discord      | [Join Server](https://discord.gg/26wKfR6jHD)                         |
+| 🎥 Tutorials    | [Tool Setup](https://youtu.be/63zlmixNa14) ・ [24/7 Host](https://youtu.be/sLnghrF9ksw) |
+| ☁️ 24/7 Hosting | [bot-hosting.net (ref)](https://bot-hosting.net/?aff=1191703681637290086) |
 
 ---
 
-## 📊 BẢNG TÍNH GIÁ THAM KHẢO
+## 💰 PRICING
 
-| Ngày mua | Giảm giá | Giá sau giảm | Tổng ngày dùng |
-|----------|----------|--------------|----------------|
-| 10       | 1%       | 29.700đ      | 11             |
-| 20       | 2%       | 58.800đ      | 22             |
-| 50       | 5%       | 142.500đ     | 56 *(+1 bonus)* |
-| 100      | 10%      | 270.000đ     | 113 *(+3 bonus)* |
-| 300      | 30%      | 630.000đ     | 339            |
-| 500      | **50%**  | **750.000đ** | **576** *(tối đa)* |
+- **Base Price**: `3,000 VND / day`
+- 💳 Pay with: `Money, Nitro, Cowoncy, Robux, YouTube, Netflix,...`
 
 ---
 
-## 🌿 MẸO SỬ DỤNG AN TOÀN
+## 🎁 DEALS & BONUSES
 
-| ✅ Nên làm | ⛔ Tránh |
-|-----------|---------|
-| Dùng trong **private server** | Dùng email dạng `user+1@...`, `user+2@...` |
-| Đặt nickname giống username | Dùng tài khoản chính trong server có Selfbot |
-| Đặt tên tránh trùng lặp với người khác | Không spam quá mức (dễ bị limit) |
+**Buy more, save more!**
+
+- 🔟 Every **10 days**:
+  - ➤ **1% off** (up to 50%)
+  - ➤ **+1 bonus day**
+  
+- ⚡ Flash Bonus:
+  - 🪙 Buy **≥ 50 days** ➜ `+1 extra day`
+  - 🪙 Buy **≥ 100 days** ➜ `+3 extra days`
+
+> ✅ All bonuses stack!
 
 ---
 
-## 📱 CÀI ĐẶT TRÊN ANDROID (Termux)
+## 🧮 PRICE ESTIMATES
 
-**Bước 1:** Tải source và các phần mềm cần thiết  
-- 🔗 [Phamdat Selfbot](https://github.com/realphamdat/phamdat-selfbot)  
-- 🔗 [Tải Git](https://git-scm.com/downloads)  
-- 🔗 [Tải Python](https://www.python.org/downloads)
+| Days Bought | Discount | Final Price | Total Days |
+|-------------|----------|-------------|------------|
+| 10          | 1%       | 29,700 VND  | 11         |
+| 20          | 2%       | 58,800 VND  | 22         |
+| 50          | 5%       | 142,500 VND | 56 (+1)    |
+| 100         | 10%      | 270,000 VND | 113 (+3)   |
+| 300         | 30%      | 630,000 VND | 339        |
+| 500         | 50%      | 750,000 VND | 576 (max)  |
 
-**Bước 2:** Cài đặt cấu hình
-- Chỉnh sửa và xuất file trong [realphamdat.pythonanywhere.com](https://realphamdat.pythonanywhere.com)
-- Gắn file vào folder setting
+---
 
-**Bước 3:** Chạy lệnh cài đặt:
+## 🔐 SAFETY TIPS
+
+| ✅ DO                         | ⛔ AVOID                                 |
+|------------------------------|------------------------------------------|
+| Use in **private servers**   | Spam or abuse features                   |
+| Use **same nick as username**| Use main account with selfbot            |
+| Set unique names             | Use emails like `user+1@...`, etc.       |
+
+---
+
+## 📱 INSTALL ON ANDROID (TERMUX)
+
+### Step 1: Download Tools
+- 📦 [Selfbot Source](https://github.com/realphamdat/phamdat-selfbot)
+- 🧰 [Git](https://git-scm.com/downloads)
+- 🐍 [Python](https://www.python.org/downloads)
+
+### Step 2: Setup Config
+- Create/export config at:  
+  [realphamdat.pythonanywhere.com](https://realphamdat.pythonanywhere.com)
+- Place config file into the `setting` folder
+
+### Step 3: Run Installation
 ```bash
 python -m pip install -r requirements.txt
 ```
