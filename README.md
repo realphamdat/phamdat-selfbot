@@ -5,7 +5,7 @@
 | 🛠️ Setting | [realphamdat.pythonanywhere.com](https://realphamdat.pythonanywhere.com) |
 | 🌍 Discord | [discord.gg/26wKfR6jHD](https://discord.gg/26wKfR6jHD) |
 | 💻 GitHub | [github.com/realphamdat/phamdat-selfbot](https://github.com/realphamdat/phamdat-selfbot) |
-| 🎬 Youtube | [Setup](https://youtu.be/63zlmixNa14)・[Host 24/7](https://youtu.be/sLnghrF9ksw) |
+| 🎬 Youtube | [Setup](https://youtu.be/aSNgLldBGmw)・[Host 24/7](https://youtu.be/sLnghrF9ksw) |
 | ☁️ Hosting | [bot-hosting.net (ref)](https://bot-hosting.net/?aff=1191703681637290086) |
 
 ---
@@ -32,7 +32,7 @@
 | Buy Days | Discount Price | Final Price | Free Days | Total Days |
 |----------|----------------|-------------|-----------|-------------|
 | 10       | -300           | 29,700      | +1        | 11          |
-| 50 ✨     | -7,500         | 142,500     | +5        | 55          |
+| 50 ✨ BEST     | -7,500         | 142,500     | +5        | 55          |
 | 100      | -30,000        | 270,000     | +10       | 110         |
 | 300      | -270,000       | 630,000     | +30       | 330         |
 | 500      | -750,000       | 750,000     | +50       | 550         |
