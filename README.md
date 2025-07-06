@@ -1,3 +1,10 @@
+<h1 align="center">
+  📬 <a href="https://realphamdat.github.io/">
+    <img src="https://img.shields.io/badge/%20CONTACT%20ME-%237289DA?style=for-the-badge&logoColor=white&color=654321" alt="Contact Me" />
+  </a> 📬
+</h1>
+
+
 # 📄 INFORMATION
 
 | Feature   | Link |
