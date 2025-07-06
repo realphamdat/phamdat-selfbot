@@ -44,6 +44,18 @@
 | 300      | -270,000       | 630,000     | +30       | 330         |
 | 500      | -750,000       | 750,000     | +50       | 550         |
 
+### 🔹Installment
+
+> 💡 You can pay in small parts instead of all at once!
+
+- 💰 Pay **10% upfront**
+- 🗓️ Pay the rest slowly, during the number of days you buy
+- 📩 Contact admin to start installment
+
+**Example:**  
+Buy 100-day plan → pay **27,000 VND now**  
+→ Then pay the rest **(243,000 VND)** over 100 days (about 2,430 VND per day)
+
 ---
 
 # 🌈 TIPS
