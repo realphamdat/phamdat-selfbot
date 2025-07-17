@@ -1,10 +1,7 @@
 git+https://github.com/dolfies/discord.py-self.git
 
 google-generativeai
-2captcha-python
-nopecha
 Pillow
-opencv-python
 numpy
 requests
 aiohttp
