@@ -1,0 +1,221 @@
+{% extends "base.html" %}
+{% block title %}Dashboard{% endblock %}
+
+{% block extra_css %}
+/* ── Dashboard Layout ─────────────────── */
+.dash-grid {
+    display: grid; grid-template-columns: 1fr;
+    gap: 16px; height: calc(100vh - 48px);
+    grid-template-rows: auto 1fr;
+}
+
+/* ── Control Bar ──────────────────────── */
+.control-bar {
+    display: flex; align-items: center; gap: 12px;
+    padding: 14px 18px; background: var(--bg-card);
+    border: 1px solid var(--border); border-radius: var(--radius);
+}
+
+.btn-main {
+    padding: 6px 16px; border-radius: var(--radius-sm); font-size: 13px; font-weight: 600;
+    border: none; cursor: pointer; transition: all 0.2s; color: #fff; text-transform: uppercase;
+}
+.btn-main.start { background: var(--green); }
+.btn-main.start:hover { background: #16a34a; }
+.btn-main.stop { background: var(--red); }
+.btn-main.stop:hover { background: #dc2626; }
+
+/* ── Terminal ─────────────────────────── */
+.terminal {
+    background: var(--bg-card); border: 1px solid var(--border);
+    border-radius: var(--radius); display: flex; flex-direction: column;
+    overflow: hidden; min-height: 0;
+}
+
+.terminal-header {
+    padding: 10px 16px; border-bottom: 1px solid var(--border);
+    display: flex; align-items: center; gap: 8px;
+    flex-shrink: 0;
+}
+.terminal-dots { display: flex; gap: 5px; }
+.terminal-dots span {
+    width: 8px; height: 8px; border-radius: 50%;
+    background: var(--border-light);
+}
+
+.terminal-actions { margin-left: auto; display: flex; gap: 4px; }
+
+.terminal-body {
+    flex: 1; overflow-y: auto; padding: 12px 16px;
+    font-family: 'SF Mono', 'Fira Code', 'Cascadia Code', monospace;
+    font-size: 11.5px; line-height: 1.7;
+    min-height: 0;
+}
+
+.log-line { display: flex; gap: 8px; white-space: pre-wrap; word-break: break-all; }
+.log-time { color: var(--text-muted); flex-shrink: 0; min-width: 58px; }
+.log-level { flex-shrink: 0; min-width: 48px; font-weight: 600; }
+.log-level.DEBUG { color: var(--text-muted); }
+.log-level.INFO { color: var(--blue); }
+.log-level.WARNING { color: var(--yellow); }
+.log-level.ERROR { color: var(--red); }
+.log-level.CRITICAL { color: var(--red); }
+.log-name { color: var(--text-muted); flex-shrink: 0; }
+.log-msg { color: var(--text-primary); flex: 1; }
+
+@media (max-width: 768px) {
+    .dash-grid { height: calc(100vh - 76px); }
+    .control-bar { padding: 12px 14px; }
+}
+{% endblock %}
+
+{% block content %}
+<div class="dash-grid">
+    <!-- Control Bar -->
+    <div class="control-bar">
+        <span class="runtime" id="runtime" style="font-size: 13px; color: var(--text-secondary); font-variant-numeric: tabular-nums; font-weight: 500; margin-right: auto;">00:00:00</span>
+        <button class="btn-main start" id="mainBtn" onclick="toggleBot()">Start</button>
+    </div>
+
+    <!-- Terminal -->
+    <div class="terminal">
+        <div class="terminal-header">
+            <div class="terminal-dots"><span></span><span></span><span></span></div>
+            <div class="terminal-actions">
+                <button class="btn btn-sm btn-icon" onclick="clearTerminal()" title="Clear">
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 6h18"/><path d="M8 6V4h8v2"/><path d="M5 6v14a2 2 0 002 2h10a2 2 0 002-2V6"/></svg>
+                </button>
+                <button class="btn btn-sm btn-icon" id="scrollLockBtn" onclick="toggleScrollLock()" title="Auto-scroll">
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 5v14"/><path d="M19 12l-7 7-7-7"/></svg>
+                </button>
+            </div>
+        </div>
+        <div class="terminal-body" id="terminalBody"></div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+    let isRunning = false;
+    let startTime = null;
+    let runtimeInterval = null;
+    let autoScroll = true;
+
+    const terminalBody = document.getElementById('terminalBody');
+    const mainBtn = document.getElementById('mainBtn');
+    const runtimeEl = document.getElementById('runtime');
+
+    // ── Init ──
+    async function init() {
+        const status = await api('/api/status');
+        setRunning(status.running, status.start_time);
+
+        const logs = await api('/api/logs');
+        logs.forEach(addLogLine);
+        scrollToBottom();
+    }
+
+    function setRunning(running, st) {
+        isRunning = running;
+        startTime = running && st ? st * 1000 : null;
+
+        if (running) {
+            mainBtn.textContent = 'Stop';
+            mainBtn.className = 'btn-main stop';
+            startRuntimeCounter();
+        } else {
+            mainBtn.textContent = 'Start';
+            mainBtn.className = 'btn-main start';
+            stopRuntimeCounter();
+            runtimeEl.textContent = '00:00:00';
+        }
+    }
+
+    // ── Toggle Bot ──
+    async function toggleBot() {
+        if (isRunning) {
+            showConfirm('Stop', 'Stop all bots and reset everything?', async () => {
+                const res = await api('/api/stop', 'POST');
+                if (res.ok) {
+                    setRunning(false, null);
+                    showToast('Stopped', 'success');
+                } else {
+                    showToast(res.error || 'Failed', 'error');
+                }
+            });
+        } else {
+            const res = await api('/api/start', 'POST');
+            if (res.ok) {
+                setRunning(true, Date.now());
+                startTime = Date.now();
+                showToast('Started', 'success');
+            } else {
+                showToast(res.error || 'Failed', 'error');
+            }
+        }
+    }
+
+    // ── Runtime Counter ──
+    function startRuntimeCounter() {
+        stopRuntimeCounter();
+        runtimeInterval = setInterval(() => {
+            if (!startTime) return;
+            const diff = Math.floor((Date.now() - startTime) / 1000);
+            const h = String(Math.floor(diff / 3600)).padStart(2, '0');
+            const m = String(Math.floor((diff % 3600) / 60)).padStart(2, '0');
+            const s = String(diff % 60).padStart(2, '0');
+            runtimeEl.textContent = `${h}:${m}:${s}`;
+        }, 1000);
+    }
+
+    function stopRuntimeCounter() {
+        if (runtimeInterval) { clearInterval(runtimeInterval); runtimeInterval = null; }
+    }
+
+    // ── Terminal ──
+    function addLogLine(entry) {
+        const line = document.createElement('div');
+        line.className = 'log-line';
+        line.innerHTML = `<span class="log-time">${entry.time}</span><span class="log-level ${entry.level}">${entry.level.padEnd(5)}</span><span class="log-name">[${entry.name}]</span><span class="log-msg">${escapeHtml(entry.message)}</span>`;
+        terminalBody.appendChild(line);
+
+        // Limit lines
+        while (terminalBody.children.length > 100) {
+            terminalBody.removeChild(terminalBody.firstChild);
+        }
+
+        if (autoScroll) scrollToBottom();
+    }
+
+    function scrollToBottom() {
+        terminalBody.scrollTop = terminalBody.scrollHeight;
+    }
+
+    function clearTerminal() {
+        terminalBody.innerHTML = '';
+    }
+
+    function toggleScrollLock() {
+        autoScroll = !autoScroll;
+        scrollLockBtn.style.opacity = autoScroll ? '1' : '0.4';
+        if (autoScroll) scrollToBottom();
+    }
+
+    function escapeHtml(s) {
+        const d = document.createElement('div');
+        d.textContent = s;
+        return d.innerHTML;
+    }
+
+    // ── Socket Events ──
+    socket.on('log', addLogLine);
+
+    socket.on('captcha_new', () => {
+        showToast('New captcha detected', 'warning');
+    });
+
+    // ── Start ──
+    init();
+</script>
+{% endblock %}

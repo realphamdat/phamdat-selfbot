@@ -1,0 +1,8 @@
+git+https://github.com/dolfies/discord.py-self.git
+curl_cffi
+brotli
+aiohttp
+Pillow
+numpy
+flask
+flask-socketio

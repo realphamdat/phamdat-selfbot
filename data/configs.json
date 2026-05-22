@@ -1,0 +1,44 @@
+{
+    "owo": {
+        "reset_time_UTC": {"hour": 7, "minute": 0, "second": 0, "microsecond": 0},
+        "prefix": "owo",
+
+        "channels_id": [1, 2, 3],
+        "changing_channel": {
+            "when_mentioned": true,
+            "when_challenge": true,
+            "after_elapsed_time": {"mode": true, "cooldown": {"min": 300, "max": 600}}
+        },
+
+        "daily": true,
+        "quest": true,
+        "huntbot": true,
+        "giveaway": true,
+
+        "spam": {
+            "hunt": true,
+            "battle": true,
+            "owo/uwu": true,
+            "delay": {"min": 0.5, "max": 1},
+            "cooldown": {"min": 15, "max": 20}
+        },
+
+        "gem": {
+            "use": false,
+            "couple": true,
+            "best": false,
+            "star": false,
+            "glitch": true,
+            "openning": {"box": true, "crate": true, "flootbox": true}
+        },
+
+        "gamble": {
+            "lottery": {"mode": false, "amount": 1},
+            "slot": {"mode": false, "bet": 1, "rate": 2, "max": 250000},
+            "coinflip": {"mode": false, "bet": 1, "rate": 2, "max": 250000},
+            "blackjack": {"mode": false, "bet": 1, "rate": 2, "max": 250000},
+            "delay": {"min": 0.5, "max": 1},
+            "cooldown": {"min": 60, "max": 120}
+        }
+    }
+}

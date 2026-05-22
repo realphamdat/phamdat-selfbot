@@ -1,0 +1,72 @@
+"""
+Daily claim logic with UTC reset time calculation.
+"""
+
+import asyncio
+import re
+import time
+import datetime
+
+class Daily:
+    @staticmethod
+    def reset_time(config, cooldown_reset=0):
+        """Calculate seconds until next reset based on UTC time config."""
+        if cooldown_reset != 0:
+            return cooldown_reset
+
+        reset_cfg = config['reset_time_UTC']
+        now = datetime.datetime.now(datetime.timezone.utc)
+        reset = now.replace(
+            hour=int(reset_cfg['hour']),
+            minute=int(reset_cfg['minute']),
+            second=int(reset_cfg['second']),
+            microsecond=int(reset_cfg['microsecond']),
+        )
+        if now >= reset:
+            reset += datetime.timedelta(days=1)
+
+        return int((reset - now).total_seconds()) + 30
+
+    @staticmethod
+    async def claim(client):
+        """Claim daily reward."""
+        if not client.selfbot_running:
+            return
+        if client.cooldown_daily - time.time() > 0:
+            return
+
+        channel = client.current_channel
+        if not channel:
+            return
+
+        await channel.send(f'{client.prefix}daily')
+        client.logger.info(f'Sent {client.prefix}daily')
+
+        try:
+            msg = await client.wait_for(
+                'message',
+                check=lambda m: (
+                    client.is_owo_message(m, in_channel=True)
+                    and client.msg_contains(m, all_of=[str(client.nickname)])
+                    and client.msg_contains(m, any_of=['next daily', 'Nu'])
+                ),
+                timeout=10,
+            )
+
+            # Parse time from response
+            time_data = re.findall(r'(\d+)H|(\d+)M|(\d+)S', msg.content.split('!')[-1].strip())
+            hours = int(time_data[0][0]) if time_data and time_data[0][0] else 0
+            minutes = int(time_data[1][1]) if len(time_data) > 1 and time_data[1][1] else 0
+            seconds = int(time_data[2][2]) if len(time_data) > 2 and time_data[2][2] else 0
+            wait = hours * 3600 + minutes * 60 + seconds
+
+            client.cooldown_reset = wait
+            client.cooldown_daily = wait + time.time()
+
+            if 'next daily' in msg.content:
+                client.logger.info(f'Claimed daily (next in {datetime.timedelta(seconds=wait)})')
+            elif 'Nu' in msg.content:
+                client.logger.info(f'Daily not ready (wait {datetime.timedelta(seconds=wait)})')
+
+        except asyncio.TimeoutError:
+            client.logger.error('Daily claim timeout')
