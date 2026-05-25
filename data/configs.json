@@ -1,4 +1,5 @@
 {
+    "discord_webhook_url": "https://discord.com/api/webhooks/...",
     "owo": {
         "reset_time_UTC": {"hour": 7, "minute": 0, "second": 0, "microsecond": 0},
         "prefix": "owo",
