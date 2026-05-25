@@ -8,6 +8,8 @@ import os
 import secrets
 import time
 import uuid
+import requests
+import threading
 
 from flask import Flask, render_template, request, jsonify, send_from_directory
 from flask_socketio import SocketIO
@@ -120,6 +122,26 @@ def api_captcha_list():
     caches = _load_caches()
     return jsonify(caches.get('captchas', []))
 
+def send_discord_webhook(captcha_data):
+    with open(CONFIGS_FILE, 'r', encoding='utf-8') as f:
+        DISCORD_WEBHOOK_URL = json.load(f).get('discord_webhook_url')
+    if not DISCORD_WEBHOOK_URL:
+        return
+    
+    payload = {
+        "content": "🚨 **NEW CAPTCHA DETECTED!** @everyone",
+        "embeds": [{
+            "title": f"Account: {captcha_data.get('display_name', 'Unknown')}",
+            "description": f"Go to solve it!\n**Type:** {captcha_data.get('type', 'Unknown')}\n**Bot:** {captcha_data.get('bot', 'owo')}",
+            "color": 16711680,
+            "thumbnail": {"url": captcha_data.get('avatar_url', '')}
+        }]
+    }
+    try:
+        requests.post(DISCORD_WEBHOOK_URL, json=payload, timeout=5)
+    except Exception as e:
+        logger.error(f"Discord webhook failed: {e}")
+
 @app.route('/api/captcha/new', methods=['POST'])
 def api_captcha_new():
     """Called by bot modules when captcha is detected."""
@@ -148,6 +170,8 @@ def api_captcha_new():
 
     socketio.emit('captcha_new', captcha_entry, namespace='/')
     socketio.emit('captcha_count', {'count': len(caches['captchas'])}, namespace='/')
+    threading.Thread(target=send_discord_webhook, args=(captcha_entry,), daemon=True).start()
+
     logger.warning(f"Captcha detected for {captcha_entry['display_name']} ({captcha_entry['type']})")
     return jsonify({'ok': True, 'id': captcha_entry['id']})
 
