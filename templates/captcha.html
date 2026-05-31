@@ -1,0 +1,409 @@
+{% extends "base.html" %}
+{% block title %}Captcha{% endblock %}
+
+{% block extra_css %}
+/* ── Captcha Grid ─────────────────────── */
+.captcha-empty {
+    display: flex; align-items: center; justify-content: center;
+    height: 60vh; color: var(--text-muted); font-size: 13px;
+}
+
+.captcha-grid {
+    display: grid; grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
+    gap: 12px;
+}
+
+/* ── Captcha Card ─────────────────────── */
+.captcha-card {
+    background: var(--bg-card); border: 1px solid var(--border);
+    border-radius: var(--radius); padding: 16px;
+    transition: all var(--transition); position: relative;
+    overflow: hidden;
+}
+.captcha-card::before {
+    content: ''; position: absolute; top: 0; left: 0; right: 0;
+    height: 3px; border-radius: var(--radius) var(--radius) 0 0;
+}
+.captcha-card.safe::before { background: var(--green); }
+.captcha-card.warning::before { background: var(--yellow); }
+.captcha-card.danger::before { background: var(--red); }
+
+.card-header {
+    display: flex; align-items: center; gap: 10px; margin-bottom: 12px;
+}
+.card-avatar {
+    width: 36px; height: 36px; border-radius: 50%;
+    background: var(--bg-tertiary); flex-shrink: 0;
+    object-fit: cover;
+}
+.card-user { flex: 1; min-width: 0; }
+.card-name {
+    font-size: 13px; font-weight: 600; color: var(--text-primary);
+    white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
+}
+.card-sub {
+    font-size: 11px; color: var(--text-muted);
+    white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
+}
+
+.card-meta {
+    display: flex; flex-wrap: wrap; gap: 6px; margin-bottom: 14px;
+}
+.card-tag {
+    font-size: 10px; font-weight: 600; padding: 2px 8px;
+    border-radius: 4px; text-transform: uppercase; letter-spacing: 0.5px;
+}
+.card-tag.type { background: var(--bg-tertiary); color: var(--text-secondary); }
+.card-tag.bot { background: rgba(59,130,246,0.15); color: var(--blue); }
+.card-tag.time { background: var(--bg-tertiary); color: var(--text-muted); }
+
+.card-actions { display: flex; gap: 6px; }
+.card-actions .btn { flex: 1; justify-content: center; }
+
+/* ── Solve Modal ──────────────────────── */
+.solve-modal { max-width: 500px; }
+.solve-img {
+    width: 100%; border-radius: var(--radius-sm);
+    margin-bottom: 12px; background: var(--bg-tertiary);
+}
+.solve-input {
+    width: 100%; padding: 10px 14px;
+    background: var(--bg-tertiary); border: 1px solid var(--border);
+    border-radius: var(--radius-sm); color: var(--text-primary);
+    font-family: var(--font); font-size: 14px; outline: none;
+    transition: border-color var(--transition);
+}
+.solve-input:focus { border-color: var(--accent); }
+.solve-input::placeholder { color: var(--text-muted); }
+
+@media (max-width: 768px) {
+    .captcha-grid { grid-template-columns: 1fr; }
+}
+{% endblock %}
+
+{% block content %}
+<div id="captchaEmpty" class="captcha-empty">No pending captchas</div>
+<div id="captchaGrid" class="captcha-grid"></div>
+
+<!-- Solve Modal -->
+<div class="modal-overlay" id="solveModal">
+    <div class="modal solve-modal">
+        <div class="modal-title" id="solveTitle"></div>
+        <div class="modal-body">
+            <img class="solve-img" id="solveImg" style="display:none">
+
+            <div id="audioWrap" style="display:none; text-align:center; margin-bottom: 12px;">
+                <audio id="solveAudio" controls style="width: 100%; border-radius: var(--radius-sm);"></audio>
+            </div>
+
+            <div id="solveInputWrap" style="display:none">
+                <input class="solve-input" id="solveInput" placeholder="Enter answer..." autocomplete="off">
+            </div>
+
+            <div id="widgetWrap" style="display:none; text-align:center;">
+                <div id="captcha-container"></div>
+            </div>
+
+            <div id="iframeWrap" style="display:none; text-align:center;">
+                <iframe id="solveIframe" style="width:100%; height:400px; border:none; border-radius:8px;"></iframe>
+            </div>
+
+            <div id="linkWrap" style="display:none; text-align:center; padding: 20px;">
+                <p style="margin-bottom: 12px; color: var(--text-muted);">Please solve this captcha on the external page.</p>
+                <a id="solveLink" href="#" target="_blank" class="btn btn-primary">Open Captcha Page</a>
+            </div>
+        </div>
+        <div class="modal-actions">
+            <button class="btn" onclick="closeSolve()">Cancel</button>
+            <button class="btn btn-primary" id="solveSendBtn" onclick="submitSolve()">Send</button>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+    let captchas = [];
+    let currentSolve = null;
+
+    const grid = document.getElementById('captchaGrid');
+    const empty = document.getElementById('captchaEmpty');
+
+    // ── Widget Manager ──
+    const widgetManager = {
+        activeProvider: null,
+        activeWidgetId: null,
+
+        async render(provider, sitekey, containerId, callback) {
+            this.clear();
+            this.activeProvider = provider;
+
+            if (provider === 'hcaptcha') {
+                await this.loadScript('https://hcaptcha.com/1/api.js?render=explicit');
+                this.activeWidgetId = hcaptcha.render(containerId, { sitekey, callback });
+            } else if (provider === 'recaptcha') {
+                await this.loadScript('https://www.google.com/recaptcha/api.js?render=explicit');
+                this.activeWidgetId = grecaptcha.render(containerId, { sitekey, callback });
+            } else if (provider === 'turnstile') {
+                await this.loadScript('https://challenges.cloudflare.com/turnstile/v0/api.js?render=explicit');
+                this.activeWidgetId = turnstile.render('#' + containerId, { sitekey, callback });
+            } else {
+                showToast(`Unsupported widget provider: ${provider}`, 'error');
+            }
+        },
+
+        clear() {
+            if (!this.activeProvider) return;
+            const container = document.getElementById('captcha-container');
+            if (this.activeProvider === 'hcaptcha' && this.activeWidgetId !== null) {
+                try { hcaptcha.reset(this.activeWidgetId); } catch(e){}
+                container.innerHTML = '';
+            } else if (this.activeProvider === 'recaptcha' && this.activeWidgetId !== null) {
+                try { grecaptcha.reset(this.activeWidgetId); } catch(e){}
+                container.innerHTML = '';
+            } else if (this.activeProvider === 'turnstile' && this.activeWidgetId !== null) {
+                try { turnstile.remove(this.activeWidgetId); } catch(e){}
+                container.innerHTML = '';
+            }
+            this.activeProvider = null;
+            this.activeWidgetId = null;
+        },
+
+        loadScript(url) {
+            const cleanUrl = url.split('?')[0];
+            if (document.querySelector(`script[src^="${cleanUrl}"]`)) return Promise.resolve();
+            return new Promise((resolve, reject) => {
+                const s = document.createElement('script');
+                s.src = url;
+                s.async = true;
+                s.defer = true;
+                s.onload = () => setTimeout(resolve, 300);
+                s.onerror = reject;
+                document.head.appendChild(s);
+            });
+        }
+    };
+
+    // ── Load Captchas ──
+    async function loadCaptchas() {
+        captchas = await api('/api/captcha/list');
+        render();
+    }
+
+    function render() {
+        grid.innerHTML = '';
+        empty.style.display = captchas.length ? 'none' : 'flex';
+
+        // Sort: danger > warning > safe
+        captchas.sort((a, b) => getPriorityWeight(a) - getPriorityWeight(b));
+
+        captchas.forEach(c => {
+            const priority = getPriority(c);
+            const elapsed = getElapsed(c.created_at);
+
+            const card = document.createElement('div');
+            card.className = `captcha-card ${priority}`;
+            card.innerHTML = `
+                <div class="card-header">
+                    <img class="card-avatar" src="${c.avatar_url || ''}" alt="" onerror="this.src='data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 36 36%22><rect width=%2236%22 height=%2236%22 fill=%22%23333%22/></svg>'">
+                    <div class="card-user">
+                        <div class="card-name">${escHtml(c.display_name)}</div>
+                        <div class="card-sub">@${escHtml(c.username)} • ID: ${c.user_id}</div>
+                    </div>
+                </div>
+                <div class="card-meta">
+                    <span class="card-tag type">${c.type}</span>
+                    <span class="card-tag bot">${c.bot}</span>
+                    <span class="card-tag type">${c.status || 'pending'}</span>
+                    <span class="card-tag time">${elapsed}</span>
+                </div>
+                <div class="card-actions">
+                    <button class="btn btn-sm btn-success" onclick="openSolve('${c.id}')">
+                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="20 6 9 17 4 12"/></svg>
+                        Solve
+                    </button>
+                    <a href="${c.message_url}" target="_blank" class="btn btn-sm">
+                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M18 13v6a2 2 0 01-2 2H5a2 2 0 01-2-2V8a2 2 0 012-2h6"/><polyline points="15 3 21 3 21 9"/><line x1="10" y1="14" x2="21" y2="3"/></svg>
+                        Jump
+                    </a>
+                    <button class="btn btn-sm btn-danger btn-icon" onclick="deleteCaptcha('${c.id}')" title="Delete">
+                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
+                    </button>
+                </div>
+            `;
+            grid.appendChild(card);
+        });
+    }
+
+    function getPriority(c) {
+        if (!c.expires_at) return 'safe';
+        const diff = new Date(c.expires_at) - Date.now();
+        if (diff <= 0) return 'danger';
+        return 'warning';
+    }
+
+    function getPriorityWeight(c) {
+        const p = getPriority(c);
+        return p === 'danger' ? 0 : p === 'warning' ? 1 : 2;
+    }
+
+    function getElapsed(created) {
+        const diff = Math.floor((Date.now() - new Date(created)) / 1000);
+        if (diff < 60) return `${diff}s ago`;
+        if (diff < 3600) return `${Math.floor(diff / 60)}m ago`;
+        return `${Math.floor(diff / 3600)}h ago`;
+    }
+
+    // ── Solve ──
+    function openSolve(id) {
+        const c = captchas.find(x => x.id === id);
+        if (!c) return;
+        currentSolve = c;
+
+        document.getElementById('solveTitle').textContent = `${c.display_name} — ${c.type}`;
+
+        const img = document.getElementById('solveImg');
+        const audioWrap = document.getElementById('audioWrap');
+        const audio = document.getElementById('solveAudio');
+        const inputWrap = document.getElementById('solveInputWrap');
+        const input = document.getElementById('solveInput');
+        const sendBtn = document.getElementById('solveSendBtn');
+        const widgetWrap = document.getElementById('widgetWrap');
+        const iframeWrap = document.getElementById('iframeWrap');
+        const iframe = document.getElementById('solveIframe');
+        const linkWrap = document.getElementById('linkWrap');
+        const solveLink = document.getElementById('solveLink');
+
+        // Reset all views
+        img.style.display = 'none';
+        audioWrap.style.display = 'none';
+        if (!audio.paused) audio.pause();
+        audio.src = '';
+        inputWrap.style.display = 'none';
+        widgetWrap.style.display = 'none';
+        iframeWrap.style.display = 'none';
+        linkWrap.style.display = 'none';
+        sendBtn.style.display = '';
+        widgetManager.clear();
+
+        const data = c.data || {};
+        const rt = data.render_type || (c.answer_input ? 'image_input' : 'none');
+
+        if (rt === 'image_input') {
+            if (data.image_url) {
+                img.src = data.image_url;
+                img.style.display = 'block';
+            }
+            inputWrap.style.display = 'block';
+            input.value = '';
+            setTimeout(() => input.focus(), 100);
+            sendBtn.textContent = 'Send';
+        } else if (rt === 'audio') {
+            if (data.audio_url) {
+                audioWrap.style.display = 'block';
+                audio.src = data.audio_url;
+            }
+            inputWrap.style.display = 'block';
+            input.placeholder = data.placeholder || "Enter audio answer...";
+            input.value = '';
+            setTimeout(() => input.focus(), 100);
+            sendBtn.textContent = 'Send';
+        } else if (rt === 'widget') {
+            widgetWrap.style.display = 'block';
+            sendBtn.style.display = 'none'; // Auto submit on callback
+            widgetManager.render(data.widget_provider, data.sitekey, 'captcha-container', token => {
+                submitSolve(token);
+            });
+        } else if (rt === 'iframe') {
+            iframeWrap.style.display = 'block';
+            iframe.src = data.url;
+            sendBtn.textContent = 'Done';
+        } else if (rt === 'link') {
+            linkWrap.style.display = 'block';
+            solveLink.href = data.url;
+            sendBtn.textContent = 'Done';
+        } else {
+            sendBtn.textContent = 'Done';
+        }
+
+        document.getElementById('solveModal').classList.add('visible');
+    }
+
+    function closeSolve() {
+        document.getElementById('solveModal').classList.remove('visible');
+        currentSolve = null;
+    }
+
+    async function submitSolve(widgetToken = null) {
+        if (!currentSolve) return;
+
+        let answer = null;
+        const data = currentSolve.data || {};
+        const rt = data.render_type || (currentSolve.answer_input ? 'image_input' : 'none');
+
+        if (rt === 'widget') {
+            answer = widgetToken;
+            if (!answer) return; // Wait for callback
+        } else if (rt === 'image_input' || rt === 'audio') {
+            answer = document.getElementById('solveInput').value.trim();
+            if (!answer) {
+                showToast('Enter an answer', 'error');
+                return;
+            }
+        }
+
+        const res = await api('/api/captcha/solve', 'POST', { id: currentSolve.id, answer });
+        if (res.ok) {
+            if (res.removed) {
+                captchas = captchas.filter(c => c.id !== currentSolve.id);
+            } else {
+                currentSolve.status = res.status || currentSolve.status;
+                currentSolve.answer = answer;
+            }
+            render();
+            closeSolve();
+            showToast(res.removed ? 'Captcha solved' : 'Answer saved', 'success');
+        } else {
+            showToast(res.error || 'Failed', 'error');
+        }
+    }
+
+    // ── Delete ──
+    function deleteCaptcha(id) {
+        showConfirm('Delete', 'Remove this captcha and resume the bot?', async () => {
+            const res = await api('/api/captcha/delete', 'POST', { id });
+            if (res.ok) {
+                captchas = captchas.filter(c => c.id !== id);
+                render();
+                showToast('Deleted', 'success');
+            } else {
+                showToast(res.error || 'Failed', 'error');
+            }
+        });
+    }
+
+    function escHtml(s) {
+        const d = document.createElement('div');
+        d.textContent = s || '';
+        return d.innerHTML;
+    }
+
+    // ── Realtime ──
+    socket.on('captcha_new', c => {
+        captchas.push(c);
+        render();
+    });
+
+    socket.on('captcha_update', () => loadCaptchas());
+
+    // ── Enter key to submit ──
+    document.getElementById('solveInput').addEventListener('keydown', e => {
+        if (e.key === 'Enter') submitSolve();
+    });
+
+    // ── Auto refresh elapsed times ──
+    setInterval(() => { if (captchas.length) render(); }, 30000);
+
+    loadCaptchas();
+</script>
+{% endblock %}

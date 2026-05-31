@@ -1,0 +1,35 @@
+OWO_DEFAULT_CONFIG = {
+    'channels_id': [],
+    'changing_channel': {
+        'when_mentioned': True,
+        'when_challenge': True,
+        'after_elapsed_time': {'min': 300, 'max': 600},
+    },
+    'daily': True,
+    'quest': True,
+    'huntbot': True,
+    'giveaway': True,
+    'spam': {
+        'hunt': True,
+        'battle': True,
+        'owo/uwu': True,
+        'delay': {'min': 0.5, 'max': 1},
+        'cooldown': {'min': 15, 'max': 20},
+    },
+    'gem': {
+        'use': False,
+        'couple': True,
+        'best': False,
+        'star': False,
+        'glitch': True,
+        'openning': {'box': True, 'crate': True, 'flootbox': True},
+    },
+    'gamble': {
+        'lottery': {'mode': False, 'amount': 1},
+        'slot': {'mode': False, 'bet': 1, 'rate': 2, 'max': 250000},
+        'coinflip': {'mode': False, 'bet': 1, 'rate': 2, 'max': 250000},
+        'blackjack': {'mode': False, 'bet': 1, 'rate': 2, 'max': 250000},
+        'delay': {'min': 0.5, 'max': 1},
+        'cooldown': {'min': 60, 'max': 120},
+    },
+}
