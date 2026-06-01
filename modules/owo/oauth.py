@@ -1,3 +1,4 @@
+import asyncio
 import aiohttp
 
 from modules.utils.logger import get_logger
@@ -14,24 +15,35 @@ class CaptchaSolver:
         self.user_token = user_token
         self.bot_id = bot_id
 
-    async def get_oauth(self):
+    async def get_oauth(self, max_retries=2):
         referer = (
             'https://discord.com/oauth2/authorize'
             f'?response_type=code&redirect_uri={self.REDIRECT_URI}&scope={self.SCOPE}&client_id={self.bot_id}'
         )
-        location = await DiscordOAuth.authorize(
-            token=self.user_token,
-            client_id=self.bot_id,
-            redirect_uri=self.REDIRECT_URI,
-            scope=self.SCOPE,
-            referer=referer,
-        )
-        if not location:
-            return None
-        return await DiscordOAuth.submit_redirect(location, host='owobot.com')
+        for attempt in range(max_retries + 1):
+            try:
+                location = await DiscordOAuth.authorize(
+                    token=self.user_token,
+                    client_id=self.bot_id,
+                    redirect_uri=self.REDIRECT_URI,
+                    scope=self.SCOPE,
+                    referer=referer,
+                )
+                if not location:
+                    continue
+                oauth_session = await DiscordOAuth.submit_redirect(location, host='owobot.com')
+                if oauth_session:
+                    return oauth_session
+            except (aiohttp.ClientConnectorDNSError, asyncio.TimeoutError) as e:
+                if attempt == max_retries:
+                    raise
+                await asyncio.sleep(2 ** attempt)
+            except Exception:
+                return None
+        return None
 
     @staticmethod
-    async def verify_captcha(oauth_session, captcha_token):
+    async def verify_captcha(oauth_session, captcha_token, timeout=15):
         headers = {
             'Accept': 'application/json, text/plain, */*',
             'Accept-Language': 'en-US;en;q=0.8',
@@ -43,7 +55,13 @@ class CaptchaSolver:
             'Sec-Fetch-Site': 'same-origin',
             'User-Agent': DiscordOAuth.DEFAULT_HEADERS['User-Agent'],
         }
-        return await DiscordOAuth.post_json(oauth_session, CaptchaSolver.VERIFY_URL, {'token': captcha_token}, headers)
+        try:
+            async with oauth_session.post(CaptchaSolver.VERIFY_URL, json={'token': captcha_token}, headers=headers, timeout=timeout) as resp:
+                return resp.status == 200
+        except asyncio.TimeoutError:
+            return False
+        except Exception:
+            return False
 
     @staticmethod
     async def reset_hcaptcha():
