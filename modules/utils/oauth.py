@@ -1,13 +1,12 @@
 import aiohttp
 import asyncio
 
-from aiohttp import ClientTimeout, ClientConnectorDNSError
 from modules.utils.logger import get_logger
 
 logger = get_logger('oauth')
 
 class DiscordOAuth:
-    REQUEST_TIMEOUT = ClientTimeout(total=10)
+    REQUEST_TIMEOUT = aiohttp.ClientTimeout(total=10)
     DEFAULT_HEADERS = {
         'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64; rv:109.0) Gecko/20100101 Firefox/111.0',
         'Accept': '*/*',
@@ -59,7 +58,7 @@ class DiscordOAuth:
                     if resp.status in (302, 307):
                         return session
                     logger.error(f'OAuth redirect submit failed: {resp.status}')
-            except (ClientConnectorDNSError, asyncio.TimeoutError) as e:
+            except (aiohttp.ClientConnectorDNSError, asyncio.TimeoutError) as e:
                 logger.warning(f'OAuth attempt {attempt+1}/{max_retries+1} failed: {e}')
                 if attempt == max_retries:
                     raise
