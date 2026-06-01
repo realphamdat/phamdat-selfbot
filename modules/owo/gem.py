@@ -15,7 +15,7 @@ class Gem:
     @staticmethod
     def _skip_gem_check(client):
         if not getattr(client, 'no_gem', False): return False
-        if time.time() - getattr(client, 'no_gem_since', 0) >= 300:
+        if time.time() - getattr(client, 'no_gem_since', 0) >= 1800:
             client.no_gem = False
             return False
         return True
@@ -130,7 +130,7 @@ class Gem:
         else:
             client.no_gem = True
             client.no_gem_since = time.time()
-            client.logger.info(f'No {tiers_to_use} gems available, disabling further attempts for 5 min')
+            client.logger.info(f'No {tiers_to_use} gems available, disabling further attempts for 30 min')
 
     @staticmethod
     async def check_gem(client, message):
