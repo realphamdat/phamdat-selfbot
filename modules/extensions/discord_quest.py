@@ -19,10 +19,10 @@ logger = get_logger('discord_quest') #
 running = True
 
 API_BASE = "https://discord.com/api/v9"
-POLL_INTERVAL = 300
-HEARTBEAT_INTERVAL = 30
+POLL_INTERVAL = 3600
+HEARTBEAT_INTERVAL = 60
 AUTO_ACCEPT = True
-MAX_QUEST_WORKERS = 3
+MAX_QUEST_WORKERS = 10
 DEBUG = True
 
 SUPPORTED_TASKS = [
