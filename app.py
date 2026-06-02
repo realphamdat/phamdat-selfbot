@@ -115,6 +115,7 @@ def _process_captcha_action(action):
                     CaptchaStore.update(bot, c_id, {'status': 'failed', 'answer': answer})
                     return jsonify({'ok': False, 'error': 'Captcha solve failed'}), 500
             else:
+                logger.warning(f'No client found for captcha {c_id} (bot may be disconnected). Saving as solved_pending.')
                 CaptchaStore.update(bot, c_id, {'status': 'solved_pending', 'answer': answer})
                 status = 'solved_pending'
         else:

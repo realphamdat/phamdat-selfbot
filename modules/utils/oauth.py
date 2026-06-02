@@ -1,12 +1,11 @@
 import aiohttp
-import asyncio
 
 from modules.utils.logger import get_logger
 
 logger = get_logger('oauth')
 
 class DiscordOAuth:
-    REQUEST_TIMEOUT = aiohttp.ClientTimeout(total=10)
+    DEFAULT_TIMEOUT = aiohttp.ClientTimeout(total=30)
     DEFAULT_HEADERS = {
         'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64; rv:109.0) Gecko/20100101 Firefox/111.0',
         'Accept': '*/*',
@@ -31,13 +30,13 @@ class DiscordOAuth:
         headers['Referer'] = referer or f'https://discord.com/oauth2/authorize?client_id={client_id}'
 
         async with aiohttp.ClientSession() as session:
-            async with session.post(url, headers=headers, json={'permissions': permissions, 'authorize': True}) as resp:
+            async with session.post(url, headers=headers, json={'permissions': permissions, 'authorize': True}, timeout=DiscordOAuth.DEFAULT_TIMEOUT) as resp:
                 if resp.status == 200:
                     return (await resp.json()).get('location')
                 logger.error(f'OAuth authorize failed: {resp.status} {await resp.text()}')
 
     @staticmethod
-    async def submit_redirect(location, host, referer='https://discord.com/', max_retries=3):
+    async def submit_redirect(location, host, referer='https://discord.com/'):
         headers = {
             'accept': 'text/html,application/xhtml+xml,application/xml;q=0.9,image/avif,image/webp,*/*;q=0.8',
             'accept-language': 'en-US,en;q=0.5',
@@ -51,27 +50,20 @@ class DiscordOAuth:
             'upgrade-insecure-requests': '1',
             'user-agent': DiscordOAuth.DEFAULT_HEADERS['User-Agent'],
         }
-        session = aiohttp.ClientSession(cookie_jar=aiohttp.CookieJar(), timeout=DiscordOAuth.REQUEST_TIMEOUT)
-        for attempt in range(max_retries + 1):
-            try:
-                async with session.get(location, headers=headers, allow_redirects=False) as resp:
-                    if resp.status in (302, 307):
-                        return session
-                    logger.error(f'OAuth redirect submit failed: {resp.status}')
-            except (aiohttp.ClientConnectorDNSError, asyncio.TimeoutError) as e:
-                logger.warning(f'OAuth attempt {attempt+1}/{max_retries+1} failed: {e}')
-                if attempt == max_retries:
-                    raise
-                await asyncio.sleep(2 ** attempt)  # backoff: 1, 2, 4s
-            except Exception:
-                logger.exception('Unexpected error in submit_redirect')
-                break
+        session = aiohttp.ClientSession(cookie_jar=aiohttp.CookieJar())
+        try:
+            async with session.get(location, headers=headers, allow_redirects=False, timeout=DiscordOAuth.DEFAULT_TIMEOUT) as resp:
+                if resp.status in (302, 307):
+                    return session
+                logger.error(f'OAuth redirect submit failed: {resp.status}')
+        except Exception:
+            logger.exception('Failed to submit OAuth redirect')
+
         await session.close()
-        return None
 
     @staticmethod
     async def post_json(session, url, payload, headers=None):
-        async with session.post(url, headers=headers or {}, json=payload) as resp:
+        async with session.post(url, headers=headers or {}, json=payload, timeout=DiscordOAuth.DEFAULT_TIMEOUT) as resp:
             if resp.status == 200:
                 return True
             logger.error(f'OAuth POST failed: {resp.status} {await resp.text()}')

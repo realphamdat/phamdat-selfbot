@@ -1,8 +1,7 @@
 import io
 import re
-import aiohttp
-import asyncio
 
+import aiohttp
 from PIL import Image
 
 from modules.owo.oauth import CaptchaSolver
@@ -135,14 +134,10 @@ class CaptchaHandler:
         if captcha_type == 'image' and answer:
             try:
                 if client.owo_bot and client.owo_bot.dm_channel:
-                    await asyncio.wait_for(client.owo_bot.dm_channel.send(answer), timeout=10)
-                else:
-                    await client.owo_bot.create_dm()
-                    await asyncio.wait_for(client.owo_bot.dm_channel.send(answer), timeout=10)
-                client.logger.info('Sent image captcha answer')
-                return True
-            except asyncio.TimeoutError:
-                client.logger.error('Timeout sending image captcha answer')
+                    await client.owo_bot.dm_channel.send(answer)
+                    client.logger.info('Sent image captcha answer')
+                    return True
+                client.logger.error('Cannot send image captcha answer: OWO DM channel is not ready')
             except Exception:
                 client.logger.exception('Failed to send image captcha answer')
             return False
