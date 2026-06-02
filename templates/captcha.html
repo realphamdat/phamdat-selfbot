@@ -352,7 +352,7 @@
             }
         }
 
-        const res = await api('/api/captcha/solve', 'POST', { id: currentSolve.id, answer });
+        const res = await api('/api/captcha/solve', 'POST', { id: currentSolve.id, bot: currentSolve.bot, answer });
         if (res.ok) {
             if (res.removed) {
                 captchas = captchas.filter(c => c.id !== currentSolve.id);
@@ -364,6 +364,12 @@
             closeSolve();
             showToast(res.removed ? 'Captcha solved' : 'Answer saved', 'success');
         } else {
+            if (rt === 'widget') {
+                widgetManager.clear();
+                widgetManager.render(data.widget_provider, data.sitekey, 'captcha-container', token => {
+                    submitSolve(token);
+                });
+            }
             showToast(res.error || 'Failed', 'error');
         }
     }

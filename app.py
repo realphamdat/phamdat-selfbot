@@ -2,6 +2,7 @@ import json
 import os
 import time
 import socket
+from concurrent.futures import TimeoutError as FutureTimeoutError
 
 from flask import Flask, render_template, request, jsonify, send_from_directory
 from flask_socketio import SocketIO
@@ -97,15 +98,23 @@ def _process_captcha_action(action):
 
     if action == 'solve':
         answer = payload.get('answer')
+        if status not in ('pending', 'solved_pending'):
+            return jsonify({'ok': False, 'error': 'Captcha already processed'}), 409
+
         if bot_manager and bot_manager.is_running():
             CaptchaStore.update(bot, c_id, {'status': 'processing', 'answer': answer})
             future = bot_manager.handle_captcha_solved(captcha, answer)
             if future:
                 try:
-                    ok = bool(future.result(timeout=45))
+                    ok = bool(future.result(timeout=120))
+                except FutureTimeoutError:
+                    logger.exception(f'Captcha solve timeout for {bot}:{c_id}')
+                    CaptchaStore.update(bot, c_id, {'status': 'pending_retry', 'answer': answer})
+                    return jsonify({'ok': False, 'error': 'Captcha solve timeout, please retry'}), 408
                 except Exception:
                     logger.exception(f'Captcha solve failed for {bot}:{c_id}')
                     ok = False
+
                 if ok:
                     CaptchaStore.remove(bot, c_id)
                     removed = True
@@ -121,14 +130,6 @@ def _process_captcha_action(action):
             CaptchaStore.update(bot, c_id, {'status': 'solved_pending', 'answer': answer})
             status = 'solved_pending'
             logger.info(f"Captcha answer saved for {captcha['display_name']} (bot offline)")
-            if bot_manager and not bot_manager.is_running():
-                try:
-                    global _start_time
-                    bot_manager.start()
-                    _start_time = time.time()
-                    logger.info("Bot auto-started after captcha solve")
-                except Exception:
-                    logger.exception("Failed to auto-start bot after captcha solve")
     else:
         if bot_manager and bot_manager.is_running():
             future = bot_manager.handle_captcha_deleted(captcha)

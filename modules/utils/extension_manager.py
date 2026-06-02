@@ -74,7 +74,10 @@ class ExtensionManager:
 
         for mod, _ in modules_snapshot:
             try:
-                mod.running = False
+                if hasattr(mod, 'stop'):
+                    mod.stop()
+                else:
+                    mod.running = False
                 logger.info(f"Stopping: {mod.__name__}")
             except Exception as e:
                 logger.exception(f"Stop signal failed {mod.__name__}: {e}")

@@ -95,7 +95,7 @@ class OWOClient(discord.Client):
 
         account_pending = [
             c for c in self._pending_captchas
-            if c.get('token_hash') == self.token_hash or str(c.get('user_id', '')) == str(self.user.id) or not c.get('user_id')
+            if c.get('token_hash') == self.token_hash or str(c.get('user_id', '')) == str(self.user.id)
         ]
         if account_pending:
             self.captcha_pending = True

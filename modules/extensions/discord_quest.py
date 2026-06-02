@@ -17,6 +17,12 @@ from modules.core.data_store import read_lines #
 logger = get_logger('discord_quest') # 
 
 running = True
+stop_event = threading.Event()
+
+def stop():
+    global running
+    running = False
+    stop_event.set()
 
 API_BASE = "https://discord.com/api/v9"
 POLL_INTERVAL = 3600
@@ -481,7 +487,8 @@ class QuestAutocompleter:
                     log("No quests need completion right now")
 
             log(f"Waiting {POLL_INTERVAL}s before next scan...")
-            time.sleep(POLL_INTERVAL)
+            if stop_event.wait(POLL_INTERVAL):
+                break
 
 def run_account(token: str, build_number: int):
     api = DiscordAPI(token, build_number)
@@ -506,7 +513,8 @@ def main():
 
     log(f"Running {len(tokens)} account(s)")
     while running and any(t.is_alive() for t in threads):
-        time.sleep(1)
+        if stop_event.wait(1):
+            break
 
 if __name__ == "__main__":
     main()

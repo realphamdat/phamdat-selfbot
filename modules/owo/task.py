@@ -117,7 +117,9 @@ class TaskManager:
                 if self.client.selfbot_running and self.client.config['gem']['glitch']:
                     try: await Gem.check_glitch(self.client)
                     except Exception: self.client.logger.exception('Glitch check error')
-                await asyncio.sleep(random.randint(600, 1200))
+                    await asyncio.sleep(random.randint(600, 1200))
+                else:
+                    await asyncio.sleep(5)
         except asyncio.CancelledError: pass
 
     async def _loop_gamble(self):
@@ -157,6 +159,8 @@ class TaskManager:
                     await asyncio.sleep(cooldown)
                     try: await self.client.channel_mgr.change_channel(self.client)
                     except Exception: self.client.logger.exception('Channel change error')
+                else:
+                    await asyncio.sleep(5)
         except asyncio.CancelledError: pass
 
     async def _loop_offline_check(self):

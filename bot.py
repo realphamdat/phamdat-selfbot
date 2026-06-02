@@ -121,7 +121,8 @@ class BotManager:
     async def _start_bot_accounts(self, bot_name, accounts):
         pending_captchas = CaptchaStore.list(bot_name)
         pending_by_token = {}
-        pending_without_token = []
+        pending_by_user = []
+        orphaned = []
 
         for captcha in pending_captchas:
             status = captcha.get('status', 'pending')
@@ -129,8 +130,13 @@ class BotManager:
                 continue
             if captcha.get('token_hash'):
                 pending_by_token.setdefault(captcha['token_hash'], []).append(captcha)
+            elif captcha.get('user_id'):
+                pending_by_user.append(captcha)
             else:
-                pending_without_token.append(captcha)
+                orphaned.append(captcha)
+
+        if orphaned:
+            logger.warning(f"Orphaned captchas (no token_hash/user_id): {len(orphaned)}")
 
         shared_clients = self._clients_by_bot.setdefault(bot_name, [])
         total = len(accounts)
@@ -145,7 +151,7 @@ class BotManager:
                     token_hash=thash,
                     config=config,
                     shared_clients=shared_clients,
-                    pending_captchas=pending_by_token.get(thash, []) + pending_without_token,
+                    pending_captchas=pending_by_token.get(thash, []) + pending_by_user,
                 )
                 shared_clients.append(client)
                 self._clients.append(client)
