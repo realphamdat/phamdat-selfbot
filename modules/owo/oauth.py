@@ -50,7 +50,7 @@ class CaptchaSolver:
         headers = {'User-Agent': DiscordOAuth.DEFAULT_HEADERS['User-Agent']}
         try:
             async with aiohttp.ClientSession() as session:
-                async with session.get('https://owobot.com/captcha', headers=headers, timeout=DiscordOAuth.DEFAULT_TIMEOUT) as resp:
+                async with session.get('https://owobot.com/captcha', headers=headers) as resp:
                     logger.info(f'reset captcha page: {resp.status}')
         except Exception:
             logger.exception('Failed to reset hcaptcha')

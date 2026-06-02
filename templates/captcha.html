@@ -129,6 +129,7 @@
     const grid = document.getElementById('captchaGrid');
     const empty = document.getElementById('captchaEmpty');
 
+    // ── Widget Manager ──
     const widgetManager = {
         activeProvider: null,
         activeWidgetId: null,
@@ -137,20 +138,14 @@
             this.clear();
             this.activeProvider = provider;
 
-            const container = document.getElementById(containerId);
-            container.innerHTML = '';
-
             if (provider === 'hcaptcha') {
                 await this.loadScript('https://hcaptcha.com/1/api.js?render=explicit');
-                await new Promise(r => setTimeout(r, 300));
                 this.activeWidgetId = hcaptcha.render(containerId, { sitekey, callback });
             } else if (provider === 'recaptcha') {
                 await this.loadScript('https://www.google.com/recaptcha/api.js?render=explicit');
-                await new Promise(r => setTimeout(r, 300));
                 this.activeWidgetId = grecaptcha.render(containerId, { sitekey, callback });
             } else if (provider === 'turnstile') {
                 await this.loadScript('https://challenges.cloudflare.com/turnstile/v0/api.js?render=explicit');
-                await new Promise(r => setTimeout(r, 300));
                 this.activeWidgetId = turnstile.render('#' + containerId, { sitekey, callback });
             } else {
                 showToast(`Unsupported widget provider: ${provider}`, 'error');
@@ -162,33 +157,34 @@
             const container = document.getElementById('captcha-container');
             if (this.activeProvider === 'hcaptcha' && this.activeWidgetId !== null) {
                 try { hcaptcha.reset(this.activeWidgetId); } catch(e){}
+                container.innerHTML = '';
             } else if (this.activeProvider === 'recaptcha' && this.activeWidgetId !== null) {
                 try { grecaptcha.reset(this.activeWidgetId); } catch(e){}
+                container.innerHTML = '';
             } else if (this.activeProvider === 'turnstile' && this.activeWidgetId !== null) {
                 try { turnstile.remove(this.activeWidgetId); } catch(e){}
+                container.innerHTML = '';
             }
-            if (container) container.innerHTML = '';
             this.activeProvider = null;
             this.activeWidgetId = null;
         },
 
         loadScript(url) {
             const cleanUrl = url.split('?')[0];
-            if (document.querySelector(`script[src^="${cleanUrl}"]`)) {
-                return Promise.resolve();
-            }
+            if (document.querySelector(`script[src^="${cleanUrl}"]`)) return Promise.resolve();
             return new Promise((resolve, reject) => {
                 const s = document.createElement('script');
                 s.src = url;
                 s.async = true;
                 s.defer = true;
-                s.onload = () => setTimeout(resolve, 500);
+                s.onload = () => setTimeout(resolve, 300);
                 s.onerror = reject;
                 document.head.appendChild(s);
             });
         }
     };
 
+    // ── Load Captchas ──
     async function loadCaptchas() {
         captchas = await api('/api/captcha/list');
         render();
@@ -198,6 +194,7 @@
         grid.innerHTML = '';
         empty.style.display = captchas.length ? 'none' : 'flex';
 
+        // Sort: danger > warning > safe
         captchas.sort((a, b) => getPriorityWeight(a) - getPriorityWeight(b));
 
         captchas.forEach(c => {
@@ -257,6 +254,7 @@
         return `${Math.floor(diff / 3600)}h ago`;
     }
 
+    // ── Solve ──
     function openSolve(id) {
         const c = captchas.find(x => x.id === id);
         if (!c) return;
@@ -276,6 +274,7 @@
         const linkWrap = document.getElementById('linkWrap');
         const solveLink = document.getElementById('solveLink');
 
+        // Reset all views
         img.style.display = 'none';
         audioWrap.style.display = 'none';
         if (!audio.paused) audio.pause();
@@ -311,16 +310,8 @@
             sendBtn.textContent = 'Send';
         } else if (rt === 'widget') {
             widgetWrap.style.display = 'block';
-            sendBtn.style.display = 'none';
-            let widgetTimeout = setTimeout(() => {
-                if (sendBtn.style.display === 'none') {
-                    sendBtn.style.display = '';
-                    sendBtn.textContent = 'Cancel';
-                    showToast('Widget timeout, please retry', 'warning');
-                }
-            }, 120000);
+            sendBtn.style.display = 'none'; // Auto submit on callback
             widgetManager.render(data.widget_provider, data.sitekey, 'captcha-container', token => {
-                clearTimeout(widgetTimeout);
                 submitSolve(token);
             });
         } else if (rt === 'iframe') {
@@ -340,7 +331,6 @@
 
     function closeSolve() {
         document.getElementById('solveModal').classList.remove('visible');
-        widgetManager.clear();
         currentSolve = null;
     }
 
@@ -353,7 +343,7 @@
 
         if (rt === 'widget') {
             answer = widgetToken;
-            if (!answer) return;
+            if (!answer) return; // Wait for callback
         } else if (rt === 'image_input' || rt === 'audio') {
             answer = document.getElementById('solveInput').value.trim();
             if (!answer) {
@@ -378,6 +368,7 @@
         }
     }
 
+    // ── Delete ──
     function deleteCaptcha(id) {
         showConfirm('Delete', 'Remove this captcha and resume the bot?', async () => {
             const res = await api('/api/captcha/delete', 'POST', { id });
@@ -397,6 +388,7 @@
         return d.innerHTML;
     }
 
+    // ── Realtime ──
     socket.on('captcha_new', c => {
         captchas.push(c);
         render();
@@ -404,10 +396,12 @@
 
     socket.on('captcha_update', () => loadCaptchas());
 
+    // ── Enter key to submit ──
     document.getElementById('solveInput').addEventListener('keydown', e => {
         if (e.key === 'Enter') submitSolve();
     });
 
+    // ── Auto refresh elapsed times ──
     setInterval(() => { if (captchas.length) render(); }, 30000);
 
     loadCaptchas();

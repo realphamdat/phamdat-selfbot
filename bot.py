@@ -154,52 +154,25 @@ class BotManager:
                 if index > 1:
                     await asyncio.sleep(2)
 
-                task = asyncio.create_task(self._run_client(client, token, bot_name, config), name=f'{bot_name}-client-{index}')
+                task = asyncio.create_task(self._run_client(client, token), name=f'{bot_name}-client-{index}')
                 self._tasks.append(task)
                 logger.info(f'Initializing {bot_name.upper()} client {index}/{total}...')
             except Exception:
                 logger.exception(f'Failed to initialize {bot_name} client {index}/{total}')
 
-    async def _run_client(self, client, token, bot_name, config):
+    async def _run_client(self, client, token):
         try:
             await client.start(token)
         except asyncio.CancelledError:
             pass
-        except Exception as e:
-            logger.exception(f'{bot_name} client error: {e}')
+        except Exception:
+            logger.exception(f'{getattr(client, "bot_name", "bot")} client error')
         finally:
             if not client.is_closed():
                 try:
                     await client.close()
                 except Exception:
                     pass
-            logger.warning(f'{bot_name} client for {token[:10]}... disconnected')
-
-            if self._running:
-                # Tự động reconnect sau 10s
-                await asyncio.sleep(10)
-                logger.info(f'Reconnecting {bot_name} client for {token[:10]}...')
-                # Tạo client mới
-                new_client = self.registry.create_client(
-                    bot_name,
-                    bot_name=bot_name,
-                    token=token,
-                    token_hash=client.token_hash,
-                    config=config,
-                    shared_clients=self._clients_by_bot[bot_name],
-                    pending_captchas=[],
-                )
-                # Thay thế trong tất cả các dict
-                self._clients.remove(client)
-                self._clients.append(new_client)
-                for idx, c in enumerate(self._clients_by_bot[bot_name]):
-                    if c is client:
-                        self._clients_by_bot[bot_name][idx] = new_client
-                        break
-                self._clients_by_token[f'{bot_name}:{client.token_hash}'] = new_client
-                # Tạo task mới
-                task = asyncio.create_task(self._run_client(new_client, token, bot_name, config))
-                self._tasks.append(task)
 
     async def _stop_bots(self):
         await self._stop_task_managers()

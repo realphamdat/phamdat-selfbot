@@ -5,7 +5,6 @@ from modules.utils.logger import get_logger
 logger = get_logger('oauth')
 
 class DiscordOAuth:
-    DEFAULT_TIMEOUT = aiohttp.ClientTimeout(total=30)
     DEFAULT_HEADERS = {
         'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64; rv:109.0) Gecko/20100101 Firefox/111.0',
         'Accept': '*/*',
@@ -30,7 +29,7 @@ class DiscordOAuth:
         headers['Referer'] = referer or f'https://discord.com/oauth2/authorize?client_id={client_id}'
 
         async with aiohttp.ClientSession() as session:
-            async with session.post(url, headers=headers, json={'permissions': permissions, 'authorize': True}, timeout=DiscordOAuth.DEFAULT_TIMEOUT) as resp:
+            async with session.post(url, headers=headers, json={'permissions': permissions, 'authorize': True}) as resp:
                 if resp.status == 200:
                     return (await resp.json()).get('location')
                 logger.error(f'OAuth authorize failed: {resp.status} {await resp.text()}')
@@ -52,7 +51,7 @@ class DiscordOAuth:
         }
         session = aiohttp.ClientSession(cookie_jar=aiohttp.CookieJar())
         try:
-            async with session.get(location, headers=headers, allow_redirects=False, timeout=DiscordOAuth.DEFAULT_TIMEOUT) as resp:
+            async with session.get(location, headers=headers, allow_redirects=False) as resp:
                 if resp.status in (302, 307):
                     return session
                 logger.error(f'OAuth redirect submit failed: {resp.status}')
@@ -63,7 +62,7 @@ class DiscordOAuth:
 
     @staticmethod
     async def post_json(session, url, payload, headers=None):
-        async with session.post(url, headers=headers or {}, json=payload, timeout=DiscordOAuth.DEFAULT_TIMEOUT) as resp:
+        async with session.post(url, headers=headers or {}, json=payload) as resp:
             if resp.status == 200:
                 return True
             logger.error(f'OAuth POST failed: {resp.status} {await resp.text()}')
