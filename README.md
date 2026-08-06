@@ -7,8 +7,11 @@
 <table align="center">
   <tr>
     <td align="center"><img src="assets/previews/terminal.png" alt="Terminal"><br>Terminal</td>
-    <td align="center"><img src="assets/previews/captcha.png" alt="Captcha"><br>Captcha</td>
     <td align="center"><img src="assets/previews/data.png" alt="Data"><br>Data</td>
+  </tr>
+  <tr>
+    <td align="center"><img src="assets/previews/captcha.png" alt="Captcha"><br>Captcha</td>
+    <td align="center"><img src="assets/previews/solve.png" alt="Solve"><br>Solve</td>
   </tr>
 </table>
 
