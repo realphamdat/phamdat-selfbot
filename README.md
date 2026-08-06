@@ -22,6 +22,7 @@
 | GitHub | [github.com/realphamdat/phamdat-selfbot](https://github.com/realphamdat/phamdat-selfbot) |
 | Profile | [realphamdat.github.io](https://realphamdat.github.io) |
 | Discord | [discord.gg/GhfuaDTWQY](https://discord.gg/GhfuaDTWQY) |
+| Youtube | [youtu.be/gqtXxDjQlhg](https://youtu.be/gqtXxDjQlhg) |
 
 ---
 
