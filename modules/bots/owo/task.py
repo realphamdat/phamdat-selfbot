@@ -28,13 +28,13 @@ class TaskManager:
         if self.client.config['daily']:
             todo.append((self._loop_daily, 0))
         if self.client.config['quest']:
-            todo.append((self._loop_quest, 5))
+            todo.append((self._loop_quest, 0))
         if self.client.config['huntbot']:
-            todo.append((self._loop_huntbot, 5))
+            todo.append((self._loop_huntbot, 10))
         todo.append((self._loop_spam, 10))
         if self.client.config['gem']['glitch']:
             todo.append((self._loop_glitch, 10))
-        todo.append((self._loop_gamble, 10))
+        todo.append((self._loop_gamble, 0))
         todo.append((self._loop_offline_check, 0))
 
         for coro_func, delay in todo:
