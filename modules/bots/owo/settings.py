@@ -67,6 +67,9 @@ class OWOSettings:
             if 'Quest Display' in content and label == 'image':
                 if await OWOSettings._click(client, accessory, 'Quest Display -> text'):
                     clicked = True
+            elif 'Achievement Display' in content and label == 'image':
+                if await OWOSettings._click(client, accessory, 'Achievement Display -> text'):
+                    clicked = True
             elif 'Quest Completion Notifications' in content and label == 'false':
                 if await OWOSettings._click(client, accessory, 'Quest Completion Notifications -> true'):
                     clicked = True
