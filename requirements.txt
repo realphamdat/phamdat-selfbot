@@ -1,0 +1,14 @@
+git+https://github.com/dolfies/discord.py-self.git
+curl_cffi
+aiohttp
+requests
+brotli
+flask
+flask-socketio
+Pillow
+numpy
+tzlocal
+discord_protos
+audioop-lts
+PyNaCl
+davey
