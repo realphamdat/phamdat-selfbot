@@ -1,5 +1,8 @@
 {
     "token": {
+        "prefix": "owo"
+        "check_status": true
+
         "channels_id": [1, 2, 3],
         "changing_channel": {
             "when_mentioned": true,
