@@ -35,7 +35,8 @@ class TaskManager:
         if self.client.config['gem']['glitch']:
             todo.append((self._loop_glitch, 10))
         todo.append((self._loop_gamble, 0))
-        todo.append((self._loop_offline_check, 0))
+        if self.client.config['check_status']:
+            todo.append((self._loop_offline_check, 0))
 
         for coro_func, delay in todo:
             if delay > 0:
