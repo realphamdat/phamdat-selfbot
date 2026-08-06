@@ -22,7 +22,7 @@ class TaskManager:
             return
         self._running = True
 
-        todo = [(self._loop_offline_check, 0)]
+        todo = []
         if len(self.client.config['channels_id']) > 1:
             todo.append((self._loop_channel, 0))
         if self.client.config['daily']:
@@ -31,12 +31,11 @@ class TaskManager:
             todo.append((self._loop_quest, 5))
         if self.client.config['huntbot']:
             todo.append((self._loop_huntbot, 5))
-        if self._spam_enabled():
-            todo.append((self._loop_spam, 10))
+        todo.append((self._loop_spam, 10))
         if self.client.config['gem']['glitch']:
             todo.append((self._loop_glitch, 10))
-        if self._gamble_enabled():
-            todo.append((self._loop_gamble, 10))
+        todo.append((self._loop_gamble, 10))
+        todo.append((self._loop_offline_check, 0))
 
         for coro_func, delay in todo:
             if delay > 0:
@@ -50,14 +49,6 @@ class TaskManager:
         task = asyncio.create_task(coro, name=name)
         self._tasks.append(task)
         return task
-
-    def _spam_enabled(self):
-        spam = self.client.config['spam']
-        return spam['owo/uwu'] or spam['hunt'] or spam['battle']
-
-    def _gamble_enabled(self):
-        gamble = self.client.config['gamble']
-        return gamble['lottery']['mode'] or gamble['slot']['mode'] or gamble['coinflip']['mode'] or gamble['blackjack']['mode']
 
     async def stop(self):
         self._running = False
