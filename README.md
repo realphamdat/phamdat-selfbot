@@ -19,7 +19,7 @@
 
 | | |
 |---|---|
-| GitHub | [realphamdat/phamdat-selfbot](https://github.com/realphamdat/phamdat-selfbot) |
+| GitHub | [github.com/realphamdat/phamdat-selfbot](https://github.com/realphamdat/phamdat-selfbot) |
 | Profile | [realphamdat.github.io](https://realphamdat.github.io) |
 | Discord | [discord.gg/GhfuaDTWQY](https://discord.gg/GhfuaDTWQY) |
 
@@ -64,31 +64,20 @@
 1. Download the project ZIP file from the [GitHub repository](https://github.com/realphamdat/phamdat-selfbot) (`Code` → `Download ZIP`).
 2. Extract the ZIP into a folder of your choice.
 3. Open a terminal (Command Prompt or PowerShell) and navigate into the extracted folder.
-4. *(Recommended)* Create a virtual environment to keep dependencies isolated:
-
-   ```bash
-   python -m venv venv
-   ```
-
-   Activate it:
-
-   - Windows: `venv\Scripts\activate`
-   - macOS/Linux: `source venv/bin/activate`
-
-5. Install the dependencies:
+4. Install the dependencies:
 
    ```bash
    pip install -r requirements.txt
    ```
 
-6. Configure your tokens inside the `data/` folder (see [Configuration](#configuration)).
-7. Start the program:
+5. Configure your tokens inside the `data/` folder (see [Configuration](#configuration)).
+6. Start the program:
 
    ```bash
    python main.py
    ```
 
-8. Open <http://localhost:2010> in your browser to access the web interface.
+7. Open <http://localhost:2010> in your browser to access the web interface.
 
 > When the terminal starts, it prints the exact URL of the website, including your LAN IP, e.g. `Website: http://192.168.1.10:2010`.
 
@@ -161,17 +150,22 @@ Every `data/*.json` file follows this exact structure: a top-level JSON object w
 ```json
 {
     "YOUR_TOKEN": {
+        "prefix": "owo",
+        "check_status": true,
+
         "channels_id": [123456789, 987654321],
         "changing_channel": {
             "when_mentioned": true,
             "when_challenge": true,
             "after_elapsed_time": {"min": 300, "max": 600}
         },
+
         "daily": true,
         "quest": true,
         "huntbot": true,
         "giveaway": true,
         "boss": true,
+
         "spam": {
             "hunt": true,
             "battle": true,
@@ -179,6 +173,7 @@ Every `data/*.json` file follows this exact structure: a top-level JSON object w
             "delay": {"min": 0.5, "max": 1},
             "cooldown": {"min": 15, "max": 20}
         },
+
         "gem": {
             "use": false,
             "couple": true,
@@ -187,6 +182,7 @@ Every `data/*.json` file follows this exact structure: a top-level JSON object w
             "glitch": true,
             "openning": {"box": true, "crate": true, "flootbox": true}
         },
+
         "gamble": {
             "lottery": {"mode": false, "amount": 1},
             "slot": {"mode": false, "bet": 1, "rate": 2, "max": 250000},
@@ -203,6 +199,8 @@ Every `data/*.json` file follows this exact structure: a top-level JSON object w
 
 | Property | Type | Default | Description |
 |---|---|---|---|
+| `prefix` | `string` | `owo` | OwO prefix |
+| `check_status` | `bool` | `true` | Check OwO status and pause if it is offline |
 | `channels_id` | `array of int` | `[]` | Channel IDs the account may operate in. One is picked randomly as the working channel. |
 | `changing_channel` | `object` | see below | Channel-switching behavior |
 | `daily` | `bool` | `true` | Claim the OWO daily reward automatically |
