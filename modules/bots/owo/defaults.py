@@ -1,4 +1,7 @@
 OWO_DEFAULT_CONFIG = {
+    'prefix': 'owo',
+    'check_status': True,
+
     'channels_id': [],
     'changing_channel': {
         'when_mentioned': True,
