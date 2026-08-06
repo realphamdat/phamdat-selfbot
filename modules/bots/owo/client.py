@@ -27,7 +27,7 @@ class OWOClient(discord.Client):
         self.config = deep_merge(OWO_DEFAULT_CONFIG, config or {})
         self.clients = clients
         self.bot_name = 'owo'
-        self.prefix = self.config['gamble']
+        self.prefix = self.config['prefix']
 
         self.owo_bot = None
         self.current_channel = None
