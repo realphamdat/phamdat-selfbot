@@ -3,7 +3,6 @@ import time
 
 import discord
 
-from modules.utils.components import iter_children, section_content
 from modules.bots.owo.daily import Daily
 
 
@@ -14,28 +13,25 @@ class Boss:
             return
         if not client.can_run():
             return
+        if not message.components:
+            return
 
-        has_boss_appeared = False
-        fight_button = None
+        container = message.components[0]
+        children = getattr(container, 'children', None)
+        if not children:
+            return
 
-        for child in iter_children(message):
-            content = section_content(child)
-            if content and 'A Guild Boss Appeared!' in content:
-                has_boss_appeared = True
+        if 'A Guild Boss Appeared!' not in Boss._section_text(children[0]):
+            return
 
-            accessory = getattr(child, 'accessory', None)
-            if accessory and getattr(accessory, 'custom_id', '') == 'guildboss_fight':
-                fight_button = accessory
-                if getattr(fight_button, 'disabled', False):
-                    return
-
-        if not has_boss_appeared or not fight_button:
+        fight = getattr(children[-1], 'accessory', None)
+        if fight is None or getattr(fight, 'disabled', False):
             return
 
         channel = message.channel
         watch_task = asyncio.create_task(Boss._watch_ticket_response(client, channel))
         try:
-            await fight_button.click()
+            await fight.click()
         except discord.HTTPException:
             watch_task.cancel()
             await asyncio.gather(watch_task, return_exceptions=True)
@@ -44,6 +40,11 @@ class Boss:
 
         client.logger.info(f'Joined boss battle in #{channel}')
         await watch_task
+
+    @staticmethod
+    def _section_text(section):
+        parts = [getattr(child, 'content', '') for child in getattr(section, 'children', []) or []]
+        return '\n'.join(part for part in parts if part)
 
     @staticmethod
     async def _watch_ticket_response(client, channel):

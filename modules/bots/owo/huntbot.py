@@ -63,7 +63,7 @@ class Huntbot:
     async def claim_submit(client):
         if not client.can_run():
             return
-        if client.cooldown_huntbot - time.time() > 0:
+        if time.time() < client.cooldown_huntbot:
             return
         if not client.current_channel:
             return

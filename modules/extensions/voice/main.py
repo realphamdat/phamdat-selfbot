@@ -20,6 +20,10 @@ def load_config():
         with open('data/voice.json', encoding='utf-8') as f:
             return json.load(f)
     except FileNotFoundError:
+        logger.warning('Voice config file not found: data/voice.json')
+        return {}
+    except json.JSONDecodeError as exc:
+        logger.error('Voice config invalid JSON: %s', exc)
         return {}
 
 

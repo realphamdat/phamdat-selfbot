@@ -21,7 +21,7 @@ class Daily:
     async def claim(client):
         if not client.can_run():
             return
-        if client.cooldown_daily - time.time() > 0:
+        if time.time() < client.cooldown_daily:
             return
 
         channel = client.current_channel

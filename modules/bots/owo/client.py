@@ -11,7 +11,6 @@ from modules.bots.owo.captcha import Captcha
 from modules.bots.owo.task import TaskManager
 from modules.bots.owo.problem import Problem
 from modules.bots.owo.quest import Quest
-from modules.bots.owo.settings import OWOSettings
 from modules.bots.owo.boss import Boss
 from modules.bots.owo.gem import Gem
 from modules.bots.owo.giveaway import Giveaway
@@ -96,9 +95,6 @@ class OWOClient(discord.Client):
         await Captcha.process_pending(self)
         await Channel.init_channel(self)
 
-        if self.config['quest'] and not self.captcha_pending:
-            await OWOSettings.apply(self)
-
         if self._on_ready_done:
             self.logger.info('Reconnected')
             return
@@ -130,7 +126,7 @@ class OWOClient(discord.Client):
         if self.config['quest']:
             Quest.quest_progress(self, message)
 
-        if self.config['boss'] and time.time() - self.cooldown_boss >= 0:
+        if self.config['boss'] and time.time() >= self.cooldown_boss:
             await Boss.handle(self, message)
 
         if self.config['gem']['use'] or self.config['gem']['glitch']:

@@ -59,7 +59,7 @@ class Gamble:
         lottery = client.config['gamble']['lottery']
         if not lottery['mode']:
             return
-        if client.cooldown_lottery - time.time() > 0:
+        if time.time() < client.cooldown_lottery:
             return
         if not client.current_channel:
             return

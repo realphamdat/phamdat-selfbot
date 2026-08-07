@@ -6,8 +6,28 @@ import datetime
 
 import discord
 
-from modules.utils.components import iter_children, section_content
 from modules.bots.owo.daily import Daily
+
+
+def _iter_children(message):
+    for component in getattr(message, 'components', []) or []:
+        yield from _iter_component_children(component)
+
+
+def _iter_component_children(component):
+    children = getattr(component, 'children', None) or getattr(component, 'components', None)
+    if not children:
+        return
+    for child in children:
+        yield child
+        yield from _iter_component_children(child)
+
+
+def _section_content(section):
+    children = getattr(section, 'children', None) or getattr(section, 'components', None)
+    if not children:
+        return getattr(section, 'content', '') or ''
+    return '\n'.join(part for part in (_section_content(child) for child in children) if part)
 
 
 class Quest:
@@ -54,15 +74,15 @@ class Quest:
 
     @staticmethod
     def _has_quest_log_header(message, user):
-        for child in iter_children(message):
-            content = section_content(child)
+        for child in _iter_children(message):
+            content = _section_content(child)
             if content and user in content:
                 return True
         return False
 
     @staticmethod
     async def _claim_quest(client, message):
-        for child in iter_children(message):
+        for child in _iter_children(message):
             for button in getattr(child, 'children', []) or []:
                 if getattr(button, 'custom_id', '') == 'quests:claim' and not getattr(button, 'disabled', False):
                     try:
@@ -75,10 +95,10 @@ class Quest:
         return False
 
     @staticmethod
-    def _extract_quests(client,message):
+    def _extract_quests(client, message):
         quests = []
-        for child in iter_children(message):
-            content = section_content(child)
+        for child in _iter_children(message):
+            content = _section_content(child)
             if not content:
                 continue
             tasks = re.findall(r'\n> (.*?)\n>', content)
@@ -102,7 +122,7 @@ class Quest:
             return
         if client.doing_quest:
             return
-        if client.cooldown_quest - time.time() > 0:
+        if time.time() < client.cooldown_quest:
             return
 
         channel = client.current_channel

@@ -183,7 +183,7 @@ class Gem:
         gem = client.config['gem']
         if not gem.get('glitch', False):
             return False
-        if client.cooldown_glitch - time.time() > 0:
+        if time.time() < client.cooldown_glitch:
             return False
         return True
 

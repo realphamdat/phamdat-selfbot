@@ -34,6 +34,14 @@ def log(msg):
     logger.info(msg)
 
 
+def warn(msg):
+    logger.warning(msg)
+
+
+def error(msg):
+    logger.error(msg)
+
+
 def read_tokens():
     result = []
     try:
@@ -43,7 +51,7 @@ def read_tokens():
                 if stripped and not stripped.startswith('#'):
                     result.append(stripped)
     except FileNotFoundError:
-        pass
+        warn('Quest token file not found: data/quest.txt')
     return result
 
 
@@ -54,7 +62,7 @@ def fetch_latest_build_number():
         ua = 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/128.0.0.0 Safari/537.36'
         r = requests.get('https://discord.com/app', headers={'User-Agent': ua}, timeout=15)
         if r.status_code != 200:
-            log(f'Could not fetch Discord page ({r.status_code}), using fallback')
+            warn(f'Could not fetch Discord page ({r.status_code}), using fallback')
             return FALLBACK
 
         scripts = re.findall(r'/assets/([a-f0-9]+)\.js', r.text)
@@ -62,7 +70,7 @@ def fetch_latest_build_number():
             scripts_alt = re.findall(r'src="(/assets/[^"]+\.js)"', r.text)
             scripts = [s.split('/')[-1].replace('.js', '') for s in scripts_alt]
         if not scripts:
-            log('No JS assets found, using fallback')
+            warn('No JS assets found, using fallback')
             return FALLBACK
 
         for asset_hash in scripts[-5:]:
@@ -76,10 +84,10 @@ def fetch_latest_build_number():
             except Exception:
                 continue
 
-        log(f'Build number not found, using fallback {FALLBACK}')
+        warn(f'Build number not found, using fallback {FALLBACK}')
         return FALLBACK
     except Exception as e:
-        log(f'Error fetching build number: {e}, using fallback {FALLBACK}')
+        error(f'Error fetching build number: {e}, using fallback {FALLBACK}')
         return FALLBACK
 
 
@@ -136,10 +144,10 @@ class DiscordAPI:
                 user = r.json()
                 log(f'Logged in as {user["username"]} (ID: {user["id"]})')
                 return True
-            log(f'Token invalid (status {r.status_code})')
+            warn(f'Token invalid (status {r.status_code})')
             return False
         except Exception as e:
-            log(f'Connection to Discord failed: {e}')
+            error(f'Connection to Discord failed: {e}')
             return False
 
 
@@ -260,22 +268,22 @@ class QuestAutocompleter:
                         quests = data.get('quests', [])
                         blocked = _get(data, 'quest_enrollment_blocked_until')
                         if blocked:
-                            log(f'Enrollment blocked until: {blocked}')
+                            warn(f'Enrollment blocked until: {blocked}')
                         return quests
                     elif isinstance(data, list):
                         return data
                     return []
                 elif r.status_code == 429:
                     retry_after = r.json().get('retry_after', 10)
-                    log(f'Rate limited on fetch, waiting {retry_after}s')
+                    warn(f'Rate limited on fetch, waiting {retry_after}s')
                     if stop_event.wait(retry_after):
                         return []
                     continue
                 else:
-                    log(f'Quest fetch error ({r.status_code}): {r.text[:200]}')
+                    error(f'Quest fetch error ({r.status_code}): {r.text[:200]}')
                     return []
             except Exception as e:
-                log(f'Error fetching quests: {e}')
+                error(f'Error fetching quests: {e}')
                 return []
 
     def enroll_quest(self, quest):
@@ -297,19 +305,19 @@ class QuestAutocompleter:
                 if r.status_code == 429:
                     retry_after = r.json().get('retry_after', 5)
                     wait = retry_after + 1
-                    log(f'Rate limited on enroll "{name}" (attempt {attempt}/3), waiting {wait}s')
+                    warn(f'Rate limited on enroll "{name}" (attempt {attempt}/3), waiting {wait}s')
                     if stop_event.wait(wait):
                         return False
                     continue
                 if r.status_code in (200, 201, 204):
                     log(f'Enrolled: {name}')
                     return True
-                log(f'Enroll "{name}" failed ({r.status_code}): {r.text[:200]}')
+                error(f'Enroll "{name}" failed ({r.status_code}): {r.text[:200]}')
                 return False
             except Exception as e:
-                log(f'Enroll error "{name}": {e}')
+                error(f'Enroll error "{name}": {e}')
                 return False
-        log(f'Skipping "{name}" after 3 rate limit hits')
+        warn(f'Skipping "{name}" after 3 rate limit hits')
         return False
 
     def auto_accept(self, quests):
@@ -366,14 +374,14 @@ class QuestAutocompleter:
                         log(f'[{name}] {seconds_done:.0f}/{seconds_needed}s')
                     elif r.status_code == 429:
                         retry_after = r.json().get('retry_after', 5)
-                        log(f'Rate limited on video, waiting {retry_after + 1}s')
+                        warn(f'Rate limited on video, waiting {retry_after + 1}s')
                         if stop_event.wait(retry_after + 1):
                             return
                         continue
                     else:
-                        log(f'Video progress error ({r.status_code}): {r.text[:200]}')
+                        error(f'Video progress error ({r.status_code}): {r.text[:200]}')
                 except Exception as e:
-                    log(f'Video progress error: {e}')
+                    error(f'Video progress error: {e}')
             if timestamp >= seconds_needed:
                 break
             if stop_event.wait(interval):
@@ -416,13 +424,13 @@ class QuestAutocompleter:
                         return
                 elif r.status_code == 429:
                     retry_after = r.json().get('retry_after', 10)
-                    log(f'Rate limited on heartbeat, waiting {retry_after + 1}s')
+                    warn(f'Rate limited on heartbeat, waiting {retry_after + 1}s')
                     if stop_event.wait(retry_after + 1):
                         return
                 else:
-                    log(f'Heartbeat error ({r.status_code}): {r.text[:200]}')
+                    error(f'Heartbeat error ({r.status_code}): {r.text[:200]}')
             except Exception as e:
-                log(f'Heartbeat error: {e}')
+                error(f'Heartbeat error: {e}')
             if stop_event.wait(HEARTBEAT_INTERVAL):
                 return
 
@@ -439,7 +447,7 @@ class QuestAutocompleter:
         qid = quest['id']
         task_type = get_task_type(quest)
         if not task_type:
-            log(f'{name}, unsupported task, skipping')
+            warn(f'{name}, unsupported task, skipping')
             return
         log(f'Starting: {name} (task: {task_type})')
         if task_type in ('WATCH_VIDEO', 'WATCH_VIDEO_ON_MOBILE'):
@@ -455,7 +463,7 @@ class QuestAutocompleter:
         try:
             self.process_quest(quest)
         except Exception as e:
-            log(f'Unexpected error processing quest {qid}: {e}')
+            warn(f'Unexpected error processing quest {qid}: {e}')
         finally:
             with self.lock:
                 self.in_progress_ids.discard(qid)
@@ -506,7 +514,7 @@ class QuestAutocompleter:
 def run_account(token, build_number):
     api = DiscordAPI(token, build_number)
     if not api.validate_token():
-        log('Skipping account, token validation failed')
+        warn('Skipping account, token validation failed')
         return
     completer = QuestAutocompleter(api)
     completer.run()
