@@ -138,7 +138,7 @@ class Gamble:
             return
 
         for _ in range(10):
-            await asyncio.sleep(random.uniform(2, 3))
+            await asyncio.sleep(2)
             try:
                 bj_msg = await client.current_channel.fetch_message(bj_msg.id)
             except Exception:
