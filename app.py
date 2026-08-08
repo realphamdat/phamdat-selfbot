@@ -191,7 +191,8 @@ def api_logs():
     limit = flask.request.args.get('limit', 1000, type=int)
     before = flask.request.args.get('before', type=int)
     limit = max(1, min(limit, 1000))
-    return flask.jsonify(handler.get_buffer(limit=limit, before=before))
+    logs, has_more = handler.get_buffer(limit=limit, before=before)
+    return flask.jsonify({'logs': logs, 'has_more': has_more, 'names': handler.get_names()})
 
 
 @socketio.on('connect')
