@@ -328,16 +328,13 @@
         if (loadingLogs || logEndReached || oldestLogSeq === null) return;
         loadingLogs = true;
         const oldHeight = terminalBody.scrollHeight;
-        const logs = await api(`/api/logs?limit=1000&before=${oldestLogSeq}`);
-        if (!logs.length) {
-            logEndReached = true;
-            loadingLogs = false;
-            return;
-        }
-        logs.forEach(prependLogLine);
-        updateOldestSeq(logs);
+        const data = await api(`/api/logs?limit=1000&before=${oldestLogSeq}`);
+        data.logs.forEach(prependLogLine);
+        updateOldestSeq(data.logs);
         terminalBody.scrollTop = terminalBody.scrollHeight - oldHeight;
+        if (!data.has_more) logEndReached = true;
         loadingLogs = false;
+        if (data.logs.length && !logEndReached && terminalBody.scrollTop <= 20) loadOlderLogs();
     }
 
     function scrollToBottom() {
@@ -354,9 +351,12 @@
         const status = await api('/api/status');
         setRunning(status.running, status.start_time ? status.start_time * 1000 : null);
 
-        const logs = await api('/api/logs?limit=1000');
-        logs.forEach(addLogLine);
-        updateOldestSeq(logs);
+        const data = await api('/api/logs?limit=1000');
+        knownNames = new Set(data.names);
+        activeNames = new Set(data.names);
+        data.logs.forEach(addLogLine);
+        updateOldestSeq(data.logs);
+        logEndReached = !data.has_more;
         scrollToBottom();
 
         buildLevelChips();
