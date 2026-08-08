@@ -11,6 +11,7 @@ class WebSocketHandler(logging.Handler):
     def __init__(self, max_buffer=100000):
         super().__init__()
         self.buffer = deque(maxlen=max_buffer)
+        self.names = {}
         self.socketio = None
         self.seq = 0
 
@@ -32,15 +33,27 @@ class WebSocketHandler(logging.Handler):
             'name': name,
             'message': message.rstrip(),
         }
+        if len(self.buffer) == self.buffer.maxlen:
+            dropped = self.buffer[0]['name']
+            count = self.names.get(dropped, 0) - 1
+            if count:
+                self.names[dropped] = count
+            else:
+                self.names.pop(dropped, None)
         self.buffer.append(entry)
+        self.names[name] = self.names.get(name, 0) + 1
         if self.socketio:
             self.socketio.emit('log', entry, namespace='/')
 
     def get_buffer(self, limit=1000, before=None):
         logs = list(self.buffer)
-        if before:
+        if before is not None:
             logs = [entry for entry in logs if entry['seq'] < before]
-        return logs[-limit:]
+        returned = logs[-limit:]
+        return returned, len(logs) > limit
+
+    def get_names(self):
+        return sorted(self.names)
 
 
 class TerminalStream:
