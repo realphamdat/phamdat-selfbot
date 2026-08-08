@@ -17,8 +17,8 @@ running = False
 stop_event = threading.Event()
 
 API_BASE = 'https://discord.com/api/v9'
-POLL_INTERVAL = 60
-HEARTBEAT_INTERVAL = 20
+POLL_INTERVAL = 300
+HEARTBEAT_INTERVAL = 60
 AUTO_ACCEPT = True
 MAX_WORKERS = 100
 
