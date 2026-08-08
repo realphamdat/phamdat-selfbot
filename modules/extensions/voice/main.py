@@ -8,7 +8,7 @@ logger = logging.getLogger('voice')
 
 running = False
 
-CHECK_INTERVAL = 30
+CHECK_INTERVAL = 60
 
 
 def log(msg):
