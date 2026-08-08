@@ -54,9 +54,9 @@ class Boss:
                 check=lambda m: (
                     m.channel.id == channel.id
                     and m.interaction is not None
-                    and "you don't have any boss tickets" in m.content.lower()
+                    and "You don't have any boss tickets!" in m.content
                 ),
-                timeout=5,
+                timeout=10,
             )
         except asyncio.TimeoutError:
             return
