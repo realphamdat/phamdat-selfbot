@@ -16,16 +16,6 @@
 </table>
 
 ## About
-
-| Component | Config file | What it does |
-|---|---|---|
-| **OwO Bot** | `data/owo.json` | Full OwO macro — hunt, battle, daily, quests, huntbot, giveaways, guild boss, gems, gambling |
-| **Chat** | `data/chat.json` | Auto-sends messages from `assets/messages.txt` into chosen channels |
-| **Voice** | `data/voice.json` | Keeps each account connected to a voice channel |
-| **Quest** | `data/quest.txt` | Auto-accepts & auto-completes Discord quests (watch / stream / play) |
-
-> Selfbots violate Discord's Terms of Service — use at your own risk.
-
 | | |
 |---|---|
 | **GitHub** | [github.com/realphamdat/phamdat-selfbot](https://github.com/realphamdat/phamdat-selfbot) |
