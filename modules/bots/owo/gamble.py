@@ -134,7 +134,7 @@ class Gamble:
                     and str(client.user.name) in str(m.embeds[0].author.name)
                     and 'play blackjack' in str(m.embeds[0].author.name)
                 ),
-                timeout=10,
+                timeout=5,
             )
         except asyncio.TimeoutError:
             client.logger.error('Blackjack message timeout')
@@ -204,7 +204,7 @@ class Gamble:
             message = await client.wait_for(
                 'message',
                 check=lambda m: Gamble._is_highlow_start(client, m),
-                timeout=10,
+                timeout=5,
             )
         except asyncio.TimeoutError:
             client.logger.error('HighLow message timeout')
