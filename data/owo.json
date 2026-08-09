@@ -30,7 +30,7 @@
             "best": false,
             "star": false,
             "glitch": true,
-            "openning": {"box": true, "crate": true, "flootbox": true}
+            "openning": {"box": true, "crate": true, "flootbox": false}
         },
 
         "gamble": {
