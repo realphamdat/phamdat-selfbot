@@ -186,7 +186,8 @@ class Gamble:
         if not message.components:
             return False
         text = Component.text(message.components[0])
-        return client.user.mention in text and '**Streak**:' in text
+        hl = [client.user.mention, '**Bet**:', '**Streak**:', '**Cash Out**:']
+        return all(t in text for t in hl)
 
     @staticmethod
     async def play_highlow(client):
