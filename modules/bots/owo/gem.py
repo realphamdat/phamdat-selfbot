@@ -166,7 +166,7 @@ class Gem:
             return
 
         gem = client.config['gem']
-        if (not gem['use'] and Gem._skip_gem_check(client)) or Gem.glitch_available(client):
+        if (not gem['use'] and Gem._skip_gem_check(client)) or not Gem.glitch_available(client):
             return
 
         if gem['couple'] and 'spent 5 <:cowoncy:416043450337853441> and caught a' in message.content:
