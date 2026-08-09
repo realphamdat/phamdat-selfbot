@@ -36,8 +36,8 @@ class Daily:
                 'message',
                 check=lambda m: (
                     client.is_owo_message(m, in_channel=True)
-                    and client.msg_contains(m, all_of=[str(client.nickname)])
-                    and client.msg_contains(m, any_of=['next daily', 'Nu'])
+                    and client.msg_contains(m.content, all_of=[str(client.nickname)])
+                    and client.msg_contains(m.content, any_of=['next daily', 'Nu'])
                 ),
                 timeout=5,
             )
