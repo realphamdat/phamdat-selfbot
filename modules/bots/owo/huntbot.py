@@ -76,7 +76,7 @@ class Huntbot:
                 'message',
                 check=lambda m: (
                     client.is_owo_message(m, in_channel=True)
-                    and client.msg_contains(m, any_of=[
+                    and client.msg_contains(m.content, any_of=[
                         'Please include your password', 'Here is your password!',
                         'STILL HUNTING', 'BACK WITH',
                     ])
@@ -105,8 +105,8 @@ class Huntbot:
                         'message',
                         check=lambda m: (
                             client.is_owo_message(m, in_channel=True)
-                            and client.msg_contains(m, all_of=[nick])
-                            and client.msg_contains(m, any_of=['YOU SPENT', 'Wrong password'])
+                            and client.msg_contains(m.content, all_of=[nick])
+                            and client.msg_contains(m.content, any_of=['YOU SPENT', 'Wrong password'])
                         ),
                         timeout=5,
                     )
