@@ -1,7 +1,25 @@
+import os
 import random
 
 
 class Channel:
+    @staticmethod
+    def _rng(client):
+        """Per-client RNG seeded from OS entropy.
+
+        The dolfies/discord.py-self fork re-seeds the process-global ``random``
+        module on every login (tracking.py -> HeadersContext.client_hints ->
+        _get_random_order -> ``random.seed(browser_version)``). Because all
+        accounts boot in the same process, that rewinds the shared RNG to the
+        same deterministic state for every account, so ``random.choice`` returns
+        the same channel every time. A dedicated per-client generator is immune.
+        """
+        rng = getattr(client, '_rng', None)
+        if rng is None:
+            rng = random.Random(os.urandom(32))
+            client._rng = rng
+        return rng
+
     @staticmethod
     async def init_channel(client):
         channels = client.config['channels_id']
@@ -9,7 +27,17 @@ class Channel:
             client.logger.error('No channels configured')
             return
 
-        client.current_channel_id = int(random.choice(channels))
+        # Prefer channels not already occupied by another account in this process
+        # so different accounts don't start stacked in the same channel.
+        in_use = {
+            other.current_channel_id
+            for other in client.clients
+            if other is not client and other.current_channel_id is not None
+        }
+        candidates = [int(c) for c in channels]
+        free = [c for c in candidates if c not in in_use] or candidates
+
+        client.current_channel_id = Channel._rng(client).choice(free)
         client.current_channel = client.get_channel(client.current_channel_id)
 
         if client.current_channel:
@@ -36,7 +64,7 @@ class Channel:
         if not available:
             return
 
-        client.current_channel_id = int(random.choice(available))
+        client.current_channel_id = Channel._rng(client).choice([int(c) for c in available])
         client.current_channel = client.get_channel(client.current_channel_id)
 
         if client.current_channel:
