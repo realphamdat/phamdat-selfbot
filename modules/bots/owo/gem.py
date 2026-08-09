@@ -17,7 +17,7 @@ class Gem:
     def _skip_gem_check(client):
         if not client.no_gem:
             return False
-        if time.time() - client.no_gem_since >= 3600:
+        if time.time() - client.no_gem_since >= 1800:
             client.no_gem = False
             return False
         return True
