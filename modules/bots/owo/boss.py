@@ -52,7 +52,7 @@ class Boss:
                     and m.interaction is not None
                     and "You don't have any boss tickets!" in m.content
                 ),
-                timeout=10,
+                timeout=5,
             )
         except asyncio.TimeoutError:
             return
