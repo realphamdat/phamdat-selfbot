@@ -41,7 +41,7 @@ class Gem:
                 'message',
                 check=lambda m: (
                     client.is_owo_message(m, in_channel=True)
-                    and client.msg_contains(m, all_of=[str(client.nickname), 'active Special gem or you do not own'])
+                    and client.msg_contains(m.content, all_of=[str(client.nickname), 'active Special gem or you do not own'])
                 ),
                 timeout=5
             )
@@ -161,7 +161,7 @@ class Gem:
             return
         if not client.is_owo_message(message, in_channel=True):
             return
-        if not client.msg_contains(message, all_of=[str(client.nickname), '🌱', 'gained']):
+        if not client.msg_contains(message.content, all_of=[str(client.nickname), '🌱', 'gained']):
             return
 
         gem = client.config['gem']
@@ -198,7 +198,7 @@ class Gem:
                 'message',
                 check=lambda m: (
                     client.is_owo_message(m, in_channel=True)
-                    and client.msg_contains(m, any_of=['are available', 'not available'])
+                    and client.msg_contains(m.content, any_of=['are available', 'not available'])
                 ),
                 timeout=5,
             )
