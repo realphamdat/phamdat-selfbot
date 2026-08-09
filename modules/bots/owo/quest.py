@@ -233,8 +233,8 @@ class Quest:
                 other.block_battle = True
                 ch = other.current_channel
                 if ch:
-                    await ch.send(f'{client.prefix}owob {client.user.mention}')
-                    other.logger.info(f'Sent {client.prefix}owob {client.user.mention}')
+                    await ch.send(f'{client.prefix}b {client.user.mention}')
+                    other.logger.info(f'Sent {client.prefix}b {client.user.mention}')
                 await asyncio.sleep(random.uniform(3, 5))
                 if not client.quest_flags.get('battle_friend'):
                     break
