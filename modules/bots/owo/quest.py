@@ -66,7 +66,16 @@ class Quest:
         if not client.current_quest:
             return
 
-        if f'🎉 | {client.user.mention}, Quest complete:' not in message.content:
+        text_complete = f'🎉 | {client.user.mention}, Quest complete:' in message.content
+
+        component_complete = False
+        for child in _iter_children(message):
+            content = _section_content(child)
+            if f'🎉 **|** {client.user.mention}, You completed a quest:' in content:
+                component_complete = True
+                break
+
+        if not (text_complete or component_complete):
             return
 
         client.logger.info(f'Finished quest: {client.current_quest}')
