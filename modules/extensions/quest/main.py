@@ -25,18 +25,6 @@ MAX_WORKERS = 100
 SUPPORTED_TASKS = ('WATCH_VIDEO', 'PLAY_ON_DESKTOP', 'STREAM_ON_DESKTOP', 'PLAY_ACTIVITY', 'WATCH_VIDEO_ON_MOBILE')
 
 
-def log(msg):
-    logger.info(msg)
-
-
-def warn(msg):
-    logger.warning(msg)
-
-
-def error(msg):
-    logger.error(msg)
-
-
 def read_tokens():
     tokens = []
     try:
@@ -45,7 +33,7 @@ def read_tokens():
                 if line.strip() and not line.lstrip().startswith('#'):
                     tokens.append(line.strip())
     except FileNotFoundError:
-        warn('Quest token file not found: data/quest.txt')
+        logger.warning('Quest token file not found: data/quest.txt')
     return tokens
 
 
@@ -115,11 +103,11 @@ class DiscordAPI:
             r = self.get('/users/@me')
             if r.status_code == 200:
                 user = r.json()
-                log(f'Logged in as {user["username"]} (ID: {user["id"]})')
+                logger.info(f'Logged in as {user["username"]} (ID: {user["id"]})')
                 return True
-            warn(f'Token invalid (status {r.status_code})')
+            logger.warning(f'Token invalid (status {r.status_code})')
         except Exception as e:
-            error(f'Connection to Discord failed: {e}')
+            logger.error(f'Connection to Discord failed: {e}')
         return False
 
 
@@ -235,7 +223,7 @@ class QuestAutocompleter:
         return not stop_event.wait(max(0, seconds))
 
     def _mark_done(self, qid, name):
-        log(f'Completed: {name}')
+        logger.info(f'Completed: {name}')
         with self.lock:
             self.completed_ids.add(qid)
 
@@ -248,19 +236,19 @@ class QuestAutocompleter:
                     if isinstance(data, dict):
                         blocked = _get(data, 'quest_enrollment_blocked_until')
                         if blocked:
-                            warn(f'Enrollment blocked until: {blocked}')
+                            logger.warning(f'Enrollment blocked until: {blocked}')
                         return data.get('quests', [])
                     return data if isinstance(data, list) else []
                 if r.status_code == 429:
                     retry_after = r.json().get('retry_after', 10)
-                    warn(f'Rate limited, waiting {retry_after}s')
+                    logger.warning(f'Rate limited, waiting {retry_after}s')
                     if stop_event.wait(retry_after):
                         return []
                     continue
-                warn(f'Quest fetch error ({r.status_code}): {r.text[:200]}')
+                logger.warning(f'Quest fetch error ({r.status_code}): {r.text[:200]}')
                 return []
             except Exception as e:
-                error(f'Error fetching quests: {e}')
+                logger.error(f'Error fetching quests: {e}')
                 return []
         return []
 
@@ -281,19 +269,19 @@ class QuestAutocompleter:
                 })
                 if r.status_code == 429:
                     retry_after = r.json().get('retry_after', 5)
-                    warn(f'Rate limited on enroll "{name}" (attempt {attempt}/3), waiting {retry_after + 1}s')
+                    logger.warning(f'Rate limited on enroll "{name}" (attempt {attempt}/3), waiting {retry_after + 1}s')
                     if stop_event.wait(retry_after + 1):
                         return False
                     continue
                 if r.status_code in (200, 201, 204):
-                    log(f'Enrolled: {name}')
+                    logger.info(f'Enrolled: {name}')
                     return True
-                warn(f'Enroll "{name}" failed ({r.status_code}): {r.text[:200]}')
+                logger.warning(f'Enroll "{name}" failed ({r.status_code}): {r.text[:200]}')
                 return False
             except Exception as e:
-                error(f'Enroll error "{name}": {e}')
+                logger.error(f'Enroll error "{name}": {e}')
                 return False
-        warn(f'Skipping "{name}" after 3 rate limits')
+        logger.warning(f'Skipping "{name}" after 3 rate limits')
         return False
 
     def auto_accept(self, quests):
@@ -302,7 +290,7 @@ class QuestAutocompleter:
         unaccepted = [q for q in quests if not is_enrolled(q) and not is_completed(q) and is_completable(q)]
         if not unaccepted:
             return quests
-        log(f'Auto-accepting {len(unaccepted)} unaccepted quest(s)')
+        logger.info(f'Auto-accepting {len(unaccepted)} unaccepted quest(s)')
         for q in unaccepted:
             if not running:
                 return quests
@@ -319,7 +307,7 @@ class QuestAutocompleter:
         needed, done = get_seconds_needed(quest), get_seconds_done(quest)
         enrolled = get_enrolled_at(quest)
         enrolled_ts = datetime.fromisoformat(enrolled.replace('Z', '+00:00')).timestamp() if enrolled else time.time()
-        log(f'Video: {name} ({done:.0f}/{needed}s)')
+        logger.info(f'Video: {name} ({done:.0f}/{needed}s)')
 
         speed = 7
         fails = 0
@@ -333,7 +321,7 @@ class QuestAutocompleter:
                         'timestamp': min(needed, timestamp + random.random())
                     })
                 except Exception as e:
-                    error(f'Video: {e}')
+                    logger.error(f'Video: {e}')
                     if not self._sleep(1):
                         return
                     continue
@@ -344,23 +332,23 @@ class QuestAutocompleter:
                         self._mark_done(qid, name)
                         return
                     done = timestamp
-                    log(f'[{name}] {done:.0f}/{needed}s')
+                    logger.info(f'[{name}] {done:.0f}/{needed}s')
                 elif code == 429:
                     retry_after = r.json().get('retry_after', 5)
-                    warn(f'Video rate limited, retry in {retry_after + 1}s')
+                    logger.warning(f'Video rate limited, retry in {retry_after + 1}s')
                     if not self._sleep(retry_after + 1):
                         return
                     continue
                 elif code >= 500:
                     fails += 1
                     if fails >= 5:
-                        warn(f'Giving up "{name}" this cycle after repeated server errors')
+                        logger.warning(f'Giving up "{name}" this cycle after repeated server errors')
                         return
                     if not self._sleep(min(60, 2 ** (fails - 1))):
                         return
                     continue
                 else:
-                    warn(f'Video rejected ({code}): {r.text[:200]}')
+                    logger.warning(f'Video rejected ({code}): {r.text[:200]}')
                     return
             if done >= needed:
                 break
@@ -377,7 +365,7 @@ class QuestAutocompleter:
     def _heartbeat_loop(self, quest, stream_key, progress_key):
         name, qid = get_quest_name(quest), quest['id']
         needed, done = get_seconds_needed(quest), get_seconds_done(quest)
-        log(f'[{get_task_type(quest)}] {name} (~{max(0, needed - done) // 60} min left)')
+        logger.info(f'[{get_task_type(quest)}] {name} (~{max(0, needed - done) // 60} min left)')
 
         fails = 0
         while done < needed:
@@ -388,7 +376,7 @@ class QuestAutocompleter:
             try:
                 r = self.api.post(f'/quests/{qid}/heartbeat', {'stream_key': stream_key, 'terminal': False})
             except Exception as e:
-                error(f'Heartbeat: {e}')
+                logger.error(f'Heartbeat: {e}')
                 if not self._sleep(HEARTBEAT_INTERVAL):
                     return
                 continue
@@ -399,7 +387,7 @@ class QuestAutocompleter:
                 value = (body.get('progress') or {}).get(progress_key, {}).get('value')
                 if value is not None:
                     done = value
-                log(f'[{name}] {done:.0f}/{needed}s')
+                logger.info(f'[{name}] {done:.0f}/{needed}s')
                 if body.get('completed_at') or done >= needed:
                     self._mark_done(qid, name)
                     return
@@ -407,18 +395,18 @@ class QuestAutocompleter:
                     return
             elif code == 429:
                 retry_after = r.json().get('retry_after', 5)
-                warn(f'Heartbeat rate limited, retry in {retry_after + 1}s')
+                logger.warning(f'Heartbeat rate limited, retry in {retry_after + 1}s')
                 if not self._sleep(retry_after + 1):
                     return
             elif code >= 500:
                 fails += 1
                 if fails >= 5:
-                    warn(f'Giving up "{name}" this cycle after repeated server errors')
+                    logger.warning(f'Giving up "{name}" this cycle after repeated server errors')
                     return
                 if not self._sleep(min(60, HEARTBEAT_INTERVAL * (2 ** (fails - 1)))):
                     return
             else:
-                warn(f'Heartbeat rejected ({code}): {r.text[:200]}')
+                logger.warning(f'Heartbeat rejected ({code}): {r.text[:200]}')
                 return
 
         try:
@@ -439,11 +427,11 @@ class QuestAutocompleter:
         name = get_quest_name(quest)
         task_type = get_task_type(quest)
         if not task_type:
-            warn(f'"{name}" - unsupported task, skipping')
+            logger.warning(f'"{name}" - unsupported task, skipping')
             return
         if qid in self.completed_ids:
             return
-        log(f'Starting: {name} (task: {task_type})')
+        logger.info(f'Starting: {name} (task: {task_type})')
         if task_type in ('WATCH_VIDEO', 'WATCH_VIDEO_ON_MOBILE'):
             self.complete_video(quest)
         elif task_type in ('PLAY_ON_DESKTOP', 'STREAM_ON_DESKTOP'):
@@ -456,7 +444,7 @@ class QuestAutocompleter:
         try:
             self.process_quest(quest)
         except Exception as e:
-            warn(f'Unexpected error processing quest {qid}: {e}')
+            logger.warning(f'Unexpected error processing quest {qid}: {e}')
         finally:
             with self.lock:
                 self.in_progress_ids.discard(qid)
@@ -467,24 +455,24 @@ class QuestAutocompleter:
         self.executor = ThreadPoolExecutor(max_workers=min(len(quests), MAX_WORKERS))
         for q in quests:
             self.executor.submit(self._process_and_cleanup, q)
-        log(f'Started {len(quests)} quest(s) with {min(len(quests), MAX_WORKERS)} worker(s)')
+        logger.info(f'Started {len(quests)} quest(s) with {min(len(quests), MAX_WORKERS)} worker(s)')
 
     def run(self):
-        log(f'Discord Quest Auto-Completer | Auto-accept: {"ON" if AUTO_ACCEPT else "OFF"} | Poll: {POLL_INTERVAL}s')
+        logger.info(f'Discord Quest Auto-Completer | Auto-accept: {"ON" if AUTO_ACCEPT else "OFF"} | Poll: {POLL_INTERVAL}s')
         cycle = 0
         while running:
             cycle += 1
-            log(f'-- Scan #{cycle} --')
+            logger.info(f'-- Scan #{cycle} --')
             quests = self.fetch_quests()
             if not quests:
-                log('No quests available')
+                logger.info('No quests available')
                 if stop_event.wait(POLL_INTERVAL):
                     break
                 continue
             enrolled = sum(is_enrolled(q) for q in quests)
             completed = sum(is_completed(q) for q in quests)
             completable = sum(is_completable(q) for q in quests)
-            log(f'Total: {len(quests)} | Enrolled: {enrolled} | Completed: {completed} | Completable: {completable}')
+            logger.info(f'Total: {len(quests)} | Enrolled: {enrolled} | Completed: {completed} | Completable: {completable}')
 
             quests = self.auto_accept(quests)
             with self.lock:
@@ -504,13 +492,13 @@ class QuestAutocompleter:
 
         if self.executor is not None:
             self.executor.shutdown(wait=False)
-        log('Quest autocompleter stopped')
+        logger.info('Quest autocompleter stopped')
 
 
 def run_account(token, build_number):
     api = DiscordAPI(token, build_number)
     if not api.validate_token():
-        warn('Skipping account, token validation failed')
+        logger.warning('Skipping account, token validation failed')
         return
     QuestAutocompleter(api).run()
 
@@ -521,12 +509,12 @@ def main():
     if not tokens:
         running = False
         return
-    log(f'Loaded {len(tokens)} token(s)')
+    logger.info(f'Loaded {len(tokens)} token(s)')
     build_number = fetch_latest_build_number()
     account_threads = [threading.Thread(target=run_account, args=(t, build_number), daemon=True) for t in tokens]
     for t in account_threads:
         t.start()
-    log(f'Running {len(tokens)} account(s)')
+    logger.info(f'Running {len(tokens)} account(s)')
     while running and any(t.is_alive() for t in account_threads):
         if stop_event.wait(1):
             break
