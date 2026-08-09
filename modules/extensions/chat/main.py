@@ -10,10 +10,6 @@ logger = logging.getLogger('chat')
 running = False
 
 
-def log(msg):
-    logger.info(msg)
-
-
 def load_config():
     try:
         with open('data/chat.json', encoding='utf-8') as f:
@@ -65,7 +61,7 @@ class ChatClient(discord.Client):
         if not self.channels:
             logger.error(f'{self.user}: no valid channels')
             return
-        log(f'{self.user} ready ({len(self.channels)} channel(s))')
+        logger.info(f'{self.user} ready ({len(self.channels)} channel(s))')
         self._loop_task = asyncio.create_task(self._loop())
 
     async def _loop(self):
@@ -85,11 +81,11 @@ class ChatClient(discord.Client):
                         await asyncio.sleep(0.5)
                         deleted = await self._delete_message(sent)
                         if deleted:
-                            log(f'{self.user}: sent and deleted message in {channel_label} -> "{preview}"')
+                            logger.info(f'{self.user}: sent and deleted message in {channel_label} -> "{preview}"')
                         else:
                             logger.warning(f'{self.user}: could not delete message in {channel_label} -> "{preview}"')
                     else:
-                        log(f'{self.user}: sent message in {channel_label} -> "{preview}"')
+                        logger.info(f'{self.user}: sent message in {channel_label} -> "{preview}"')
                 except discord.HTTPException:
                     logger.exception(f'{self.user}: send failed in {channel_label}')
                 await _interruptible_sleep(random.uniform(self.cooldown['min'], self.cooldown['max']))
@@ -146,7 +142,7 @@ async def _run():
     if not clients:
         logger.warning('No chat accounts configured')
         return
-    log(f'Starting {len(clients)} chat account(s)')
+    logger.info(f'Starting {len(clients)} chat account(s)')
     tasks = [asyncio.create_task(_run_client(c)) for c in clients]
     while running and any(not t.done() for t in tasks):
         await asyncio.sleep(0.5)
