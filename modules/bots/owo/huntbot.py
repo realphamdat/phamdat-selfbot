@@ -81,7 +81,7 @@ class Huntbot:
                         'STILL HUNTING', 'BACK WITH',
                     ])
                 ),
-                timeout=10,
+                timeout=5,
             )
             content = msg.content
             nick = str(client.nickname)
@@ -108,7 +108,7 @@ class Huntbot:
                             and client.msg_contains(m, all_of=[nick])
                             and client.msg_contains(m, any_of=['YOU SPENT', 'Wrong password'])
                         ),
-                        timeout=10,
+                        timeout=5,
                     )
                     if 'YOU SPENT' in verify.content:
                         client.logger.info('Huntbot submitted successfully')
