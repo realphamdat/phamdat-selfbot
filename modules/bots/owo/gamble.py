@@ -257,9 +257,9 @@ class Gamble:
     async def _highlow_guess(client, message):
         guesses = []
         for button in Component.buttons(message):
-            match = re.match(r'(Higher|Lower) \(\+(\d+)\)', button.label or '')
+            match = re.match(r'(Higher|Lower) \(\+([\d,]+)\)', button.label or '')
             if match and not button.disabled:
-                guesses.append((int(match.group(2)), button))
+                guesses.append((int(match.group(2).replace(',', '')), button))
         if not guesses:
             client.logger.warning('HighLow guess buttons not found')
             return True
