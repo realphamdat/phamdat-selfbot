@@ -56,7 +56,7 @@ class OWOClient(discord.Client):
         }
 
         if int(self.config['gamble']['highlow']['bet']) < 10:
-            int(self.config['gamble']['highlow']['bet']) = 10
+            self.config['gamble']['highlow']['bet'] = 10
 
         self.bet_slot = int(self.config['gamble']['slot']['bet'])
         self.bet_coinflip = int(self.config['gamble']['coinflip']['bet'])
