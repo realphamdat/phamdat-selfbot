@@ -128,7 +128,7 @@ class Quest:
                     and m.components
                     and Quest._has_quest_log_header(m, client.user.mention)
                 ),
-                timeout=10,
+                timeout=5,
             )
 
             if await Quest._claim_quest(client, msg):
