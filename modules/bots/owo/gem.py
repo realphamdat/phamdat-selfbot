@@ -43,7 +43,7 @@ class Gem:
                     client.is_owo_message(m, in_channel=True)
                     and client.msg_contains(m, all_of=[str(client.nickname), 'active Special gem or you do not own'])
                 ),
-                timeout=10
+                timeout=5
             )
             client.special_pet_available = False
         except asyncio.TimeoutError:
@@ -63,7 +63,7 @@ class Gem:
                     client.is_owo_message(m, in_channel=True)
                     and f"{client.nickname}'s Inventory" in m.content
                 ),
-                timeout=10,
+                timeout=5,
             )
             client.inventory_str = msg.content
             inv = [int(x) for x in re.findall(r'`(.*?)`', msg.content) if x.isnumeric()]
