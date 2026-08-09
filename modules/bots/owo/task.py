@@ -158,6 +158,7 @@ class TaskManager:
                         or gamble['slot']['mode']
                         or gamble['coinflip']['mode']
                         or gamble['blackjack']['mode']
+                        or gamble['highlow']['mode']
                         or self.client.quest_flags.get('gamble')
                     )
 

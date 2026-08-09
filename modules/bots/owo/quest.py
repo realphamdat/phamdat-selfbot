@@ -7,27 +7,7 @@ import datetime
 import discord
 
 from modules.bots.owo.daily import Daily
-
-
-def _iter_children(message):
-    for component in getattr(message, 'components', []) or []:
-        yield from _iter_component_children(component)
-
-
-def _iter_component_children(component):
-    children = getattr(component, 'children', None) or getattr(component, 'components', None)
-    if not children:
-        return
-    for child in children:
-        yield child
-        yield from _iter_component_children(child)
-
-
-def _section_content(section):
-    children = getattr(section, 'children', None) or getattr(section, 'components', None)
-    if not children:
-        return getattr(section, 'content', '') or ''
-    return '\n'.join(part for part in (_section_content(child) for child in children) if part)
+from modules.utils.component import Component
 
 
 class Quest:
@@ -69,8 +49,8 @@ class Quest:
         text_complete = f'🎉 | {client.user.mention}, Quest complete:' in message.content
 
         component_complete = False
-        for child in _iter_children(message):
-            content = _section_content(child)
+        for child in Component.descendants(message):
+            content = Component.text(child)
             if f'🎉 **|** {client.user.mention}, You completed a quest:' in content:
                 component_complete = True
                 break
@@ -83,31 +63,30 @@ class Quest:
 
     @staticmethod
     def _has_quest_log_header(message, user):
-        for child in _iter_children(message):
-            content = _section_content(child)
+        for child in Component.descendants(message):
+            content = Component.text(child)
             if content and user in content:
                 return True
         return False
 
     @staticmethod
     async def _claim_quest(client, message):
-        for child in _iter_children(message):
-            for button in getattr(child, 'children', []) or []:
-                if getattr(button, 'custom_id', '') == 'quests:claim' and not getattr(button, 'disabled', False):
-                    try:
-                        await button.click()
-                    except discord.HTTPException:
-                        client.logger.exception('Failed to claim quest')
-                        return False
-                    client.logger.info('Claimed quest')
-                    return True
+        for button in Component.buttons(message):
+            if button.custom_id == 'quests:claim' and not button.disabled:
+                try:
+                    await button.click()
+                except discord.HTTPException:
+                    client.logger.exception('Failed to claim quest')
+                    return False
+                client.logger.info('Claimed quest')
+                return True
         return False
 
     @staticmethod
     def _extract_quests(client, message):
         quests = []
-        for child in _iter_children(message):
-            content = _section_content(child)
+        for child in Component.descendants(message):
+            content = Component.text(child)
             if not content:
                 continue
             tasks = re.findall(r'\n> (.*?)\n>', content)

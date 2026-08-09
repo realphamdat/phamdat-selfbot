@@ -4,7 +4,10 @@ import random
 import time
 import datetime
 
+import discord
+
 from modules.bots.owo.daily import Daily
+from modules.utils.component import Component
 
 
 class Gamble:
@@ -179,6 +182,97 @@ class Gamble:
                 break
 
     @staticmethod
+    def _is_highlow_start(client, message):
+        if not message.components:
+            return False
+        text = Component.text(message.components[0])
+        return client.user.mention in text and '**Streak**:' in text
+
+    @staticmethod
+    async def play_highlow(client):
+        if not client.can_run() or not client.current_channel:
+            return
+
+        highlow = client.config['gamble']['highlow']
+        if client.bet_highlow >= int(highlow['max']):
+            client.bet_highlow = int(highlow['bet'])
+
+        await client.current_channel.send(f'{client.prefix}hl {client.bet_highlow}')
+        client.logger.info(f'Sent {client.prefix}hl {client.bet_highlow}')
+
+        try:
+            message = await client.wait_for(
+                'message',
+                check=lambda m: Gamble._is_highlow_start(client, m),
+                timeout=10,
+            )
+        except asyncio.TimeoutError:
+            client.logger.error('HighLow message timeout')
+            return
+
+        for _ in range(50):
+            await asyncio.sleep(2)
+            try:
+                message = await client.current_channel.fetch_message(message.id)
+            except discord.HTTPException:
+                break
+            if await Gamble._handle_highlow(client, message):
+                break
+
+    @staticmethod
+    async def _handle_highlow(client, message):
+        text = Component.text(message)
+
+        if 'cashed out!' in text:
+            client.logger.info(f'HighLow won {client.bet_highlow}')
+            client.bet_highlow = int(client.config['gamble']['highlow']['bet'])
+            return True
+
+        if 'guessed incorrectly!' in text:
+            client.logger.info(f'HighLow lost {client.bet_highlow}')
+            client.bet_highlow *= int(client.config['gamble']['highlow']['rate'])
+            return True
+
+        match = re.search(r'\(([\d.]+)x\)', text)
+        if match and float(match.group(1)) >= 2.0:
+            return await Gamble._highlow_cashout(client, message)
+
+        return await Gamble._highlow_guess(client, message)
+
+    @staticmethod
+    async def _highlow_cashout(client, message):
+        for button in Component.buttons(message):
+            if 'cashout' in (button.custom_id or '') and not button.disabled:
+                try:
+                    await button.click()
+                except discord.HTTPException:
+                    client.logger.exception('Failed to click highlow cashout')
+                    return True
+                client.logger.info('HighLow cashed out')
+                return False
+        client.logger.warning('HighLow cashout button not found')
+        return True
+
+    @staticmethod
+    async def _highlow_guess(client, message):
+        guesses = []
+        for button in Component.buttons(message):
+            match = re.match(r'(Higher|Lower) \(\+(\d+)\)', button.label or '')
+            if match and not button.disabled:
+                guesses.append((int(match.group(2)), button))
+        if not guesses:
+            client.logger.warning('HighLow guess buttons not found')
+            return True
+        value, button = max(guesses, key=lambda item: item[0])
+        try:
+            await button.click()
+        except discord.HTTPException:
+            client.logger.exception('Failed to click highlow guess')
+            return True
+        client.logger.info(f'HighLow guessed {button.label}')
+        return False
+
+    @staticmethod
     async def gamble_cycle(client):
         gamble = client.config['gamble']
         delay_min = gamble['delay']['min']
@@ -199,5 +293,9 @@ class Gamble:
 
             if gamble['blackjack']['mode'] or client.quest_flags.get('gamble'):
                 await Gamble.play_blackjack(client)
+                await asyncio.sleep(random.uniform(delay_min, delay_max))
+
+            if gamble['highlow']['mode'] or client.quest_flags.get('gamble'):
+                await Gamble.play_highlow(client)
         except Exception:
             client.logger.exception('Gamble error')

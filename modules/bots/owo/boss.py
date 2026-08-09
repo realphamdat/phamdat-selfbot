@@ -4,6 +4,7 @@ import time
 import discord
 
 from modules.bots.owo.daily import Daily
+from modules.utils.component import Component
 
 
 class Boss:
@@ -21,7 +22,7 @@ class Boss:
         if not children:
             return
 
-        if 'A Guild Boss Appeared!' not in Boss._section_text(children[0]):
+        if 'A Guild Boss Appeared!' not in Component.text(children[0]):
             return
 
         fight = getattr(children[-1], 'accessory', None)
@@ -40,11 +41,6 @@ class Boss:
 
         client.logger.info(f'Joined boss battle in #{channel}')
         await watch_task
-
-    @staticmethod
-    def _section_text(section):
-        parts = [getattr(child, 'content', '') for child in getattr(section, 'children', []) or []]
-        return '\n'.join(part for part in parts if part)
 
     @staticmethod
     async def _watch_ticket_response(client, channel):

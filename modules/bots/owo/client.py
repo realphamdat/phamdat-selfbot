@@ -58,6 +58,7 @@ class OWOClient(discord.Client):
         self.bet_slot = int(self.config['gamble']['slot']['bet'])
         self.bet_coinflip = int(self.config['gamble']['coinflip']['bet'])
         self.bet_blackjack = int(self.config['gamble']['blackjack']['bet'])
+        self.bet_highlow = int(self.config['gamble']['highlow']['bet'])
 
         self.ga_joined = set()
         self.block_battle = False
