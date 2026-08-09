@@ -67,7 +67,8 @@ class Gem:
             )
             client.inventory_str = msg.content
             inv = [int(x) for x in re.findall(r'`(.*?)`', msg.content) if x.isnumeric()]
-            
+
+            await asyncio.sleep(2)
             await Gem._open_items(client, inv)
             return inv
         except asyncio.TimeoutError:
