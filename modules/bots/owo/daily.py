@@ -39,7 +39,7 @@ class Daily:
                     and client.msg_contains(m, all_of=[str(client.nickname)])
                     and client.msg_contains(m, any_of=['next daily', 'Nu'])
                 ),
-                timeout=10,
+                timeout=5,
             )
 
             text = msg.content.split('!')[-1].strip()
