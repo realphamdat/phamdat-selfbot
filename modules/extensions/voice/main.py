@@ -11,10 +11,6 @@ running = False
 CHECK_INTERVAL = 60
 
 
-def log(msg):
-    logger.info(msg)
-
-
 def load_config():
     try:
         with open('data/voice.json', encoding='utf-8') as f:
@@ -51,7 +47,7 @@ class VoiceSession(discord.Client):
         if not self.channel:
             logger.error(f'{self.user}: voice channel {self.channel_id} not available')
             return
-        log(f'{self.user}: ready for voice in {self.channel.name or self.channel.id}')
+        logger.info(f'{self.user}: ready for voice in {self.channel.name or self.channel.id}')
         self._loop_task = asyncio.create_task(self._loop())
 
     async def _loop(self):
@@ -64,7 +60,7 @@ class VoiceSession(discord.Client):
 
                 try:
                     await self.channel.connect()
-                    log(f'{self.user}: joined voice in {self.channel.name or self.channel.id}')
+                    logger.info(f'{self.user}: joined voice in {self.channel.name or self.channel.id}')
                 except discord.ClientException:
                     logger.warning(f'{self.user}: voice connection already exists or invalid state')
                 except (discord.HTTPException, asyncio.TimeoutError, discord.ConnectionClosed) as exc:
@@ -109,7 +105,7 @@ async def _run():
     if not clients:
         logger.warning('No voice accounts configured')
         return
-    log(f'Starting {len(clients)} voice account(s)')
+    logger.info(f'Starting {len(clients)} voice account(s)')
     tasks = [asyncio.create_task(_run_client(c)) for c in clients]
     while running and any(not t.done() for t in tasks):
         await asyncio.sleep(1)
