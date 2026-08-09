@@ -200,7 +200,7 @@ class Gem:
                     client.is_owo_message(m, in_channel=True)
                     and client.msg_contains(m, any_of=['are available', 'not available'])
                 ),
-                timeout=10,
+                timeout=5,
             )
             if 'are available' in msg.content:
                 parts = re.findall(r'\*\*(.*?)\*\*', msg.content)
