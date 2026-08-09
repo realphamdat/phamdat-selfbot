@@ -97,7 +97,7 @@ class TaskManager:
         try:
             while self._running:
                 if self.client.can_run() and self.client.config['quest']:
-                    if self.client.cooldown_quest - time.time() <= 0:
+                    if self.client.cooldown_quest <= time.time():
                         try:
                             await Quest.do_quest(self.client)
                         except Exception:
