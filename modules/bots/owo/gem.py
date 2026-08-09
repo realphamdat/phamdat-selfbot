@@ -164,10 +164,7 @@ class Gem:
         if not client.msg_contains(message.content, all_of=[str(client.nickname), '🌱', 'gained']):
             return
 
-        gem = client.config['gem']
-        if not gem['use']:
-            return
-        if Gem._skip_gem_check(client):
+        if (not client.config['gem']['use'] and Gem._skip_gem_check(client)) or not Gem.glitch_available(client):
             return
 
         if gem['couple'] and 'spent 5 <:cowoncy:416043450337853441> and caught a' in message.content:
@@ -180,8 +177,7 @@ class Gem:
 
     @staticmethod
     def glitch_available(client):
-        gem = client.config['gem']
-        if not gem.get('glitch', False):
+        if not client.config['gem'].get('glitch', False):
             return False
         if time.time() < client.cooldown_glitch:
             return False
