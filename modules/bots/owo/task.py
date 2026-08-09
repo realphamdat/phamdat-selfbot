@@ -141,7 +141,7 @@ class TaskManager:
                         await Gem.check_glitch(self.client)
                     except Exception:
                         self.client.logger.exception('Glitch error')
-                await asyncio.sleep(300)
+                await asyncio.sleep(600)
         except asyncio.CancelledError:
             pass
 
@@ -199,7 +199,7 @@ class TaskManager:
             await self.client.wait_for(
                 'message',
                 check=lambda m: m.author.id == self.client.owo_bot.id,
-                timeout=10,
+                timeout=5,
             )
             self.client.logger.info('OWO bot is online')
         except asyncio.TimeoutError:
