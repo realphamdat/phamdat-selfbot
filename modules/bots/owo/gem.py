@@ -166,7 +166,7 @@ class Gem:
             return
 
         gem = client.config['gem']
-        if (not gem['use'] and Gem._skip_gem_check(client)) or not Gem.glitch_available(client):
+        if (not gem['use'] and Gem._skip_gem_check(client)) or Gem.glitch_available(client):
             return
 
         if gem['couple'] and 'spent 5 <:cowoncy:416043450337853441> and caught a' in message.content:
@@ -179,15 +179,11 @@ class Gem:
 
     @staticmethod
     def glitch_available(client):
-        if not client.config['gem'].get('glitch', False):
-            return False
-        if time.time() < client.cooldown_glitch:
-            return False
-        return True
+        return client.config['gem'].get('glitch', False) and time.time() < client.cooldown_glitch
 
     @staticmethod
     async def check_glitch(client):
-        if not Gem.glitch_available(client) or not client.current_channel:
+        if Gem.glitch_available(client) or not client.current_channel:
             return
         await client.current_channel.send(f'{client.prefix}dt')
         client.logger.info(f'Sent {client.prefix}dt')
