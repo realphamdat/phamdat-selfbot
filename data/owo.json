@@ -38,6 +38,7 @@
             "slot": {"mode": false, "bet": 1, "rate": 2, "max": 250000},
             "coinflip": {"mode": false, "bet": 1, "rate": 2, "max": 250000},
             "blackjack": {"mode": false, "bet": 1, "rate": 2, "max": 250000},
+            "highlow": {"mode": false, "bet": 10, "rate": 2, "max": 250000},
             "delay": {"min": 0.5, "max": 1},
             "cooldown": {"min": 60, "max": 120}
         }
