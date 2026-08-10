@@ -48,13 +48,9 @@ class WebSocketHandler(logging.Handler):
     def get_buffer(self, limit=1000, before=None, after=None):
         logs = list(self.buffer)
         if before is not None:
-            # Older-walking: return the newest `limit` entries older than cursor.
             filtered = [entry for entry in logs if entry['seq'] < before]
             returned = filtered[-limit:]
         elif after is not None:
-            # Forward-walking (reconnect backfill): return the OLDEST `limit`
-            # entries newer than cursor so successive pages tile the gap with
-            # no slip/skip (last-limit here would drop the logs nearest cursor).
             filtered = [entry for entry in logs if entry['seq'] > after]
             returned = filtered[:limit]
         else:
