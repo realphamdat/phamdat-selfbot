@@ -46,17 +46,14 @@ class WebSocketHandler(logging.Handler):
             self.socketio.emit('log', entry, namespace='/')
 
     def get_buffer(self, limit=1000, before=None, after=None):
-        logs = list(self.buffer)
         if before is not None:
-            filtered = [entry for entry in logs if entry['seq'] < before]
-            returned = filtered[-limit:]
-        elif after is not None:
-            filtered = [entry for entry in logs if entry['seq'] > after]
-            returned = filtered[:limit]
-        else:
-            returned = logs[-limit:]
-            filtered = logs
-        return returned, len(filtered) > limit
+            filtered = [e for e in self.buffer if e['seq'] < before]
+            return filtered[-limit:], len(filtered) > limit
+        if after is not None:
+            filtered = [e for e in self.buffer if e['seq'] > after]
+            return filtered[:limit], len(filtered) > limit
+        logs = list(self.buffer)
+        return logs[-limit:], len(logs) > limit
 
     def get_names(self):
         return sorted(self.names)

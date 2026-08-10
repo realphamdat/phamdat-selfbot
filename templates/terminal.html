@@ -147,21 +147,15 @@
 {% endblock %}
 {% block extra_js %}
 <script>
-    const ALL_LEVELS = ['INFO', 'WARNING', 'ERROR', 'CRITICAL', 'DEBUG'];
+    const ALL_LEVELS = ['INFO','WARNING','ERROR','CRITICAL','DEBUG'];
+    const chat = s => document.querySelector(s);
 
-    let isRunning = false;
-    let startTime = null;
-    let runtimeInterval = null;
-    let autoScroll = true;
-    let oldestLogSeq = null;
-    let loadingLogs = false;
-    let logEndReached = false;
-
-    let activeLevels = new Set(ALL_LEVELS);
-    let knownNames = new Set();
-    let activeNames = new Set();
-    let searchQuery = '';
-    let searchMode = 'smart';
+    let isRunning=false, startTime=null, runtimeInterval=null, autoScroll=true;
+    let oldestLogSeq=null, loadingLogs=false, logEndReached=false;
+    let activeLevels=new Set(ALL_LEVELS), knownNames=new Set(), activeNames=new Set();
+    let searchQuery='', searchMode='smart', searchTimer=null;
+    let maxRenderedSeq=0, initialLoaded=false, liveQueue=[], flushId=null;
+    const seenSeqs = new Set();
 
     const terminalBody = document.getElementById('terminalBody');
     const mainBtn = document.getElementById('mainBtn');
@@ -170,191 +164,127 @@
     const filterPanel = document.getElementById('filterPanel');
     const searchInput = document.getElementById('searchInput');
 
-    function toggleFilterPanel() {
-        filterPanel.classList.toggle('open');
+    function toggleFilterPanel() { filterPanel.classList.toggle('open'); }
+
+    function makeChip(label, active, on) {
+        const c = document.createElement('span');
+        c.className = 'chip' + (active ? ' active' : '');
+        c.textContent = label;
+        c.onclick = on;
+        return c;
     }
+
+    function toggleChips(boxSel, set, keys) {
+        chat(boxSel).querySelectorAll('.chip').forEach(c =>
+            c.classList.toggle('active', c.textContent === 'All' ? set.size === keys.length : set.has(c.dataset.key)));
+    }
+    const refreshLevelChips = () => toggleChips('#levelChips', activeLevels, ALL_LEVELS);
+    const refreshNameChips = () => toggleChips('#nameChips', activeNames, [...knownNames]);
 
     function buildLevelChips() {
-        const container = document.getElementById('levelChips');
-        container.innerHTML = '';
-        const allChip = document.createElement('span');
-        allChip.className = 'chip active';
-        allChip.textContent = 'All';
-        allChip.onclick = () => {
+        const box = chat('#levelChips');
+        box.innerHTML = '';
+        box.appendChild(makeChip('All', true, () => {
             if (activeLevels.size === ALL_LEVELS.length) activeLevels.clear();
-            else activeLevels = new Set(ALL_LEVELS);
-            refreshLevelChips();
-            applyFilters();
-        };
-        container.appendChild(allChip);
-
+            else ALL_LEVELS.forEach(v => activeLevels.add(v));
+            refreshLevelChips(); applyFilters();
+        }));
         ALL_LEVELS.forEach(level => {
-            const chip = document.createElement('span');
-            chip.className = 'chip active';
-            chip.textContent = level;
-            chip.dataset.level = level;
-            chip.onclick = () => {
-                if (activeLevels.has(level)) activeLevels.delete(level);
-                else activeLevels.add(level);
-                refreshLevelChips();
-                applyFilters();
-            };
-            container.appendChild(chip);
+            const c = makeChip(level, true, () => {
+                activeLevels.has(level) ? activeLevels.delete(level) : activeLevels.add(level);
+                refreshLevelChips(); applyFilters();
+            });
+            c.dataset.key = level;
+            box.appendChild(c);
         });
     }
 
-    function refreshLevelChips() {
-        document.querySelectorAll('#levelChips .chip').forEach(chip => {
-            if (chip.textContent === 'All') {
-                chip.classList.toggle('active', activeLevels.size === ALL_LEVELS.length);
-            } else {
-                chip.classList.toggle('active', activeLevels.has(chip.dataset.level));
-            }
+    function nameChip(name) {
+        const c = makeChip(name, activeNames.has(name), () => {
+            activeNames.has(name) ? activeNames.delete(name) : activeNames.add(name);
+            refreshNameChips(); applyFilters();
         });
+        c.dataset.key = name;
+        return c;
     }
 
     function buildNameChips() {
-        const container = document.getElementById('nameChips');
-        container.innerHTML = '';
+        const box = chat('#nameChips');
+        box.innerHTML = '';
         const names = [...knownNames];
-
-        const allChip = document.createElement('span');
-        allChip.className = 'chip' + (activeNames.size === names.length ? ' active' : '');
-        allChip.textContent = 'All';
-        allChip.onclick = () => {
+        box.appendChild(makeChip('All', activeNames.size === names.length, () => {
             if (activeNames.size === names.length) activeNames.clear();
-            else activeNames = new Set(names);
-            refreshNameChips();
-            applyFilters();
-        };
-        container.appendChild(allChip);
-
-        names.forEach(name => addNameChip(name));
+            else names.forEach(n => activeNames.add(n));
+            refreshNameChips(); applyFilters();
+        }));
+        names.forEach(n => box.appendChild(nameChip(n)));
     }
 
-    function addNameChip(name) {
-        const container = document.getElementById('nameChips');
-        if ([...container.children].some(c => c.dataset.name === name)) return;
-        const chip = document.createElement('span');
-        chip.className = 'chip' + (activeNames.has(name) ? ' active' : '');
-        chip.textContent = name;
-        chip.dataset.name = name;
-        chip.onclick = () => {
-            if (activeNames.has(name)) activeNames.delete(name);
-            else activeNames.add(name);
-            refreshNameChips();
-            applyFilters();
-        };
-        container.appendChild(chip);
-    }
-
-    function refreshNameChips() {
-        const names = [...knownNames];
-        document.querySelectorAll('#nameChips .chip').forEach(chip => {
-            if (chip.textContent === 'All') {
-                chip.classList.toggle('active', activeNames.size === names.length);
-            } else {
-                chip.classList.toggle('active', activeNames.has(chip.dataset.name));
-            }
-        });
+    function registerName(name) {
+        if (knownNames.has(name)) return;
+        knownNames.add(name);
+        activeNames.add(name);
+        if (chat('#nameChips').children.length) chat('#nameChips').appendChild(nameChip(name));
     }
 
     function setSearchMode(mode) {
         searchMode = mode;
-        document.getElementById('smartBtn').classList.toggle('active', mode === 'smart');
-        document.getElementById('strictBtn').classList.toggle('active', mode === 'strict');
+        chat('#smartBtn').classList.toggle('active', mode === 'smart');
+        chat('#strictBtn').classList.toggle('active', mode === 'strict');
         applyFilters();
     }
 
-    function matchesFilter(entry) {
-        if (!activeLevels.has(entry.level)) return false;
-        if (!activeNames.has(entry.name)) return false;
-        if (searchQuery) {
-            if (searchMode === 'smart') {
-                return entry.message.toLowerCase().includes(searchQuery.toLowerCase());
-            }
-            return entry.message.includes(searchQuery);
-        }
-        return true;
+    function matchesFilter(e) {
+        if (!activeLevels.has(e.level) || !activeNames.has(e.name)) return false;
+        return !searchQuery || (searchMode === 'smart'
+            ? e.message.toLowerCase().includes(searchQuery.toLowerCase())
+            : e.message.includes(searchQuery));
     }
 
     function applyFilters() {
         searchQuery = searchInput.value.trim();
-        terminalBody.querySelectorAll('.log-line').forEach(line => {
-            line.classList.toggle('hidden', !matchesFilter({
-                level: line.dataset.level,
-                name: line.dataset.name,
-                message: line.dataset.msg,
-            }));
-        });
+        terminalBody.querySelectorAll('.log-line').forEach(l =>
+            l.classList.toggle('hidden', !matchesFilter({ level: l.dataset.level, name: l.dataset.name, message: l.dataset.msg })));
     }
 
-    // Debounce live keystrokes: toggling the visibility class over thousands
-    // of rows per keystroke is expensive, so only re-filter after a pause.
-    let searchDebounceId = null;
     function onSearchInput() {
-        if (searchDebounceId) clearTimeout(searchDebounceId);
-        searchDebounceId = setTimeout(applyFilters, 120);
+        clearTimeout(searchTimer);
+        searchTimer = setTimeout(applyFilters, 120);
     }
 
-    function createLogLine(entry) {
-        const line = document.createElement('div');
-        line.className = 'log-line';
-        line.dataset.level = entry.level;
-        line.dataset.name = entry.name;
-        line.dataset.msg = entry.message;
-        line.dataset.seq = entry.seq;
-        if (!matchesFilter(entry)) line.classList.add('hidden');
-        line.innerHTML = `<span class="log-time">${entry.time}</span><span class="log-level ${entry.level}">${entry.level.padEnd(5)}</span><span class="log-name">[${entry.name}]</span><span class="log-msg">${escapeHtml(entry.message)}</span>`;
-        return line;
+    function createLogLine(e) {
+        const l = document.createElement('div');
+        l.className = 'log-line';
+        Object.assign(l.dataset, { level: e.level, name: e.name, msg: e.message, seq: e.seq });
+        if (!matchesFilter(e)) l.classList.add('hidden');
+        l.innerHTML = `<span class="log-time">${e.time}</span><span class="log-level ${e.level}">${e.level.padEnd(5)}</span><span class="log-name">[${e.name}]</span><span class="log-msg">${escapeHtml(e.message)}</span>`;
+        return l;
     }
 
-    // ---- Rendering: batching, dedup by seq, bounded window ----
-
-    // Allowlist of already-rendered seqs so REST + WebSocket + reconnect
-    // can never render the same log twice (fixes duplicate lines).
-    const seenSeqs = new Set();
-    // Safety valve: never let the DOM grow without bound.
-    const MAX_RENDERED = 15000;
-    // Highest seq ever rendered; used to backfill the reconnect gap forward.
-    let maxRenderedSeq = 0;
-
-    // Render a list of entries in ONE DOM pass (one reflow) instead of one
-    // reflow per log, which starves the event loop once logs exceed ~1k.
     function renderBatch(entries, prepend = false) {
-        let added = 0;
         const frag = document.createDocumentFragment();
-        for (const entry of entries) {
-            if (seenSeqs.has(entry.seq)) continue;
-            seenSeqs.add(entry.seq);
-            if (entry.seq > maxRenderedSeq) maxRenderedSeq = entry.seq;
-            registerName(entry.name);
-            frag.appendChild(createLogLine(entry));
+        let added = 0;
+        for (const e of entries) {
+            if (seenSeqs.has(e.seq)) continue;
+            seenSeqs.add(e.seq);
+            maxRenderedSeq = Math.max(maxRenderedSeq, e.seq);
+            registerName(e.name);
+            frag.appendChild(createLogLine(e));
             added++;
         }
-        if (added) {
-            if (prepend) terminalBody.insertBefore(frag, terminalBody.firstChild);
-            else terminalBody.appendChild(frag);
-            trimOverflow();
-        }
-        return added;
+        if (!added) return;
+        if (prepend) terminalBody.insertBefore(frag, terminalBody.firstChild);
+        else terminalBody.appendChild(frag);
+        trimOverflow();
     }
 
-    // Coalesce a burst of live socket logs into a single periodic flush
-    // (and therefore a single scroll / single reflow) every ~70ms.
-    let liveQueue = [];
-    let liveFlushId = null;
-
-    function queueLog(entry) {
-        liveQueue.push(entry);
-        if (liveFlushId === null) {
-            liveFlushId = setTimeout(flushLive, 70);
-        }
+    function queueLog(e) {
+        liveQueue.push(e);
+        if (flushId === null) flushId = setTimeout(flushLive, 70);
     }
 
     function flushLive() {
-        liveFlushId = null;
-        if (!liveQueue.length) return;
+        flushId = null;
         const batch = liveQueue;
         liveQueue = [];
         renderBatch(batch);
@@ -362,73 +292,50 @@
     }
 
     function trimOverflow() {
-        let overflow = terminalBody.children.length - MAX_RENDERED;
-        while (overflow > 0) {
-            terminalBody.removeChild(terminalBody.firstChild);
-            overflow--;
-        }
-        if (terminalBody.children.length >= MAX_RENDERED) {
-            // Rebuild the dedup set from what is actually in the DOM so
-            // seenSeqs itself stays bounded in size.
+        while (terminalBody.children.length > 15000) terminalBody.removeChild(terminalBody.firstChild);
+        if (terminalBody.children.length >= 15000) {
             seenSeqs.clear();
-            for (const line of terminalBody.children) {
-                seenSeqs.add(Number(line.dataset.seq));
-            }
+            terminalBody.querySelectorAll('.log-line').forEach(l => seenSeqs.add(Number(l.dataset.seq)));
         }
     }
 
-    // Reconnect: backfill logs that were emitted while the socket was down,
-    // walking forward from the last rendered seq until the newest log so no
-    // gap is left missing (fixes missing logs after a disconnect).
-    let initialLoaded = false;
     async function resyncTail() {
         if (!initialLoaded) return;
-        const wasAtBottom = autoScroll;
+        const atBottom = autoScroll;
         try {
             let cursor = maxRenderedSeq;
             while (true) {
                 const data = await api(`/api/logs?limit=1000&after=${cursor}`);
-                const added = data.logs || [];
-                if (!added.length) break;
-                (data.names || []).forEach(n => registerName(n));
-                renderBatch(added);
-                cursor = added[added.length - 1].seq;
-                if (!data.has_more || added.length < 1000) break;
+                const logs = data.logs || [];
+                if (!logs.length) break;
+                (data.names || []).forEach(registerName);
+                renderBatch(logs);
+                cursor = logs[logs.length - 1].seq;
+                if (!data.has_more || logs.length < 1000) break;
             }
-        } catch (e) { /* best-effort; next reconnect or live event retries */ }
-        if (wasAtBottom) scrollToBottom();
+        } catch (e) {}
+        if (atBottom) scrollToBottom();
     }
     socket.on('connect', resyncTail);
 
-    function registerName(name) {
-        if (knownNames.has(name)) return;
-        knownNames.add(name);
-        activeNames.add(name);
-        if (document.getElementById('nameChips').children.length) addNameChip(name);
-    }
-
     function updateOldestSeq(logs) {
-        if (!logs.length) return;
-        const first = logs[0].seq;
-        oldestLogSeq = oldestLogSeq === null ? first : Math.min(oldestLogSeq, first);
+        if (logs.length) oldestLogSeq = oldestLogSeq === null ? logs[0].seq : Math.min(oldestLogSeq, logs[0].seq);
     }
 
     async function loadOlderLogs() {
         if (loadingLogs || logEndReached || oldestLogSeq === null) return;
         loadingLogs = true;
-        const oldHeight = terminalBody.scrollHeight;
+        const top = terminalBody.scrollHeight;
         const data = await api(`/api/logs?limit=1000&before=${oldestLogSeq}`);
         renderBatch(data.logs, true);
         updateOldestSeq(data.logs);
-        terminalBody.scrollTop = terminalBody.scrollHeight - oldHeight;
+        terminalBody.scrollTop = terminalBody.scrollHeight - top;
         if (!data.has_more) logEndReached = true;
         loadingLogs = false;
         if (data.logs.length && !logEndReached && terminalBody.scrollTop <= 20) loadOlderLogs();
     }
 
-    function scrollToBottom() {
-        terminalBody.scrollTop = terminalBody.scrollHeight;
-    }
+    function scrollToBottom() { terminalBody.scrollTop = terminalBody.scrollHeight; }
 
     function toggleScrollLock() {
         autoScroll = !autoScroll;
@@ -439,7 +346,6 @@
     async function init() {
         const status = await api('/api/status');
         setRunning(status.running, status.start_time ? status.start_time * 1000 : null);
-
         const data = await api('/api/logs?limit=1000');
         knownNames = new Set(data.names);
         activeNames = new Set(data.names);
@@ -447,46 +353,29 @@
         updateOldestSeq(data.logs);
         logEndReached = !data.has_more;
         scrollToBottom();
-
         buildLevelChips();
         buildNameChips();
         initialLoaded = true;
     }
 
-    function setRunning(running, startTimeMs) {
+    function setRunning(running, start) {
         isRunning = running;
-        startTime = startTimeMs;
-        if (running) {
-            mainBtn.textContent = 'Stop';
-            mainBtn.className = 'btn-main stop';
-            startRuntimeCounter();
-        } else {
-            mainBtn.textContent = 'Start';
-            mainBtn.className = 'btn-main start';
-            stopRuntimeCounter();
-            runtimeEl.textContent = '00:00:00';
-        }
+        startTime = start;
+        mainBtn.textContent = running ? 'Stop' : 'Start';
+        mainBtn.className = running ? 'btn-main stop' : 'btn-main start';
+        if (running) startRuntimeCounter();
+        else { stopRuntimeCounter(); runtimeEl.textContent = '00:00:00'; }
     }
 
     async function toggleBot() {
         if (isRunning) {
             showConfirm('Stop', 'Stop all bots and reset everything?', async () => {
                 const res = await api('/api/stop', 'POST');
-                if (res.ok) {
-                    setRunning(false, null);
-                    showToast('Stopped', 'success');
-                } else {
-                    showToast(res.error || 'Failed', 'error');
-                }
+                res.ok ? setRunning(false, null) || showToast('Stopped', 'success') : showToast(res.error || 'Failed', 'error');
             });
         } else {
             const res = await api('/api/start', 'POST');
-            if (res.ok) {
-                setRunning(true, Date.now());
-                showToast('Started', 'success');
-            } else {
-                showToast(res.error || 'Failed', 'error');
-            }
+            res.ok ? setRunning(true, Date.now()) || showToast('Started', 'success') : showToast(res.error || 'Failed', 'error');
         }
     }
 
@@ -494,11 +383,8 @@
         stopRuntimeCounter();
         runtimeInterval = setInterval(() => {
             if (!startTime) return;
-            const diff = Math.floor((Date.now() - startTime) / 1000);
-            const h = String(Math.floor(diff / 3600)).padStart(2, '0');
-            const m = String(Math.floor((diff % 3600) / 60)).padStart(2, '0');
-            const s = String(diff % 60).padStart(2, '0');
-            runtimeEl.textContent = `${h}:${m}:${s}`;
+            const d = Math.floor((Date.now() - startTime) / 1000);
+            runtimeEl.textContent = [d / 3600, d % 3600 / 60, d % 60].map(n => String(Math.floor(n)).padStart(2, '0')).join(':');
         }, 1000);
     }
 
@@ -506,13 +392,8 @@
         if (runtimeInterval) { clearInterval(runtimeInterval); runtimeInterval = null; }
     }
 
-    socket.on('log', entry => {
-        queueLog(entry);
-    });
-
-    terminalBody.addEventListener('scroll', () => {
-        if (terminalBody.scrollTop <= 20) loadOlderLogs();
-    });
+    socket.on('log', queueLog);
+    terminalBody.addEventListener('scroll', () => { if (terminalBody.scrollTop <= 20) loadOlderLogs(); });
 
     init();
 </script>
