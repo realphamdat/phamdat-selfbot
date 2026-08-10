@@ -282,8 +282,41 @@
         showToast('New captcha detected', 'warning');
     });
     socket.on('notification', data => {
+        if (!audioUnlocked && !unlockToastShown) {
+            unlockToastShown = true;
+            persistUnlockHint();
+            showToast('Click anywhere to enable sound notifications', 'warning');
+        }
         new Audio('/assets/notification.mp3').play().catch(() => {});
     });
+
+    let audioUnlocked = false;
+
+    function persistUnlockHint() {
+        try { localStorage.setItem('phamdat_audio_unlock_hint', '1'); } catch (e) {}
+    }
+    function readUnlockHint() {
+        try { return localStorage.getItem('phamdat_audio_unlock_hint') === '1'; } catch (e) { return false; }
+    }
+    let unlockToastShown = readUnlockHint();
+
+    function unlockAudio() {
+        if (audioUnlocked) return;
+        audioUnlocked = true;
+        persistUnlockHint();
+        ['pointerdown', 'keydown', 'touchstart', 'scroll'].forEach(ev =>
+            document.removeEventListener(ev, unlockAudio, true)
+        );
+
+
+        const ctx = new (window.AudioContext || window.webkitAudioContext)();
+        ctx.resume();
+        setTimeout(() => ctx.close().catch(() => {}), 800);
+    }
+
+    ['pointerdown', 'keydown', 'touchstart', 'scroll'].forEach(ev =>
+        document.addEventListener(ev, unlockAudio, { capture: true, passive: true })
+    );
     function escapeHtml(s) {
         const d = document.createElement('div');
         d.textContent = s ?? '';
