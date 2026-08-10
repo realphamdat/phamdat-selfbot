@@ -132,7 +132,7 @@
             <div class="filter-section">
                 <span class="filter-section-title">Search</span>
                 <div class="search-row">
-                    <input type="text" class="search-input" id="searchInput" placeholder="Search content..." oninput="applyFilters()">
+                    <input type="text" class="search-input" id="searchInput" placeholder="Search content..." oninput="onSearchInput()">
                     <div class="search-mode-toggle">
                         <button class="mode-btn active" id="smartBtn" onclick="setSearchMode('smart')">Smart</button>
                         <button class="mode-btn" id="strictBtn" onclick="setSearchMode('strict')">Strict</button>
@@ -289,27 +289,116 @@
         });
     }
 
+    // Debounce live keystrokes: toggling the visibility class over thousands
+    // of rows per keystroke is expensive, so only re-filter after a pause.
+    let searchDebounceId = null;
+    function onSearchInput() {
+        if (searchDebounceId) clearTimeout(searchDebounceId);
+        searchDebounceId = setTimeout(applyFilters, 120);
+    }
+
     function createLogLine(entry) {
         const line = document.createElement('div');
         line.className = 'log-line';
         line.dataset.level = entry.level;
         line.dataset.name = entry.name;
         line.dataset.msg = entry.message;
+        line.dataset.seq = entry.seq;
         if (!matchesFilter(entry)) line.classList.add('hidden');
         line.innerHTML = `<span class="log-time">${entry.time}</span><span class="log-level ${entry.level}">${entry.level.padEnd(5)}</span><span class="log-name">[${entry.name}]</span><span class="log-msg">${escapeHtml(entry.message)}</span>`;
         return line;
     }
 
-    function addLogLine(entry) {
-        registerName(entry.name);
-        terminalBody.appendChild(createLogLine(entry));
+    // ---- Rendering: batching, dedup by seq, bounded window ----
+
+    // Allowlist of already-rendered seqs so REST + WebSocket + reconnect
+    // can never render the same log twice (fixes duplicate lines).
+    const seenSeqs = new Set();
+    // Safety valve: never let the DOM grow without bound.
+    const MAX_RENDERED = 15000;
+    // Highest seq ever rendered; used to backfill the reconnect gap forward.
+    let maxRenderedSeq = 0;
+
+    // Render a list of entries in ONE DOM pass (one reflow) instead of one
+    // reflow per log, which starves the event loop once logs exceed ~1k.
+    function renderBatch(entries, prepend = false) {
+        let added = 0;
+        const frag = document.createDocumentFragment();
+        for (const entry of entries) {
+            if (seenSeqs.has(entry.seq)) continue;
+            seenSeqs.add(entry.seq);
+            if (entry.seq > maxRenderedSeq) maxRenderedSeq = entry.seq;
+            registerName(entry.name);
+            frag.appendChild(createLogLine(entry));
+            added++;
+        }
+        if (added) {
+            if (prepend) terminalBody.insertBefore(frag, terminalBody.firstChild);
+            else terminalBody.appendChild(frag);
+            trimOverflow();
+        }
+        return added;
+    }
+
+    // Coalesce a burst of live socket logs into a single periodic flush
+    // (and therefore a single scroll / single reflow) every ~70ms.
+    let liveQueue = [];
+    let liveFlushId = null;
+
+    function queueLog(entry) {
+        liveQueue.push(entry);
+        if (liveFlushId === null) {
+            liveFlushId = setTimeout(flushLive, 70);
+        }
+    }
+
+    function flushLive() {
+        liveFlushId = null;
+        if (!liveQueue.length) return;
+        const batch = liveQueue;
+        liveQueue = [];
+        renderBatch(batch);
         if (autoScroll) scrollToBottom();
     }
 
-    function prependLogLine(entry) {
-        registerName(entry.name);
-        terminalBody.insertBefore(createLogLine(entry), terminalBody.firstChild);
+    function trimOverflow() {
+        let overflow = terminalBody.children.length - MAX_RENDERED;
+        while (overflow > 0) {
+            terminalBody.removeChild(terminalBody.firstChild);
+            overflow--;
+        }
+        if (terminalBody.children.length >= MAX_RENDERED) {
+            // Rebuild the dedup set from what is actually in the DOM so
+            // seenSeqs itself stays bounded in size.
+            seenSeqs.clear();
+            for (const line of terminalBody.children) {
+                seenSeqs.add(Number(line.dataset.seq));
+            }
+        }
     }
+
+    // Reconnect: backfill logs that were emitted while the socket was down,
+    // walking forward from the last rendered seq until the newest log so no
+    // gap is left missing (fixes missing logs after a disconnect).
+    let initialLoaded = false;
+    async function resyncTail() {
+        if (!initialLoaded) return;
+        const wasAtBottom = autoScroll;
+        try {
+            let cursor = maxRenderedSeq;
+            while (true) {
+                const data = await api(`/api/logs?limit=1000&after=${cursor}`);
+                const added = data.logs || [];
+                if (!added.length) break;
+                (data.names || []).forEach(n => registerName(n));
+                renderBatch(added);
+                cursor = added[added.length - 1].seq;
+                if (!data.has_more || added.length < 1000) break;
+            }
+        } catch (e) { /* best-effort; next reconnect or live event retries */ }
+        if (wasAtBottom) scrollToBottom();
+    }
+    socket.on('connect', resyncTail);
 
     function registerName(name) {
         if (knownNames.has(name)) return;
@@ -329,7 +418,7 @@
         loadingLogs = true;
         const oldHeight = terminalBody.scrollHeight;
         const data = await api(`/api/logs?limit=1000&before=${oldestLogSeq}`);
-        data.logs.forEach(prependLogLine);
+        renderBatch(data.logs, true);
         updateOldestSeq(data.logs);
         terminalBody.scrollTop = terminalBody.scrollHeight - oldHeight;
         if (!data.has_more) logEndReached = true;
@@ -354,13 +443,14 @@
         const data = await api('/api/logs?limit=1000');
         knownNames = new Set(data.names);
         activeNames = new Set(data.names);
-        data.logs.forEach(addLogLine);
+        renderBatch(data.logs);
         updateOldestSeq(data.logs);
         logEndReached = !data.has_more;
         scrollToBottom();
 
         buildLevelChips();
         buildNameChips();
+        initialLoaded = true;
     }
 
     function setRunning(running, startTimeMs) {
@@ -417,7 +507,7 @@
     }
 
     socket.on('log', entry => {
-        addLogLine(entry);
+        queueLog(entry);
     });
 
     terminalBody.addEventListener('scroll', () => {

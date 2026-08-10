@@ -45,12 +45,22 @@ class WebSocketHandler(logging.Handler):
         if self.socketio:
             self.socketio.emit('log', entry, namespace='/')
 
-    def get_buffer(self, limit=1000, before=None):
+    def get_buffer(self, limit=1000, before=None, after=None):
         logs = list(self.buffer)
         if before is not None:
-            logs = [entry for entry in logs if entry['seq'] < before]
-        returned = logs[-limit:]
-        return returned, len(logs) > limit
+            # Older-walking: return the newest `limit` entries older than cursor.
+            filtered = [entry for entry in logs if entry['seq'] < before]
+            returned = filtered[-limit:]
+        elif after is not None:
+            # Forward-walking (reconnect backfill): return the OLDEST `limit`
+            # entries newer than cursor so successive pages tile the gap with
+            # no slip/skip (last-limit here would drop the logs nearest cursor).
+            filtered = [entry for entry in logs if entry['seq'] > after]
+            returned = filtered[:limit]
+        else:
+            returned = logs[-limit:]
+            filtered = logs
+        return returned, len(filtered) > limit
 
     def get_names(self):
         return sorted(self.names)

@@ -190,8 +190,9 @@ def api_logs():
     handler = get_ws_handler()
     limit = flask.request.args.get('limit', 1000, type=int)
     before = flask.request.args.get('before', type=int)
+    after = flask.request.args.get('after', type=int)
     limit = max(1, min(limit, 1000))
-    logs, has_more = handler.get_buffer(limit=limit, before=before)
+    logs, has_more = handler.get_buffer(limit=limit, before=before, after=after)
     return flask.jsonify({'logs': logs, 'has_more': has_more, 'names': handler.get_names()})
 
 
