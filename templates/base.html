@@ -276,6 +276,7 @@
 
 <script>
     const socket = io();
+    const baseTitle = document.title;
 
     socket.on('captcha_count', data => {
         const badge = document.getElementById('captchaBadge');
@@ -283,6 +284,7 @@
             badge.textContent = data.count;
             badge.classList.toggle('hidden', data.count === 0);
         }
+        document.title = data.count ? `(${data.count}) ${baseTitle}` : baseTitle;
     });
 
     socket.on('captcha_new', () => {
