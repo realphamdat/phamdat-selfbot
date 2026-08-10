@@ -284,26 +284,17 @@
     socket.on('notification', data => {
         if (!audioUnlocked && !unlockToastShown) {
             unlockToastShown = true;
-            persistUnlockHint();
             showToast('Click anywhere to enable sound notifications', 'warning');
         }
         new Audio('/assets/notification.mp3').play().catch(() => {});
     });
 
     let audioUnlocked = false;
-
-    function persistUnlockHint() {
-        try { localStorage.setItem('phamdat_audio_unlock_hint', '1'); } catch (e) {}
-    }
-    function readUnlockHint() {
-        try { return localStorage.getItem('phamdat_audio_unlock_hint') === '1'; } catch (e) { return false; }
-    }
-    let unlockToastShown = readUnlockHint();
+    let unlockToastShown = false;
 
     function unlockAudio() {
         if (audioUnlocked) return;
         audioUnlocked = true;
-        persistUnlockHint();
         ['pointerdown', 'keydown', 'touchstart', 'scroll'].forEach(ev =>
             document.removeEventListener(ev, unlockAudio, true)
         );
