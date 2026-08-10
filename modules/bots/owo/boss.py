@@ -44,16 +44,19 @@ class Boss:
 
     @staticmethod
     async def _watch_ticket_response(client, channel):
+        def is_ticket_response(m):
+            if m.channel.id != channel.id:
+                return False
+            for component in m.components:
+                try:
+                    if "You don't have any boss tickets!" in Component.text(component):
+                        return True
+                except Exception:
+                    continue
+            return False
+
         try:
-            await client.wait_for(
-                'message',
-                check=lambda m: (
-                    m.channel.id == channel.id
-                    and m.interaction is not None
-                    and "You don't have any boss tickets!" in m.content
-                ),
-                timeout=5,
-            )
+            await client.wait_for('message', check=is_ticket_response, timeout=5.0)
         except asyncio.TimeoutError:
             return
 
