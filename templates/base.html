@@ -242,6 +242,13 @@
             </svg>
             About
         </a>
+        <a href="#" class="nav-item" onclick="playNotification(); return false;" title="Play notification sound">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                <path d="M6 8a6 6 0 0 1 12 0c0 7 3 9 3 9H3s3-2 3-9"/>
+                <path d="M10.3 21a1.94 1.94 0 0 0 3.4 0"/>
+            </svg>
+            Notify
+        </a>
     </div>
 </nav>
 
@@ -282,32 +289,11 @@
         showToast('New captcha detected', 'warning');
     });
     socket.on('notification', data => {
-        if (!audioUnlocked && !unlockToastShown) {
-            unlockToastShown = true;
-            showToast('Click anywhere to enable sound notifications', 'warning');
-        }
-        new Audio('/assets/notification.mp3').play().catch(() => {});
+        playNotification();
     });
-
-    let audioUnlocked = false;
-    let unlockToastShown = false;
-
-    function unlockAudio() {
-        if (audioUnlocked) return;
-        audioUnlocked = true;
-        ['pointerdown', 'keydown', 'touchstart', 'scroll'].forEach(ev =>
-            document.removeEventListener(ev, unlockAudio, true)
-        );
-
-
-        const ctx = new (window.AudioContext || window.webkitAudioContext)();
-        ctx.resume();
-        setTimeout(() => ctx.close().catch(() => {}), 800);
+    function playNotification() {
+        new Audio('/assets/notification.mp3').play().catch(() => {});
     }
-
-    ['pointerdown', 'keydown', 'touchstart', 'scroll'].forEach(ev =>
-        document.addEventListener(ev, unlockAudio, { capture: true, passive: true })
-    );
     function escapeHtml(s) {
         const d = document.createElement('div');
         d.textContent = s ?? '';
