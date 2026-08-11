@@ -8,8 +8,8 @@ class Spam:
         if not client.can_run() or not client.current_channel:
             return
         cmd = random.choice(['owo', 'uwu'])
-        await client.current_channel.send(f'{client.prefix}{cmd}')
-        client.logger.info(f'Sent {client.prefix}{cmd}')
+        await client.current_channel.send(cmd)
+        client.logger.info(f'Sent {cmd}')
 
     @staticmethod
     async def send_hunt(client):
