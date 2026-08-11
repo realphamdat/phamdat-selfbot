@@ -14,7 +14,7 @@ class Gem:
             client.no_gem = True
             wait = Daily.reset_time(client.cooldown_reset)
             client.no_gem_since = wait + time.time()
-            client.logger.info(f"No gem available (wait {datetime.datetime.fromtimestamp(client.no_gem_since)})")
+            client.logger.info(f"No gem available (wait {datetime.timedelta(seconds=wait)})")
             return
         if not client.can_run() or not client.current_channel:
             return
