@@ -156,7 +156,7 @@ class Gem:
         if opening['flootbox'] and 49 in inv:
             await client.current_channel.send(f'{client.prefix}lb f')
             client.logger.info(f'Sent {client.prefix}lb f')
-            await asyncio.sleep(2)
+        await asyncio.sleep(2)
 
     @staticmethod
     def glitch_available(client):
