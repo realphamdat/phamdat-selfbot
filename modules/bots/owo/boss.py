@@ -60,6 +60,6 @@ class Boss:
         except asyncio.TimeoutError:
             return
 
-        wait = (client.cooldown_reset)
+        wait = Daily.reset_time(client.cooldown_reset)
         client.cooldown_boss = wait + time.time()
         client.logger.info(f'Boss out of tickets, paused {datetime.timedelta(seconds=wait)} until daily reset')
