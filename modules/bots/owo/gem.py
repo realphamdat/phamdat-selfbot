@@ -96,6 +96,7 @@ class Gem:
 
         client.no_gem = False
         gem = client.config['gem']
+        await asyncio.sleep(5)
 
         if gem['couple']:
             if 'spent 5 <:cowoncy:416043450337853441> and caught a' in message.content:
