@@ -151,7 +151,7 @@ class Quest:
                 if not selected:
                     wait = Daily.reset_time(client.cooldown_reset)
                     client.cooldown_quest = wait + time.time()
-                    client.logger.warning('No solo quest available (need multi-account)')
+                    client.logger.warning(f'No solo quest available (need multi-account) (next quest in {datetime.timedelta(seconds=wait)})')
                     return
             else:
                 selected = quests[0]
