@@ -51,7 +51,6 @@ class Gem:
 
     @staticmethod
     async def get_inventory(client):
-        await asyncio.sleep(2)
         if not client.can_run() or not client.current_channel:
             return []
         await client.current_channel.send(f'{client.prefix}inv')
@@ -68,7 +67,7 @@ class Gem:
             client.inventory_str = msg.content
             inv = [int(x) for x in re.findall(r'`(.*?)`', msg.content) if x.isnumeric()]
 
-            await asyncio.sleep(2)
+            await asyncio.sleep(5)
             await Gem._open_items(client, inv)
             return inv
         except asyncio.TimeoutError:
