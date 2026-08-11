@@ -141,7 +141,7 @@ class TaskManager:
                         await Gem.check_glitch(self.client)
                     except Exception:
                         self.client.logger.exception('Glitch error')
-                await asyncio.sleep(600)
+                await asyncio.sleep(random.randint(600, 1200))
         except asyncio.CancelledError:
             pass
 
