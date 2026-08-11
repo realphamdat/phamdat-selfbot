@@ -168,6 +168,7 @@ class Gem:
         if (not gem['use'] and Gem._skip_gem_check(client)) and not Gem.glitch_available(client):
             return
 
+        await asyncio.sleep(2)
         if gem['couple'] and 'spent 5 <:cowoncy:416043450337853441> and caught a' in message.content:
             await Gem._couple_gem(client, gem)
         else:
