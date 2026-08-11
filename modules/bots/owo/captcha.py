@@ -87,7 +87,7 @@ class Captcha:
         if client.captcha_pending and is_owo:
             is_dm = client.owo_bot.dm_channel and message.channel.id == client.owo_bot.dm_channel.id
             if is_dm:
-                if client.msg_contains(message.content, any_of=['\U0001f44d', 'thumbsup']):
+                if client.message_contains(message.content, any_of=['\U0001f44d', 'thumbsup']):
                     await Captcha.mark_solved(client)
                     return
 

@@ -30,10 +30,10 @@ class TaskManager:
         if self.client.config['quest']:
             todo.append((self._loop_quest, 0))
         if self.client.config['huntbot']:
-            todo.append((self._loop_huntbot, 10))
-        todo.append((self._loop_spam, 10))
+            todo.append((self._loop_huntbot, 5))
         if self.client.config['gem']['glitch']:
-            todo.append((self._loop_glitch, 10))
+            todo.append((self._loop_glitch, 5))
+        todo.append((self._loop_spam, 10))
         todo.append((self._loop_gamble, 0))
         if self.client.config['check_status']:
             todo.append((self._loop_offline_check, 0))
@@ -153,20 +153,10 @@ class TaskManager:
                     cooldown_min = gamble['cooldown']['min']
                     cooldown_max = gamble['cooldown']['max']
 
-                    has_work = (
-                        gamble['lottery']['mode']
-                        or gamble['slot']['mode']
-                        or gamble['coinflip']['mode']
-                        or gamble['blackjack']['mode']
-                        or gamble['highlow']['mode']
-                        or self.client.quest_flags.get('gamble')
-                    )
-
-                    if has_work:
-                        try:
-                            await Gamble.gamble_cycle(self.client)
-                        except Exception:
-                            self.client.logger.exception('Gamble error')
+                    try:
+                        await Gamble.gamble_cycle(self.client)
+                    except Exception:
+                        self.client.logger.exception('Gamble error')
 
                     await asyncio.sleep(random.randint(int(cooldown_min), int(cooldown_max)))
                 else:
@@ -203,7 +193,7 @@ class TaskManager:
             )
             self.client.logger.info('OWO bot is online')
         except asyncio.TimeoutError:
-            self.client.logger.warning('OWO bot appears offline')
+            self.client.logger.warning('OWO bot is offline')
             wait = random.randint(300, 600)
             self.client.logger.info(f'Pausing for {wait}s')
             self.client.paused = True

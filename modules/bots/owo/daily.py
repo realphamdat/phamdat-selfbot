@@ -32,17 +32,17 @@ class Daily:
         client.logger.info(f'Sent {client.prefix}daily')
 
         try:
-            msg = await client.wait_for(
+            message = await client.wait_for(
                 'message',
                 check=lambda m: (
                     client.is_owo_message(m, in_channel=True)
-                    and client.msg_contains(m.content, all_of=[str(client.nickname)])
-                    and client.msg_contains(m.content, any_of=['next daily', 'Nu'])
+                    and client.message_contains(m.content, all_of=[str(client.nickname)])
+                    and client.message_contains(m.content, any_of=['next daily', 'Nu'])
                 ),
                 timeout=5,
             )
 
-            text = msg.content.split('!')[-1].strip()
+            text = message.content.split('!')[-1].strip()
             h = re.search(r'(\d+)H', text)
             m = re.search(r'(\d+)M', text)
             s = re.search(r'(\d+)S', text)
@@ -54,9 +54,9 @@ class Daily:
             client.cooldown_reset = wait
             client.cooldown_daily = wait + time.time()
 
-            if 'next daily' in msg.content:
+            if 'next daily' in message.content:
                 client.logger.info(f'Claimed daily (next in {datetime.timedelta(seconds=wait)})')
-            elif 'Nu' in msg.content:
+            elif 'Nu' in message.content:
                 client.logger.info(f'Daily not ready (wait {datetime.timedelta(seconds=wait)})')
 
         except asyncio.TimeoutError:

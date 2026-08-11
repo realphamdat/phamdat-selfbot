@@ -7,9 +7,9 @@ class Spam:
     async def send_owo(client):
         if not client.can_run() or not client.current_channel:
             return
-        say = random.choice(['owo', 'uwu'])
-        await client.current_channel.send(say)
-        client.logger.info(f'Sent {say}')
+        cmd = random.choice(['owo', 'uwu'])
+        await client.current_channel.send(f'{client.prefix}{cmd}')
+        client.logger.info(f'Sent {client.prefix}{cmd}')
 
     @staticmethod
     async def send_hunt(client):
@@ -35,18 +35,14 @@ class Spam:
         delay_min = spam['delay']['min']
         delay_max = spam['delay']['max']
 
-        should_owo = spam['owo/uwu'] or client.quest_flags.get('owo')
-        should_hunt = spam['hunt'] or client.quest_flags.get('hunt')
-        should_battle = spam['battle'] or client.quest_flags.get('battle')
-
         try:
-            if should_owo:
+            if spam['owo/uwu'] or client.quest_flags.get('owo'):
                 await Spam.send_owo(client)
                 await asyncio.sleep(random.uniform(delay_min, delay_max))
-            if should_hunt:
+            if spam['hunt'] or client.quest_flags.get('hunt'):
                 await Spam.send_hunt(client)
                 await asyncio.sleep(random.uniform(delay_min, delay_max))
-            if should_battle:
+            if spam['battle'] or client.quest_flags.get('battle'):
                 await Spam.send_battle(client)
                 await asyncio.sleep(random.uniform(delay_min, delay_max))
         except Exception:

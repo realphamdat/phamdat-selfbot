@@ -109,4 +109,4 @@ def _watch_files():
                                 bot.reload()
                     else:
                         logger.info(f'Data file changed: {filename} (running, skip reload)')
-        time.sleep(2)
+        time.sleep(1)

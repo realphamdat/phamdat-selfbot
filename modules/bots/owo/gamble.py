@@ -79,7 +79,7 @@ class Gamble:
                     and m.embeds
                     and str(m.embeds[0].author.name) == f"{client.nickname}'s Lottery Submission"
                 ),
-                timeout=10,
+                timeout=5,
             )
         except asyncio.TimeoutError:
             client.logger.error('Lottery message timeout')
@@ -126,7 +126,7 @@ class Gamble:
         client.logger.info(f'Sent {client.prefix}bj {client.bet_blackjack}')
 
         try:
-            bj_msg = await client.wait_for(
+            message = await client.wait_for(
                 'message',
                 check=lambda m: (
                     client.is_owo_message(m, in_channel=True)
@@ -143,27 +143,27 @@ class Gamble:
         for _ in range(10):
             await asyncio.sleep(2)
             try:
-                bj_msg = await client.current_channel.fetch_message(bj_msg.id)
+                message = await client.current_channel.fetch_message(message.id)
             except Exception:
                 break
 
-            footer = str(bj_msg.embeds[0].footer.text) if bj_msg.embeds[0].footer else ''
+            footer = str(message.embeds[0].footer.text) if message.embeds[0].footer else ''
 
             if 'in progress' in footer or 'resuming previous' in footer:
-                points = re.findall(r'\[(.*?)\]', bj_msg.embeds[0].fields[1].name)
+                points = re.findall(r'\[(.*?)\]', message.embeds[0].fields[1].name)
                 if points:
                     my_points = int(points[0])
                     emoji = '👊' if my_points <= 17 else '🛑'
-                    has_reacted = any(reaction.me for reaction in bj_msg.reactions)
+                    has_reacted = any(reaction.me for reaction in message.reactions)
                     try:
                         if emoji == '👊':
                             if has_reacted:
-                                await bj_msg.remove_reaction(emoji, client.user)
+                                await message.remove_reaction(emoji, client.user)
                             else:
-                                await bj_msg.add_reaction(emoji)
+                                await message.add_reaction(emoji)
                             client.logger.info(f'Blackjack {my_points} pts (Hit) - {"Remove" if has_reacted else "Add"} reaction')
                         else:
-                            await bj_msg.add_reaction(emoji)
+                            await message.add_reaction(emoji)
                             client.logger.info(f'Blackjack {my_points} pts (Stand)')
                     except Exception:
                         client.logger.exception('Failed to react blackjack')
@@ -186,7 +186,7 @@ class Gamble:
         if not message.components:
             return False
         text = Component.text(message.components[0])
-        return client.msg_contains(text, all_of=[client.user.mention, '**Bet**:', '**Streak**:', '**Cash Out**:'])
+        return client.message_contains(text, all_of=[client.user.mention, '**Bet**:', '**Streak**:', '**Cash Out**:'])
 
     @staticmethod
     async def play_highlow(client):

@@ -4,11 +4,19 @@ import re
 import time
 import datetime
 
+from modules.bots.owo.daily import Daily
+
 
 class Gem:
     @staticmethod
     async def _send_use(client, gem_to_use):
-        if not gem_to_use or not client.can_run() or not client.current_channel:
+        if not gem_to_use:
+            client.no_gem = True
+            wait = Daily.reset_time(client.cooldown_reset)
+            client.no_gem_since = wait + time.time()
+            client.logger.info(f"No gem available (wait {datetime.datetime.fromtimestamp(client.no_gem_since)})")
+            return
+        if not client.can_run() or not client.current_channel:
             return
         await client.current_channel.send(f'{client.prefix}use {gem_to_use}')
         client.logger.info(f'Sent {client.prefix}use {gem_to_use}')
@@ -17,9 +25,9 @@ class Gem:
                 'message',
                 check=lambda message: (
                     client.is_owo_message(message, in_channel=True)
-                    and client.msg_contains(message.content, all_of=[str(client.nickname), 'active Special gem or you do not own'])
+                    and client.message_contains(message.content, all_of=[str(client.nickname), 'active Special gem or you do not own'])
                 ),
-                timeout=10,
+                timeout=5,
             )
             client.special_pet_available = False
         except asyncio.TimeoutError:
@@ -80,10 +88,15 @@ class Gem:
             return
         if not client.is_owo_message(message, in_channel=True):
             return
-        if not client.msg_contains(message.content, all_of=[str(client.nickname), '🌱', 'gained']):
+        if not client.message_contains(message.content, all_of=[str(client.nickname), '🌱', 'gained']):
             return
 
+        if client.no_gem and time.time() < client.no_gem_since and not Gem.glitch_available(client):
+            return
+
+        client.no_gem = False
         gem = client.config['gem']
+
         if gem['couple']:
             if 'spent 5 <:cowoncy:416043450337853441> and caught a' in message.content:
                 await Gem._couple_gem(client, gem)
@@ -110,16 +123,16 @@ class Gem:
         await client.current_channel.send(f'{client.prefix}inv')
         client.logger.info(f'Sent {client.prefix}inv')
         try:
-            msg = await client.wait_for(
+            message = await client.wait_for(
                 'message',
                 check=lambda message: (
                     client.is_owo_message(message, in_channel=True)
                     and f"{client.nickname}'s Inventory" in message.content
                 ),
-                timeout=10,
+                timeout=5,
             )
-            client.inventory_str = msg.content
-            inv = [int(item) for item in re.findall(r'`(.*?)`', msg.content) if item.isnumeric()]
+            client.inventory_str = message.content
+            inv = [int(item) for item in re.findall(r'`(.*?)`', message.content) if item.isnumeric()]
             await Gem._open_items(client, inv)
             return inv
         except asyncio.TimeoutError:
@@ -134,15 +147,15 @@ class Gem:
         if opening['box'] and 50 in inv:
             await client.current_channel.send(f'{client.prefix}lb all')
             client.logger.info(f'Sent {client.prefix}lb all')
-            await asyncio.sleep(random.randint(2, 3))
+            await asyncio.sleep(2)
         if opening['crate'] and 100 in inv:
             await client.current_channel.send(f'{client.prefix}wc all')
             client.logger.info(f'Sent {client.prefix}wc all')
-            await asyncio.sleep(random.randint(2, 3))
+            await asyncio.sleep(2)
         if opening['flootbox'] and 49 in inv:
             await client.current_channel.send(f'{client.prefix}lb f')
             client.logger.info(f'Sent {client.prefix}lb f')
-            await asyncio.sleep(random.randint(2, 3))
+            await asyncio.sleep(2)
 
     @staticmethod
     def glitch_available(client):
@@ -157,16 +170,16 @@ class Gem:
         await client.current_channel.send(f'{client.prefix}dt')
         client.logger.info(f'Sent {client.prefix}dt')
         try:
-            msg = await client.wait_for(
+            message = await client.wait_for(
                 'message',
                 check=lambda message: (
                     client.is_owo_message(message, in_channel=True)
-                    and client.msg_contains(message.content, any_of=['are available', 'not available'])
+                    and client.message_contains(message.content, any_of=['are available', 'not available'])
                 ),
-                timeout=10,
+                timeout=5,
             )
-            if 'are available' in msg.content:
-                parts = re.findall(r'\*\*(.*?)\*\*', msg.content)
+            if 'are available' in message.content:
+                parts = re.findall(r'\*\*(.*?)\*\*', message.content)
                 glitch_end = re.findall('[0-9]+', parts[2]) if len(parts) >= 3 else []
                 if len(glitch_end) == 1:
                     duration = int(glitch_end[0])
@@ -178,7 +191,7 @@ class Gem:
                     duration = 600
                 client.cooldown_glitch = duration + time.time()
                 client.logger.info(f"Glitch is available ({datetime.timedelta(seconds=duration)})")
-            elif 'not available' in msg.content:
+            elif 'not available' in message.content:
                 client.logger.info("Glitch isn't available")
         except asyncio.TimeoutError:
             client.logger.error("Couldn't get glitch message")

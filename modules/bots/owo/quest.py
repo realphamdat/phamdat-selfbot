@@ -121,7 +121,7 @@ class Quest:
         client.logger.info(f'Sent {client.prefix}q')
 
         try:
-            msg = await client.wait_for(
+            message = await client.wait_for(
                 'message',
                 check=lambda m: (
                     client.is_owo_message(m, in_channel=True)
@@ -131,11 +131,11 @@ class Quest:
                 timeout=5,
             )
 
-            if await Quest._claim_quest(client, msg):
+            if await Quest._claim_quest(client, message):
                 await asyncio.sleep(2)
-                msg = await channel.fetch_message(msg.id)
+                message = await channel.fetch_message(message.id)
 
-            quests = Quest._extract_quests(client, msg)
+            quests = Quest._extract_quests(client, message)
             if not quests:
                 wait = Daily.reset_time(client.cooldown_reset)
                 client.cooldown_quest = wait + time.time()
@@ -168,23 +168,21 @@ class Quest:
             client.logger.exception('Quest fetch error')
 
     @staticmethod
+    def set_spam_flags(client):
+        client.quest_flags['owo'] = True
+        client.quest_flags['hunt'] = True
+        client.quest_flags['battle'] = True
+
+    @staticmethod
     def set_quest_flag(client, q):
         if re.search(r"Say 'owo' [0-9]+ times!", q):
-            client.quest_flags['owo'] = True
-            client.quest_flags['hunt'] = True
-            client.quest_flags['battle'] = True
+            Quest.set_spam_flags(client)
         elif re.search(r"Earn [0-9]+ xp from hunting and battling!", q):
-            client.quest_flags['hunt'] = True
-            client.quest_flags['battle'] = True
-            client.quest_flags['owo'] = True
+            Quest.set_spam_flags(client)
         elif re.search(r"Hunt [0-9]+ [a-zA-Z]+ rank animals!|Manually hunt [0-9]+ times!", q):
-            client.quest_flags['hunt'] = True
-            client.quest_flags['owo'] = True
-            client.quest_flags['battle'] = True
+            Quest.set_spam_flags(client)
         elif re.search(r"Battle [0-9]+ times!", q):
-            client.quest_flags['battle'] = True
-            client.quest_flags['owo'] = True
-            client.quest_flags['hunt'] = True
+            Quest.set_spam_flags(client)
         elif re.search(r"Gamble [0-9]+ times!", q):
             client.quest_flags['gamble'] = True
         elif re.search(r"Use an action command on someone [0-9]+ times!", q):
@@ -195,13 +193,13 @@ class Quest:
             Quest._spawn(client, Quest._do_battle_friend(client), 'owo-quest-battle-friend')
         elif re.search(r"Receive a cookie from [0-9]+ friends!", q):
             client.quest_flags['cookie'] = True
-            Quest._spawn(client, Quest._do_cookie(client), 'owo-quest-cookie')
+            Quest._spawn(client, Quest._do_cookie(client), 'owo-quest-receive-cookie')
         elif re.search(r"Have a friend pray to you [0-9]+ times!", q):
             client.quest_flags['pray'] = True
-            Quest._spawn(client, Quest._do_pray(client), 'owo-quest-pray')
+            Quest._spawn(client, Quest._do_pray(client), 'owo-quest-have-pray')
         elif re.search(r"Have a friend curse you [0-9]+ times!", q):
             client.quest_flags['curse'] = True
-            Quest._spawn(client, Quest._do_curse(client), 'owo-quest-curse')
+            Quest._spawn(client, Quest._do_curse(client), 'owo-quest-have-curse')
         elif re.search(r"Have a friend use an action command on you [0-9]+ times!", q):
             client.quest_flags['action_you'] = True
             Quest._spawn(client, Quest._do_action_you(client), 'owo-quest-action-you')
@@ -219,10 +217,9 @@ class Quest:
                 action = random.choice(client.owo_actions)
                 await client.current_channel.send(f'{client.prefix}{action} {client.owo_bot.mention}')
                 client.logger.info(f'Sent {client.prefix}{action} {client.owo_bot.mention}')
-            await asyncio.sleep(random.uniform(3, 5))
             if not client.quest_flags.get('action_someone'):
                 break
-            await asyncio.sleep(5)
+            await asyncio.sleep(random.uniform(3, 5))
 
     @staticmethod
     async def _do_battle_friend(client):
@@ -303,4 +300,3 @@ class Quest:
                 await asyncio.sleep(random.uniform(3, 5))
                 if not client.quest_flags.get('action_you'):
                     break
-            await asyncio.sleep(5)

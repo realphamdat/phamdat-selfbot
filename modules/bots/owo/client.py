@@ -157,10 +157,10 @@ class OWOClient(discord.Client):
         return True
 
     @staticmethod
-    def msg_contains(message, all_of=None, any_of=None):
-        if all_of and not all(t in message for t in all_of):
+    def message_contains(message, all_of=None, any_of=None):
+        if all_of and not all(content in message for content in all_of):
             return False
-        if any_of and not any(t in message for t in any_of):
+        if any_of and not any(content in message for content in any_of):
             return False
         return True
 

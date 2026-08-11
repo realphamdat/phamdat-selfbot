@@ -29,7 +29,7 @@ OWO_DEFAULT_CONFIG = {
         'best': False,
         'star': False,
         'glitch': True,
-        'openning': {'box': True, 'crate': True, 'flootbox': True},
+        'openning': {'box': True, 'crate': True, 'flootbox': False},
     },
 
     'gamble': {
