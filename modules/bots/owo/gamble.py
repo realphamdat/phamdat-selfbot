@@ -126,7 +126,7 @@ class Gamble:
         client.logger.info(f'Sent {client.prefix}bj {client.bet_blackjack}')
 
         try:
-            message = await client.wait_for(
+            bj_msg = await client.wait_for(
                 'message',
                 check=lambda m: (
                     client.is_owo_message(m, in_channel=True)
@@ -143,27 +143,27 @@ class Gamble:
         for _ in range(10):
             await asyncio.sleep(2)
             try:
-                message = await client.current_channel.fetch_message(message.id)
+                bj_msg = await client.current_channel.fetch_message(bj_msg.id)
             except Exception:
                 break
 
-            footer = str(message.embeds[0].footer.text) if message.embeds[0].footer else ''
+            footer = str(bj_msg.embeds[0].footer.text) if bj_msg.embeds[0].footer else ''
 
             if 'in progress' in footer or 'resuming previous' in footer:
-                points = re.findall(r'\[(.*?)\]', message.embeds[0].fields[1].name)
+                points = re.findall(r'\[(.*?)\]', bj_msg.embeds[0].fields[1].name)
                 if points:
                     my_points = int(points[0])
                     emoji = '👊' if my_points <= 17 else '🛑'
-                    has_reacted = any(reaction.me for reaction in message.reactions)
+                    has_reacted = any(reaction.me for reaction in bj_msg.reactions)
                     try:
                         if emoji == '👊':
                             if has_reacted:
-                                await message.remove_reaction(emoji, client.user)
+                                await bj_msg.remove_reaction(emoji, client.user)
                             else:
-                                await message.add_reaction(emoji)
+                                await bj_msg.add_reaction(emoji)
                             client.logger.info(f'Blackjack {my_points} pts (Hit) - {"Remove" if has_reacted else "Add"} reaction')
                         else:
-                            await message.add_reaction(emoji)
+                            await bj_msg.add_reaction(emoji)
                             client.logger.info(f'Blackjack {my_points} pts (Stand)')
                     except Exception:
                         client.logger.exception('Failed to react blackjack')
