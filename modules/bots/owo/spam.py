@@ -7,9 +7,9 @@ class Spam:
     async def send_owo(client):
         if not client.can_run() or not client.current_channel:
             return
-        cmd = random.choice(['owo', 'uwu'])
-        await client.current_channel.send(cmd)
-        client.logger.info(f'Sent {cmd}')
+        say = random.choice(['owo', 'uwu'])
+        await client.current_channel.send(say)
+        client.logger.info(f'Sent {say}')
 
     @staticmethod
     async def send_hunt(client):
