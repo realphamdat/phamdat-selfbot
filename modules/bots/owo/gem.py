@@ -59,7 +59,8 @@ class Gem:
             if all((start_values[tier] + n) in inv and (start_values[tier] + n) in gem_tiers[tier] for tier in active)
         ]
         selected = valid[-1] if valid and gem['best'] else (valid[0] if valid else [])
-        await Gem._send_use(client, ' '.join(map(str, selected)) if selected else None)
+        gem_to_use = ' '.join(map(str, selected)) if selected else None
+        await Gem._send_use(client, gem_to_use)
 
     @staticmethod
     async def _single_gem(client, gem, empty_gem):
