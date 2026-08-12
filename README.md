@@ -2,6 +2,8 @@
   <img src="assets/banner.png" alt="Phamdat Selfbot">
 </p>
 
+---
+
 ## PREVIEW
 
 <details>
@@ -31,6 +33,8 @@
 
 </details>
 
+---
+
 ## ABOUT
 
 | | |
@@ -55,134 +59,197 @@ python main.py
 
 ---
 
-## Configuration
+## SETUP
 
-Each config file is a JSON object where every **key is a Discord token** — one account per key, handled separately. Add a token key → add an account; remove it → remove the account.
+### How data works
+
+All settings live in the `data/` folder. You edit these files, then start the bot.
+
+**Bot and extensions**
+
+The tool has one **bot** and three **extensions**. Each module reads only its own file - a token in `owo.json` does not appear in the other files by itself. List an account in each file where you want it to work.
+
+| Kind | Name | Config file |
+|------|------|-------------|
+| Bot | OwO | `data/owo.json` |
+| Extension | Quest | `data/quest.txt` |
+| Extension | Chat | `data/chat.json` |
+| Extension | Voice | `data/voice.json` |
+
+The **bot** farms OwO. The **extensions** each run a separate task (Discord quests, chatting, voice). They are independent - fill a file to turn a module on, empty it to turn it off.
+
+**Multi-account**
+
+In the JSON files, the **top-level key is a Discord account token** - each key is one account, handled on its own. To add an account, add a token key. To remove one, delete that key.
+
+```json
+{
+    "TOKEN_A": { "...": "..." },
+    "TOKEN_B": { "...": "..." }
+}
+```
+
+**Data types**
+
+| Type | Meaning | Example |
+|------|---------|---------|
+| String | text, inside quotes | `"owo"` |
+| Number | a number, no quotes | `12` |
+| Boolean | true or false, no quotes | `true` |
+| List | several values inside `[ ]` | `[1, 2, 3]` |
+| Object | a nested group inside `{ }` | `{"min": 5, "max": 10}` |
+
+**Rules to know**
+
+- A key you leave out keeps its **default** value. A minimal account is just `"YOUR_TOKEN": {}`.
+- Use a **list** to allow several IDs (channels, ...). Use a plain number for a single ID.
+- `quest.txt` is plain text, not JSON: one token per line, `#` for comments.
+- `settings.json` is **global** and is not keyed by token.
+- `caches.json` is written by the tool - do not edit it.
+- Edit the files first, then start the tool. `data/owo.json` is the only file it watches - changes are reloaded while the tool is stopped.
+
+---
 
 <details>
-<summary><b>owo.json</b> — OwO bot macro</summary>
+<summary><b>OwO</b>  -  Bot  -  <code>data/owo.json</code></summary>
 
-Runs the full OwO macro per account: hunt, battle, daily, quests, huntbot, giveaways, guild boss, gems and gambling.
+The full OwO farm: hunt, battle, daily, quests, huntbot, giveaway, boss, gems and gambling.
 
 ```json
 {
     "YOUR_TOKEN": {
-        "channels_id": [123456789]
+        "prefix": "owo",
+        "channels_id": [123456789],
+        "daily": true,
+        "spam": { "hunt": true, "battle": true }
     }
 }
 ```
 
 **Top level**
 
-| Property | Type | Default | What it does |
-|---|---|---|---|
-| `prefix` | string | `owo` | OwO command prefix — `{prefix}h` sends `owoh` |
-| `check_status` | bool | `true` | Probes OWO every 60 s; pauses the account 5–10 min if OWO stops replying |
-| `channels_id` | array of int | `[]` | Channels the account may work in — one is picked randomly at startup |
-| `changing_channel` | object | — | Channel-rotation behavior (below) |
-| `daily` | bool | `true` | Auto-claim `{prefix}daily`, waits exactly the duration OWO reports |
-| `quest` | bool | `true` | Auto-read, claim & complete OWO quests |
-| `huntbot` | bool | `true` | Claim huntbot rewards and submit huntbot passwords |
-| `giveaway` | bool | `true` | Auto-join `New Giveaway` messages |
-| `boss` | bool | `true` | Join guild boss battles |
-| `spam` | object | — | XP-farming command loop (below) |
-| `gem` | object | — | Gem usage & inventory handling (below) |
-| `gamble` | object | — | Slot, coinflip, blackjack, highlow, lottery (below) |
+| Key | Type | Default | Purpose |
+|-----|------|---------|---------|
+| `prefix` | String | `owo` | Prefix for every OwO command |
+| `check_status` | Boolean | `true` | Pause the account if OwO seems offline |
+| `channels_id` | List | `[]` | Channels this account can work in |
+| `changing_channel` | Object | *(below)* | When to switch between channels |
+| `daily` | Boolean | `true` | Claim the daily reward |
+| `quest` | Boolean | `true` | Complete OwO quests |
+| `huntbot` | Boolean | `true` | Claim huntbot rewards and submit passwords |
+| `giveaway` | Boolean | `true` | Join giveaways |
+| `boss` | Boolean | `true` | Join guild boss battles |
+| `spam` | Object | *(below)* | The hunt / battle / owo loop |
+| `gem` | Object | *(below)* | Gem usage and opening inventory |
+| `gamble` | Object | *(below)* | Gambling games |
 
-**`changing_channel`** — needs more than one ID in `channels_id`; a single ID means no rotation at all.
+**changing_channel** - needs more than one channel in `channels_id`:
 
-| Property | Type | Default | What it does |
-|---|---|---|---|
-| `when_mentioned` | bool | `true` | Switch channel when the account gets mentioned |
-| `when_challenge` | bool | `true` | Switch channel after accepting a battle challenge |
-| `after_elapsed_time.min` | int | `300` | Minimum seconds between automatic rotations |
-| `after_elapsed_time.max` | int | `600` | Maximum seconds between automatic rotations |
+| Key | Type | Default | Purpose |
+|-----|------|---------|---------|
+| `when_mentioned` | Boolean | `true` | Switch channel when the account is mentioned |
+| `when_challenge` | Boolean | `true` | Switch channel after a battle challenge |
+| `after_elapsed_time` | Object | `{"min": 300, "max": 600}` | Switch after a random time (seconds) |
 
-**`spam`** — the XP loop: one cycle of commands, then a random `cooldown` sleep, repeat.
+**spam** - the XP loop:
 
-| Property | Type | Default | What it does |
-|---|---|---|---|
-| `hunt` | bool | `true` | Send `{prefix}h` |
-| `battle` | bool | `true` | Send `{prefix}b` (auto-skipped during "battle a friend" quests) |
-| `owo/uwu` | bool | `true` | Send a plain `owo` or `uwu` |
-| `delay.min` | number | `0.5` | Min random delay (s) between commands in a cycle |
-| `delay.max` | number | `1` | Max random delay (s) between commands in a cycle |
-| `cooldown.min` | int | `15` | Min random sleep (s) after a full cycle |
-| `cooldown.max` | int | `20` | Max random sleep (s) after a full cycle |
+| Key | Type | Default | Purpose |
+|-----|------|---------|---------|
+| `hunt` | Boolean | `true` | Send the hunt command |
+| `battle` | Boolean | `true` | Send the battle command |
+| `owo/uwu` | Boolean | `true` | Send a random `owo` or `uwu` |
+| `delay` | Object | `{"min": 0.5, "max": 1}` | Pause between commands (seconds) |
+| `cooldown` | Object | `{"min": 15, "max": 20}` | Pause between cycles (seconds) |
 
-**`gem`**
+**gem**:
 
-| Property | Type | Default | What it does |
-|---|---|---|---|
-| `use` | bool | `false` | Auto-use a gem when the account gains one (reacts to OWO "gained" messages) |
-| `couple` | bool | `true` | Use the 5-gem couple combo when OWO says "spent 5 cowoncy and caught a…" |
-| `best` | bool | `false` | `false` = lowest-tier gem, `true` = highest |
-| `star` | bool | `false` | Also use the star gem when an active special pet exists |
-| `glitch` | bool | `true` | Check the double-time glitch (`{prefix}dt`) every 10 min — runs even with `use: false` |
-| `openning.box` | bool | `true` | Open lootboxes (`{prefix}lb all`) when in inventory |
-| `openning.crate` | bool | `true` | Open crates (`{prefix}wc all`) when in inventory |
-| `openning.flootbox` | bool | `true` | Open flootboxes (`{prefix}lb f`) when in inventory |
+| Key | Type | Default | Purpose |
+|-----|------|---------|---------|
+| `use` | Boolean | `false` | Auto-use a gem when the account gains one |
+| `couple` | Boolean | `true` | Use the couple gem combo |
+| `best` | Boolean | `false` | With `use`, use the highest-tier gem |
+| `star` | Boolean | `false` | Also use the star gem |
+| `glitch` | Boolean | `true` | Check the double-time glitch |
+| `openning` | Object | *(below)* | Auto-open items in the inventory |
 
-**`gamble`** — every game has `mode`, all off by default. `delay` / `cooldown` are shared.
+**openning** (inside `gem`):
 
-| Game | Settings | Defaults | What it does |
-|---|---|---|---|
-| `lottery` | `mode`, `amount` | `false`, `1` | One `{prefix}lottery <amount>` submission per daily reset |
-| `slot` | `mode`, `bet`, `rate`, `max` | `false`, `1`, `2`, `250000` | `{prefix}s <bet>` |
-| `coinflip` | `mode`, `bet`, `rate`, `max` | `false`, `1`, `2`, `250000` | `{prefix}cf <bet>` |
-| `blackjack` | `mode`, `bet`, `rate`, `max` | `false`, `1`, `2`, `250000` | `{prefix}bj <bet>` — reacts 👊 (hit) while points ≤ 17, 🛑 (stand) above |
-| `highlow` | `mode`, `bet`, `rate`, `max` | `false`, `10`, `2`, `250000` | `{prefix}hl <bet>` — guesses Higher/Lower via buttons, cashes out at ×2 (min bet 10) |
-| `delay.min` / `delay.max` | number | `0.5` / `1` | Random delay (s) between games in a cycle |
-| `cooldown.min` / `cooldown.max` | int | `60` / `120` | Random sleep (s) after a full gamble cycle |
+| Key | Type | Default | Purpose |
+|-----|------|---------|---------|
+| `box` | Boolean | `true` | Open lootboxes |
+| `crate` | Boolean | `true` | Open crates |
+| `flootbox` | Boolean | `false` | Open the special flootboxes |
 
-Martingale for all games: a loss multiplies the next bet by `rate`, a win (or hitting `max`) resets it to `bet`.
+**gamble**:
 
-With 2+ accounts configured, friend quests (battle, cookie, pray, curse, action) are solved by the other accounts.
+| Key | Type | Default | Purpose |
+|-----|------|---------|---------|
+| `lottery` | Object | *(below)* | Lottery |
+| `slot` | Object | *(below)* | Slot machine |
+| `coinflip` | Object | *(below)* | Coin flip |
+| `blackjack` | Object | *(below)* | Blackjack |
+| `highlow` | Object | *(below)* | High / low |
+| `delay` | Object | `{"min": 0.5, "max": 1}` | Pause between games (seconds) |
+| `cooldown` | Object | `{"min": 60, "max": 120}` | Pause between cycles (seconds) |
+
+Each game has a `mode` switch (default `false`) to turn it on. All games are off by default.
+
+| Game | `mode` | `bet` | `rate` | `max` |
+|------|--------|-------|--------|-------|
+| slot | false | 1 | 2 | 250000 |
+| coinflip | false | 1 | 2 | 250000 |
+| blackjack | false | 1 | 2 | 250000 |
+| highlow | false | 10 | 2 | 250000 |
+
+For every game: `bet` is the base bet (highlow is forced to a minimum of 10), `rate` multiplies the next bet after a loss and `max` is the highest bet allowed. `lottery` uses `amount` (default `1`) - its tickets per daily reset.
+
+When **two or more** accounts are set up, friend quests (battle, cookie, pray, curse, action) are solved by the other accounts automatically.
 
 </details>
-
 <details>
-<summary><b>quest.txt</b> — Discord quests autocompleter</summary>
+<summary><b>Quest</b>  -  Extension  -  <code>data/quest.txt</code></summary>
 
-Plain text, **one token per line**. Lines starting with `#` are ignored — the only config file that isn't JSON.
+Completes Discord quests (watch a video, play on desktop, stream, play an activity). This is a different thing from the OwO `quest` key above - it is for Discord's own quest system. It talks to Discord's HTTP API directly, so it does not use the bot gateway. All tokens run together.
 
-```
+```txt
 # one token per line
 TOKEN_A
 TOKEN_B
 ```
 
-Uses Discord's HTTP API directly. Every 5 minutes it fetches available quests, auto-accepts eligible ones and completes the supported types (watch video, play on desktop, stream, play activity), respects rate limits, and processes up to 100 quests in parallel.
+Plain text, one token per line. Lines starting with `#` are ignored. There is nothing else to configure.
 
 </details>
 
 <details>
-<summary><b>chat.json</b> — auto-chat</summary>
+<summary><b>Chat</b>  -  Extension  -  <code>data/chat.json</code></summary>
 
-Sends messages from `assets/messages.txt` (one message per line) into the channels you list — a random channel and a random message every time.
+Sends messages into the channels you choose - a random channel and a random message each time. The messages come from `assets/messages.txt`, one per line (empty lines are ignored).
 
 ```json
 {
     "YOUR_TOKEN": {
-        "chat_channel_id": [123456789, 987654321],
+        "chat_channel_id": [123456789],
         "cooldown": {"min": 60, "max": 120},
         "exist": false
     }
 }
 ```
 
-| Property | Type | Default | What it does |
-|---|---|---|---|
-| `chat_channel_id` | array of int | `[]` | Channels to send in (random pick per message). Empty → account skipped |
-| `cooldown.min` / `cooldown.max` | int | `60` / `120` | Random seconds between messages |
-| `exist` | bool | `false` | `false` = send then instantly delete (ghost). `true` = leave the message |
+| Key | Type | Default | Purpose |
+|-----|------|---------|---------|
+| `chat_channel_id` | List | `[]` | Channels to send to; empty means the account is skipped |
+| `cooldown` | Object | `{"min": 60, "max": 120}` | Pause between messages (seconds) |
+| `exist` | Boolean | `false` | `false` sends then deletes (ghost); `true` leaves the message |
 
 </details>
 
 <details>
-<summary><b>voice.json</b> — voice keep-connected</summary>
+<summary><b>Voice</b>  -  Extension  -  <code>data/voice.json</code></summary>
 
-Keeps each account connected to a voice channel; every 60 s it checks the connection and reconnects if it dropped.
+Keeps each account connected to a voice channel and reconnects if it drops.
+
+The key is the token; the value is the voice channel ID - a **bare number, no quotes**.
 
 ```json
 {
@@ -190,7 +257,30 @@ Keeps each account connected to a voice channel; every 60 s it checks the connec
 }
 ```
 
-The key is the account token, the value is the voice channel ID (a number — no quotes).
+</details>
+
+<details>
+<summary><b>settings.json</b>  -  Global</summary>
+
+Not keyed by token - one file for the whole tool. Optional.
+
+When any account hits a captcha, the web app already shows it. If `discord_webhook` is set, the tool also posts a Discord alert so you get pinged (for example at night).
+
+```json
+{
+    "discord_webhook": {
+        "url": "https://discord.com/api/webhooks/...",
+        "content": "@everyone @here <@&role_id> <@user_id>"
+    }
+}
+```
+
+| Key | Type | Default | Purpose |
+|-----|------|---------|---------|
+| `url` | String | *(none)* | Webhook URL that receives the alert |
+| `content` | String | `@everyone @here` | Mention text sent with the alert |
+
+Each alert sends your `content` mentions plus an embed titled **CAPTCHA DETECTED** with the account's name and a link to the captcha message.
 
 </details>
 
