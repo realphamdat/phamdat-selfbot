@@ -2,20 +2,36 @@
   <img src="assets/banner.png" alt="Phamdat Selfbot">
 </p>
 
-## Previews
+## PREVIEW
 
-<table align="center">
-  <tr>
-    <td align="center"><img src="assets/previews/terminal.png" alt="Terminal"><br>Terminal</td>
-    <td align="center"><img src="assets/previews/data.png" alt="Data"><br>Data</td>
-  </tr>
-  <tr>
-    <td align="center"><img src="assets/previews/captcha.png" alt="Captcha"><br>Captcha</td>
-    <td align="center"><img src="assets/previews/solve.png" alt="Solve"><br>Solve</td>
-  </tr>
-</table>
+<details>
+<summary><b>Terminal</b></summary>
 
-## About
+<p align="center">
+  <img src="assets/previews/terminal.png" alt="Terminal">
+</p>
+
+</details>
+
+<details>
+<summary><b>Data</b></summary>
+
+<p align="center">
+  <img src="assets/previews/data.png" alt="Data">
+</p>
+
+</details>
+
+<details>
+<summary><b>Captcha</b></summary>
+
+<p align="center">
+  <img src="assets/previews/captcha.png" alt="Captcha">
+</p>
+
+</details>
+
+## ABOUT
 
 | | |
 |---|---|
@@ -27,24 +43,15 @@
 
 ---
 
-## Installation
+## INSTALLATION
 
-**Requirements:** Python 3.10+ (64-bit), Git.
+**Requirements:**
+[Python](https://www.python.org/downloads/), [Git](https://git-scm.com/install/windows)
 
 ```bash
-git clone https://github.com/realphamdat/phamdat-selfbot.git
-cd phamdat-selfbot
 pip install -r requirements.txt
 python main.py
 ```
-
-The terminal prints a web address (e.g. `http://192.168.1.10:2010`). Open it in your browser:
-
-| Tab | What it's for |
-|---|---|
-| **Terminal** | Start / stop the bots, live logs |
-| **Captcha** | Solve pending captchas |
-| **Data** | Edit config files |
 
 ---
 
@@ -189,19 +196,26 @@ The key is the account token, the value is the voice channel ID (a number — no
 
 ---
 
-## Tips
+## IMPORTANCE
 
-1. **A captcha pauses an account** until solved on the Captcha tab. To get notified, set `url` under `discord_webhook` in `data/settings.json`.
-2. **Open the web UI from another device** on the same network: `http://<IP printed in terminal>:2010`.
-3. **`owo.json` reloads a few seconds after saving** while the macro is stopped. `chat.json`, `voice.json` and `quest.txt` load only at startup — restart the bot after editing them.
+### Tips
+
+- **Open the web UI from another device** on the same network: `http://<IP printed in terminal>:2010`.
+- **Avoid using overly short or generic names** such as "bear", "pink", ".,;:?!@#$%^&*" or similar. These names are highly likely to overlap with other players, which can confuse the system during message recognition and may even cause serious errors. Choose a distinct, clear, and uncommon name instead. A name like "Phamdat" can still work if it is not commonly used, because the system relies on the name to accurately match bot replies.
+- **Do not attach too many accounts to the same channel**. Doing so can flood the message flow, reduce efficiency, and make the system less reliable. If it is unavoidable, proceed with caution and only when absolutely necessary.
+
+### OwO
+
+- **Do not let the inventory become too large**. An overloaded inventory can trigger excessive message overflow, and the system may only recognize the first inventory message while later ones are skipped. This prevents important information from being scanned correctly. Avoid buying large quantities of rings, stacking thousands of boxes, crates, and other bulk inventory items.
+- **Quest features require the correct OWO settings**. To make quests work properly, you must configure the settings from the `owobs` command, as shown in the image at [assets/tips/owo_settings.png](assets/tips/owo_settings.png). Without this setup, the quest system may not function correctly.
 
 ---
 
 ## License
 
-This project is licensed under the **Phamdat Selfbot — Educational License**. See [LICENSE](LICENSE) for details.
+This project is licensed under the **Phamdat Selfbot - Educational License**. See [LICENSE](LICENSE) for details.
 
 - Educational use only.
 - Selling or commercial use is strictly prohibited.
 - Credit required when referencing or borrowing code.
-- Provided "as is" — the author assumes no liability for misuse or any consequences arising from use.
+- Provided "as is" - the author assumes no liability for misuse or any consequences arising from use.
