@@ -29,11 +29,17 @@ class BotManager:
         _init_mtimes()
         threading.Thread(target=_watch_files, name='file_watcher', daemon=True).start()
 
+    def reload():
+        for bot in BOTS.values():
+            if hasattr(bot, 'reload'):
+                bot.reload()
+
     def start(self):
         global _running
         with _lock:
             if _running:
                 return
+            BotManager.reload()
             for bot in BOTS.values():
                 bot.start_macro()
             for ext in EXTENSIONS.values():
@@ -104,9 +110,7 @@ def _watch_files():
                 with _lock:
                     if not _running:
                         logger.info(f'Data file changed: {filename}, reloading')
-                        for bot in BOTS.values():
-                            if hasattr(bot, 'reload'):
-                                bot.reload()
+                        BotManager.reload()
                     else:
                         logger.info(f'Data file changed: {filename} (running, skip reload)')
         time.sleep(1)

@@ -27,16 +27,16 @@ class Gamble:
         elif '<:eggplant:417475705719226369> <:eggplant:417475705719226369> <:eggplant:417475705719226369>' in c:
             client.logger.info(f'Slot draw {client.bet_slot}')
         elif '<:heart:417475705899712522> <:heart:417475705899712522> <:heart:417475705899712522>' in c:
-            client.logger.info(f'Slot won {client.bet_slot} (x2)')
+            client.logger.info(f'Slot won {client.bet_slot * 2} (x2)')
             client.bet_slot = int(client.config['gamble']['slot']['bet'])
         elif '<:cherry:417475705178161162> <:cherry:417475705178161162> <:cherry:417475705178161162>' in c:
-            client.logger.info(f'Slot won {client.bet_slot * 2} (x3)')
+            client.logger.info(f'Slot won {client.bet_slot * 3} (x3)')
             client.bet_slot = int(client.config['gamble']['slot']['bet'])
         elif '<:cowoncy:417475705912426496> <:cowoncy:417475705912426496> <:cowoncy:417475705912426496>' in c:
-            client.logger.info(f'Slot won {client.bet_slot * 3} (x4)')
+            client.logger.info(f'Slot won {client.bet_slot * 4} (x4)')
             client.bet_slot = int(client.config['gamble']['slot']['bet'])
         elif '<:o_:417475705899843604> <:w_:417475705920684053> <:o_:417475705899843604>' in c:
-            client.logger.info(f'Slot won {client.bet_slot * 9} (x10)')
+            client.logger.info(f'Slot won {client.bet_slot * 10} (x10)')
             client.bet_slot = int(client.config['gamble']['slot']['bet'])
 
     @staticmethod
@@ -222,9 +222,11 @@ class Gamble:
     @staticmethod
     async def _handle_highlow(client, message):
         text = Component.text(message)
+        match = re.search(r'\(([\d.]+)x\)', text)
+        if match: multiple = float(match.group(1))
 
         if 'cashed out!' in text:
-            client.logger.info(f'HighLow won {client.bet_highlow}')
+            client.logger.info(f'HighLow won {client.bet_highlow * multiple} (x{multiple})')
             client.bet_highlow = int(client.config['gamble']['highlow']['bet'])
             return True
 
@@ -233,8 +235,7 @@ class Gamble:
             client.bet_highlow *= int(client.config['gamble']['highlow']['rate'])
             return True
 
-        match = re.search(r'\(([\d.]+)x\)', text)
-        if match and float(match.group(1)) >= 2.0:
+        if multiple >= 2.0:
             return await Gamble._highlow_cashout(client, message)
 
         return await Gamble._highlow_guess(client, message)

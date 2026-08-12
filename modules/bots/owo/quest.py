@@ -230,8 +230,8 @@ class Quest:
                 other.block_battle = True
                 ch = other.current_channel
                 if ch:
-                    await ch.send(f'{client.prefix}b {client.user.mention}')
-                    other.logger.info(f'Sent {client.prefix}b {client.user.mention}')
+                    await ch.send(f'{other.prefix}b {client.user.mention}')
+                    other.logger.info(f'Sent {other.prefix}b {client.user.mention}')
                 await asyncio.sleep(random.uniform(3, 5))
                 if not client.quest_flags.get('battle_friend'):
                     break
@@ -247,8 +247,22 @@ class Quest:
                     continue
                 ch = other.current_channel
                 if ch:
-                    await ch.send(f'owocookie {client.user.id}')
-                    other.logger.info(f'Sent owocookie {client.user.id}')
+                    for attempt in range(3):
+                        await ch.send(f'{other.prefix}cookie {client.user.id}')
+                        other.logger.info(f'Sent {other.prefix}cookie {client.user.id}')
+                        try:
+                            await other.wait_for(
+                                'message',
+                                check=lambda m: (
+                                    other.is_owo_message(m, in_channel=True)
+                                    and any(text in m.content for text in ('You need to wait', 'You got a cookie'))
+                                ),
+                                timeout=5,
+                            )
+                            break
+                        except asyncio.TimeoutError:
+                            if attempt < 2:
+                                await asyncio.sleep(5)
                 await asyncio.sleep(random.uniform(3, 5))
                 if not client.quest_flags.get('cookie'):
                     break
@@ -264,8 +278,8 @@ class Quest:
                     continue
                 ch = other.current_channel
                 if ch:
-                    await ch.send(f'owopray {client.user.id}')
-                    other.logger.info(f'Sent owopray {client.user.id}')
+                    await ch.send(f'{other.prefix}pray {client.user.id}')
+                    other.logger.info(f'Sent {other.prefix}pray {client.user.id}')
                 await asyncio.sleep(random.uniform(3, 5))
                 if not client.quest_flags.get('pray'):
                     break
@@ -279,8 +293,8 @@ class Quest:
                     continue
                 ch = other.current_channel
                 if ch:
-                    await ch.send(f'owocurse {client.user.id}')
-                    other.logger.info(f'Sent owocurse {client.user.id}')
+                    await ch.send(f'{other.prefix}curse {client.user.id}')
+                    other.logger.info(f'Sent {other.prefix}curse {client.user.id}')
                 await asyncio.sleep(random.uniform(3, 5))
                 if not client.quest_flags.get('curse'):
                     break
@@ -295,8 +309,8 @@ class Quest:
                 action = random.choice(client.owo_actions)
                 ch = other.current_channel
                 if ch:
-                    await ch.send(f'{client.prefix}{action} {client.user.mention}')
-                    other.logger.info(f'Sent {client.prefix}{action} {client.user.mention}')
+                    await ch.send(f'{other.prefix}{action} {client.user.mention}')
+                    other.logger.info(f'Sent {other.prefix}{action} {client.user.mention}')
                 await asyncio.sleep(random.uniform(3, 5))
                 if not client.quest_flags.get('action_you'):
                     break
