@@ -50,18 +50,43 @@
 ## INSTALLATION
 
 **Requirements:**
-[Python](https://www.python.org/downloads/), [Git](https://git-scm.com/install/windows)
+[Python](https://www.python.org/downloads/), [Git](https://git-scm.com/install/windows). When installing Python, tick **Add Python to PATH** so you can run `python` from any folder. Git is required because one dependency is installed straight from GitHub.
+
+**Get the code**
+
+- **Download ZIP** - on the [repo page](https://github.com/realphamdat/phamdat-selfbot), press *Code* then *Download ZIP*, and extract the folder.
+- **Or clone** - open a terminal anywhere:
+
+```bash
+git clone https://github.com/realphamdat/phamdat-selfbot.git
+```
+
+**Install dependencies**
+
+Open a terminal inside the project folder and run:
 
 ```bash
 pip install -r requirements.txt
+```
+
+**Add your data**
+
+Put your settings and tokens into the `data/` folder first - this is covered in [SETUP](#setup). The tool reads these files when it starts.
+
+**Run**
+
+```bash
 python main.py
 ```
+
+The tool starts a local web page. Open `http://localhost:2010` in your browser to **start/stop the macro, solve captchas and edit your data**. From another device on the same network, open `http://<IP shown in terminal>:2010`.
 
 ---
 
 ## SETUP
 
-### How data works
+<details>
+<summary><b>HOW DATA WORKS</b></summary>
 
 All settings live in the `data/` folder. You edit these files, then start the bot.
 
@@ -108,8 +133,7 @@ In the JSON files, the **top-level key is a Discord account token** - each key i
 - `caches.json` is written by the tool - do not edit it.
 - Edit the files first, then start the tool. `data/owo.json` is the only file it watches - changes are reloaded while the tool is stopped.
 
----
-
+</details>
 <details>
 <summary><b>OwO</b>  -  Bot  -  <code>data/owo.json</code></summary>
 
