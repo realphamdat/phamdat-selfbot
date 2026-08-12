@@ -255,7 +255,7 @@ class Quest:
                                 'message',
                                 check=lambda m: (
                                     other.is_owo_message(m, in_channel=True)
-                                    and any(text in m.content for text in ('You need to wait', 'You got a cookie'))
+                                    and other.message_contains(m.content, any_of=['You need to wait', 'You got a cookie'])
                                 ),
                                 timeout=5,
                             )
