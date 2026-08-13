@@ -133,7 +133,7 @@ class OWOClient(discord.Client):
         if self.config['boss'] and time.time() >= self.cooldown_boss:
             await Boss.handle(self, message)
 
-        if self.config['gem']['use'] or self.config['gem']['glitch']:
+        if self.config['gem']['use'] or Gem.glitch_available(self):
             await Gem.check_gem(self, message)
 
     async def on_message_edit(self, before, after):
