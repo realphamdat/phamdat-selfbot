@@ -92,7 +92,7 @@ class Gem:
         if not client.message_contains(message.content, all_of=[str(client.nickname), '🌱', 'gained']):
             return
 
-        if (client.no_gem and time.time() < client.no_gem_since) or not Gem.glitch_available(client):
+        if client.no_gem and time.time() < client.no_gem_since:
             return
 
         client.no_gem = False
