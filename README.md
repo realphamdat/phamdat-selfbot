@@ -49,8 +49,16 @@
 
 ## INSTALLATION
 
-**Requirements:**
-[Python](https://www.python.org/downloads/), [Git](https://git-scm.com/install/windows). When installing Python, tick **Add Python to PATH** so you can run `python` from any folder. Git is required because one dependency is installed straight from GitHub.
+**Requirements**
+
+- **Python** – [python.org](https://www.python.org/downloads/).  
+  During installation, check **Add Python to PATH** so you can run `python` from any folder.
+
+- **Git** – [git-scm.com](https://git-scm.com/install/windows).  
+  Required because one dependency is installed directly from GitHub.
+
+- **Chrome for Testing** – [googlechromelabs.github.io/chrome-for-testing](https://googlechromelabs.github.io/chrome-for-testing).  
+  Choose the build for your operating system.
 
 **Get the code**
 
