@@ -43,8 +43,6 @@ class Gem:
             'gem3': range(65, 72),
             'gem4': range(72, 79),
         }
-        if gem['star'] and client.special_pet_available:
-            gem_tiers['star'] = range(79, 86)
         start_values = {
             'gem1': 51,
             'gem3': 65,
@@ -59,6 +57,11 @@ class Gem:
             if all((start_values[tier] + n) in inv and (start_values[tier] + n) in gem_tiers[tier] for tier in active)
         ]
         selected = valid[-1] if valid and gem['best'] else (valid[0] if valid else [])
+
+        if selected and gem['star'] and Gem.glitch_available(client):
+            if start_values['star'] + (selected[0] - start_values['gem1']) in inv:
+                selected.append(start_values['star'] + (selected[0] - start_values['gem1']))
+
         gem_to_use = ' '.join(map(str, selected)) if selected else None
         await Gem._send_use(client, gem_to_use)
 
