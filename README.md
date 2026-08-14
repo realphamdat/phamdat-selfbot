@@ -166,8 +166,10 @@ The full OwO farm: hunt, battle, daily, quests, huntbot, giveaway, boss, gems an
 | `check_status` | Boolean | `true` | Pause the account if OwO seems offline |
 | `channels_id` | List | `[]` | Channels this account can work in |
 | `changing_channel` | Object | *(below)* | When to switch between channels |
-| `daily` | Boolean | `true` | Claim the daily reward |
+| `checklist` | Boolean | `true` | Complete OwO checklist |
 | `quest` | Boolean | `true` | Complete OwO quests |
+| `vote` | Boolean | `true` | Vote OwO in top.gg |
+| `daily` | Boolean | `true` | Claim the daily reward |
 | `huntbot` | Boolean | `true` | Claim huntbot rewards and submit passwords |
 | `giveaway` | Boolean | `true` | Join giveaways |
 | `boss` | Boolean | `true` | Join guild boss battles |

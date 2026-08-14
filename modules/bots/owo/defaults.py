@@ -9,8 +9,10 @@ OWO_DEFAULT_CONFIG = {
         'after_elapsed_time': {'min': 300, 'max': 600},
     },
 
-    'daily': True,
+    'checklist': True,
     'quest': True,
+    'vote': True,
+    'daily': True,
     'huntbot': True,
     'giveaway': True,
     'boss': True,

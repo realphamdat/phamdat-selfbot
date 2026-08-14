@@ -10,8 +10,10 @@
             "after_elapsed_time": {"min": 300, "max": 600}
         },
 
-        "daily": true,
+        "checklist": true,
         "quest": true,
+        "vote": true,
+        "daily": true,
         "huntbot": true,
         "giveaway": true,
         "boss": true,
