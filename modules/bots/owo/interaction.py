@@ -5,13 +5,11 @@ import time
 
 from modules.bots.owo.daily import Daily
 
-FLAGS = {'pray': 'pray', 'curse': 'curse', 'battle': 'battle_friend',
-         'action': 'action_you', 'cookie': 'cookie'}
+FLAGS = {'pray': 'pray', 'curse': 'curse', 'battle': 'battle_friend', 'action': 'action_you', 'cookie': 'cookie'}
 
+CD = {'pray': 300, 'curse': 300, 'battle': 15, 'action': 10}
 
 class Interaction:
-    CD = {'pray': 300, 'curse': 300, 'battle': 15, 'action': 10}
-
     def __init__(self, clients):
         self._clients = clients
         self._queue = collections.defaultdict(collections.deque)
@@ -82,7 +80,7 @@ class Interaction:
         return time.time() >= sender.interaction_cd.get(kind, 0)
 
     def _mark(self, sender, kind):
-        sender.interaction_cd[kind] = time.time() + self.CD[kind]
+        sender.interaction_cd[kind] = time.time() + CD[kind]
 
     def _command(self, kind, sender, target):
         if kind == 'battle':

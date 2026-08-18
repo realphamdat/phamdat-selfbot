@@ -63,7 +63,7 @@ class Checklist:
     @staticmethod
     async def _fetch_weekly(client, message_id):
         for _ in range(5):
-            await asyncio.sleep(1)
+            await asyncio.sleep(2)
             try:
                 message = await client.current_channel.fetch_message(message_id)
             except discord.HTTPException:
@@ -94,8 +94,9 @@ class Checklist:
 
         daily = Checklist.scan(message)
         client.cookie_available = bool(daily[1])
-        client.logger.info(f'Cookie is available')
+        client.logger.info(f'Cookie is {client.cookie_available}')
         await Checklist._claim(client, message)
+        await asyncio.sleep(2)
 
         week = (False, False)
         if await Checklist._switch_to_weekly(client, message):
