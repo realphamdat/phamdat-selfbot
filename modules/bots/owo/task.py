@@ -169,8 +169,7 @@ class TaskManager:
                     except Exception:
                         self.client.logger.exception('Spam error')
                     spam = self.client.config['spam']
-                    await asyncio.sleep(random.uniform(int(spam['cooldown']['min']),
-                                                       int(spam['cooldown']['max'])))
+                    await asyncio.sleep(random.uniform(int(spam['cooldown']['min']), int(spam['cooldown']['max'])))
                 else:
                     await asyncio.sleep(random.uniform(30, 60))
         except asyncio.CancelledError:
@@ -197,8 +196,7 @@ class TaskManager:
                         await Gamble.gamble_cycle(self.client)
                     except Exception:
                         self.client.logger.exception('Gamble error')
-                    await asyncio.sleep(random.uniform(int(gamble['cooldown']['min']),
-                                                       int(gamble['cooldown']['max'])))
+                    await asyncio.sleep(random.uniform(int(gamble['cooldown']['min']), int(gamble['cooldown']['max'])))
                 else:
                     await asyncio.sleep(random.uniform(30, 60))
         except asyncio.CancelledError:
