@@ -191,8 +191,8 @@ The full OwO farm: hunt, battle, daily, quests, huntbot, giveaway, boss, gems an
 | `hunt` | Boolean | `true` | Send the hunt command |
 | `battle` | Boolean | `true` | Send the battle command |
 | `owo/uwu` | Boolean | `true` | Send a random `owo` or `uwu` |
-| `delay` | Object | `{"min": 1, "max": 2}` | Pause between commands (seconds) |
-| `cooldown` | Object | `{"min": 30, "max": 60}` | Pause between cycles (seconds) |
+| `delay` | Object | `{"min": 0.5, "max": 1}` | Pause between commands (seconds) |
+| `cooldown` | Object | `{"min": 15, "max": 20}` | Pause between cycles (seconds) |
 
 **gem**:
 
