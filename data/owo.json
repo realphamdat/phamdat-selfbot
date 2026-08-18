@@ -14,9 +14,9 @@
         "quest": true,
         "vote": true,
         "daily": true,
+        "boss": true,
         "huntbot": true,
         "giveaway": true,
-        "boss": true,
 
         "spam": {
             "hunt": true,

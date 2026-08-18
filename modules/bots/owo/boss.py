@@ -11,15 +11,16 @@ from modules.utils.component import Component
 class Boss:
     @staticmethod
     async def handle(client, message):
+        if not client.can_run():
+            return
         if not client.is_owo_message(message):
             return
-        if not client.can_run():
+        if time.time() < client.cooldown_boss:
             return
         if not message.components:
             return
 
-        container = message.components[0]
-        children = getattr(container, 'children', None)
+        children = getattr(message.components[0], 'children', None)
         if not children:
             return
 
@@ -45,10 +46,10 @@ class Boss:
 
     @staticmethod
     async def _watch_ticket_response(client, channel):
-        def is_ticket_response(m):
-            if m.channel.id != channel.id:
+        def is_ticket_response(message):
+            if message.channel.id != channel.id:
                 return False
-            for component in m.components:
+            for component in message.components:
                 try:
                     if "You don't have any boss tickets!" in Component.text(component):
                         return True
@@ -57,10 +58,10 @@ class Boss:
             return False
 
         try:
-            await client.wait_for('message', check=is_ticket_response, timeout=5.0)
+            await client.wait_for('message', check=is_ticket_response, timeout=5)
         except asyncio.TimeoutError:
             return
 
         wait = Daily.reset_time(client.cooldown_reset)
         client.cooldown_boss = wait + time.time()
-        client.logger.info(f'Boss out of tickets, paused {datetime.timedelta(seconds=wait)} until daily reset')
+        client.logger.info(f'Run out of boss tickets (reset in {datetime.timedelta(seconds=wait)})')

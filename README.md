@@ -58,7 +58,7 @@
   Required because one dependency is installed directly from GitHub.
 
 - **Chrome for Testing** – [googlechromelabs.github.io/chrome-for-testing](https://googlechromelabs.github.io/chrome-for-testing).  
-  Choose the build for your operating system.
+  Choose the build for your operating system (required for the top.gg voting feature). Reference image: [assets/tips/chrome_binary.png](assets/tips/chrome_binary.png)
 
 **Get the code**
 
@@ -100,16 +100,15 @@ All settings live in the `data/` folder. You edit these files, then start the bo
 
 **Bot and extensions**
 
-The tool has one **bot** and three **extensions**. Each module reads only its own file - a token in `owo.json` does not appear in the other files by itself. List an account in each file where you want it to work.
+The tool has one **bot** and two **extensions**. Each module reads only its own file - a token in `owo.json` does not appear in the other files by itself. List an account in each file where you want it to work.
 
 | Kind | Name | Config file |
 |------|------|-------------|
 | Bot | OwO | `data/owo.json` |
 | Extension | Quest | `data/quest.txt` |
-| Extension | Chat | `data/chat.json` |
-| Extension | Voice | `data/voice.json` |
+| Extension | Top.gg | `data/topgg.txt` |
 
-The **bot** farms OwO. The **extensions** each run a separate task (Discord quests, chatting, voice). They are independent - fill a file to turn a module on, empty it to turn it off.
+The **bot** farms OwO (daily, quests, checklists, vote, huntbot, boss, gems, gambling...). The **extensions** run separate tasks - Discord quests and top.gg voting. They are independent - fill a file to turn a module on, empty it to turn it off.
 
 **Multi-account**
 
@@ -136,10 +135,10 @@ In the JSON files, the **top-level key is a Discord account token** - each key i
 
 - A key you leave out keeps its **default** value. A minimal account is just `"YOUR_TOKEN": {}`.
 - Use a **list** to allow several IDs (channels, ...). Use a plain number for a single ID.
-- `quest.txt` is plain text, not JSON: one token per line, `#` for comments.
+- `quest.txt` and `topgg.txt` are plain text, not JSON: one entry per line, `#` for comments.
 - `settings.json` is **global** and is not keyed by token.
 - `caches.json` is written by the tool - do not edit it.
-- Edit the files first, then start the tool. `data/owo.json` is the only file it watches - changes are reloaded while the tool is stopped.
+- Edit the files first, then start the tool. Starting always reloads every account from the data files.
 
 </details>
 <details>
@@ -170,9 +169,9 @@ The full OwO farm: hunt, battle, daily, quests, huntbot, giveaway, boss, gems an
 | `quest` | Boolean | `true` | Complete OwO quests |
 | `vote` | Boolean | `true` | Vote OwO in top.gg |
 | `daily` | Boolean | `true` | Claim the daily reward |
+| `boss` | Boolean | `true` | Join guild boss battles |
 | `huntbot` | Boolean | `true` | Claim huntbot rewards and submit passwords |
 | `giveaway` | Boolean | `true` | Join giveaways |
-| `boss` | Boolean | `true` | Join guild boss battles |
 | `spam` | Object | *(below)* | The hunt / battle / owo loop |
 | `gem` | Object | *(below)* | Gem usage and opening inventory |
 | `gamble` | Object | *(below)* | Gambling games |
@@ -192,8 +191,8 @@ The full OwO farm: hunt, battle, daily, quests, huntbot, giveaway, boss, gems an
 | `hunt` | Boolean | `true` | Send the hunt command |
 | `battle` | Boolean | `true` | Send the battle command |
 | `owo/uwu` | Boolean | `true` | Send a random `owo` or `uwu` |
-| `delay` | Object | `{"min": 0.5, "max": 1}` | Pause between commands (seconds) |
-| `cooldown` | Object | `{"min": 15, "max": 20}` | Pause between cycles (seconds) |
+| `delay` | Object | `{"min": 1, "max": 2}` | Pause between commands (seconds) |
+| `cooldown` | Object | `{"min": 30, "max": 60}` | Pause between cycles (seconds) |
 
 **gem**:
 
@@ -254,42 +253,18 @@ TOKEN_B
 Plain text, one token per line. Lines starting with `#` are ignored. There is nothing else to configure.
 
 </details>
-
 <details>
-<summary><b>Chat</b>  -  Extension  -  <code>data/chat.json</code></summary>
+<summary><b>Top.gg</b>  -  Extension  -  <code>data/topgg.txt</code></summary>
 
-Sends messages into the channels you choose - a random channel and a random message each time. The messages come from `assets/messages.txt`, one per line (empty lines are ignored).
+Votes for any bot on top.gg. This is a different thing from the OwO `vote` key above - that one votes the OwO bot with the account's own token, this one votes any bot id with any token. It opens Chrome for Testing for every vote, so the browser from the requirements is required.
 
-```json
-{
-    "YOUR_TOKEN": {
-        "chat_channel_id": [123456789],
-        "cooldown": {"min": 60, "max": 120},
-        "exist": false
-    }
-}
+```txt
+# one token + one bot id per line
+TOKEN_A 408785106942164992
+TOKEN_B 408785106942164992
 ```
 
-| Key | Type | Default | Purpose |
-|-----|------|---------|---------|
-| `chat_channel_id` | List | `[]` | Channels to send to; empty means the account is skipped |
-| `cooldown` | Object | `{"min": 60, "max": 120}` | Pause between messages (seconds) |
-| `exist` | Boolean | `false` | `false` sends then deletes (ghost); `true` leaves the message |
-
-</details>
-
-<details>
-<summary><b>Voice</b>  -  Extension  -  <code>data/voice.json</code></summary>
-
-Keeps each account connected to a voice channel and reconnects if it drops.
-
-The key is the token; the value is the voice channel ID - a **bare number, no quotes**.
-
-```json
-{
-    "YOUR_TOKEN": 123456789
-}
-```
+Plain text, one token and one bot id per line. Lines starting with `#` are ignored. After a successful vote, the account waits for the top.gg cooldown before it votes again. There is nothing else to configure.
 
 </details>
 
@@ -331,7 +306,7 @@ Each alert sends your `content` mentions plus an embed titled **CAPTCHA DETECTED
 ### OwO
 
 - **Do not let the inventory become too large**. An overloaded inventory can trigger excessive message overflow, and the system may only recognize the first inventory message while later ones are skipped. This prevents important information from being scanned correctly. Avoid buying large quantities of rings, stacking thousands of boxes, crates, and other bulk inventory items.
-- **Quest features require the correct OWO settings**. To make quests work properly, you must configure the settings from the `owobs` command, as shown in the image at [assets/tips/owo_settings.png](assets/tips/owo_settings.png). Without this setup, the quest system may not function correctly.
+- **Checklist/Quest features require the correct OWO settings**. To make checklist/quest work properly, you must configure the settings from the `owobs` command, as shown in the image at [assets/tips/owo_settings.png](assets/tips/owo_settings.png). Without this setup, the checklist/quest system may not function correctly.
 
 ---
 

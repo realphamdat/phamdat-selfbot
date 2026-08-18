@@ -1,11 +1,14 @@
 import asyncio
+import datetime
 import random
 import time
 
-from modules.bots.owo.daily import Daily
+from modules.bots.owo.checklist import Checklist
 from modules.bots.owo.quest import Quest
-from modules.bots.owo.spam import Spam
+from modules.bots.owo.vote import Vote
+from modules.bots.owo.daily import Daily
 from modules.bots.owo.huntbot import Huntbot
+from modules.bots.owo.spam import Spam
 from modules.bots.owo.gem import Gem
 from modules.bots.owo.gamble import Gamble
 from modules.bots.owo.channel import Channel
@@ -17,32 +20,47 @@ class TaskManager:
         self._tasks = []
         self._running = False
 
+
     async def start(self):
         if self._running:
             return
         self._running = True
 
-        todo = []
-        if len(self.client.config['channels_id']) > 1:
-            todo.append((self._loop_channel, 0))
-        if self.client.config['daily']:
-            todo.append((self._loop_daily, 0))
-        if self.client.config['quest']:
-            todo.append((self._loop_quest, 0))
-        if self.client.config['huntbot']:
-            todo.append((self._loop_huntbot, 5))
-        if self.client.config['gem']['glitch']:
-            todo.append((self._loop_glitch, 5))
-        todo.append((self._loop_spam, 10))
-        todo.append((self._loop_gamble, 0))
-        if self.client.config['check_status']:
-            todo.append((self._loop_offline_check, 0))
+        if self.client.config['quest'] and self.client.interaction:
+            self.client.interaction.ensure('cookie')
 
-        for coro_func, delay in todo:
-            if delay > 0:
-                await asyncio.sleep(delay)
-            task = asyncio.create_task(coro_func())
-            self._tasks.append(task)
+        todo = []
+        if self.client.config['channels_id'] and len(self.client.config['channels_id']) > 1:
+            todo.append(self._loop_channel)
+        if self.client.config['checklist']:
+            todo.append(self._loop_checklist)
+        if self.client.config['quest']:
+            todo.append(self._loop_quest)
+        if self.client.config['vote']:
+            todo.append(self._loop_vote)
+        if self.client.config['daily']:
+            todo.append(self._loop_daily)
+        if self.client.config['huntbot']:
+            todo.append(self._loop_huntbot)
+        spam = self.client.config['spam']
+        if self.client.config['quest'] or spam['hunt'] or spam['battle'] or spam['owo/uwu']:
+            todo.append(self._loop_spam)
+        if self.client.config['gem']['glitch']:
+            todo.append(self._loop_glitch)
+        gamble = self.client.config['gamble']
+        if (
+            self.client.config['quest']
+            or gamble['lottery']['mode'] or gamble['slot']['mode']
+            or gamble['coinflip']['mode'] or gamble['blackjack']['mode']
+            or gamble['highlow']['mode']
+        ):
+            todo.append(self._loop_gamble)
+        if self.client.config['check_status']:
+            todo.append(self._loop_offline_check)
+
+        for coro_func in todo:
+            await asyncio.sleep(random.uniform(5, 10))
+            self._tasks.append(asyncio.create_task(coro_func()))
 
         self.client.logger.info('All tasks started')
 
@@ -67,9 +85,7 @@ class TaskManager:
                 channels = self.client.config['channels_id']
                 if self.client.can_run() and len(channels) > 1:
                     changing_channel = self.client.config['changing_channel']
-                    cooldown_min = changing_channel['after_elapsed_time']['min']
-                    cooldown_max = changing_channel['after_elapsed_time']['max']
-                    cooldown = random.randint(int(cooldown_min), int(cooldown_max))
+                    cooldown = random.uniform(int(changing_channel['after_elapsed_time']['min']), int(changing_channel['after_elapsed_time']['max']))
                     self.client.logger.info(f'Next channel change in {cooldown}s')
                     await asyncio.sleep(cooldown)
                     try:
@@ -77,44 +93,70 @@ class TaskManager:
                     except Exception:
                         self.client.logger.exception('Channel change error')
                 else:
-                    await asyncio.sleep(1)
+                    await asyncio.sleep(random.uniform(30, 60))
         except asyncio.CancelledError:
             pass
 
-    async def _loop_daily(self):
+    async def _loop_checklist(self):
         try:
             while self._running:
-                if self.client.can_run() and self.client.config['daily']:
+                if self.client.can_run():
                     try:
-                        await Daily.claim(self.client)
+                        if await Checklist.check(self.client):
+                            wait = Checklist.schedule(self.client)
+                            self.client.logger.info(f'Next checklist check in {datetime.timedelta(seconds=wait)}')
+                            await asyncio.sleep(wait)
                     except Exception:
-                        self.client.logger.exception('Daily error')
-                await asyncio.sleep(60)
+                        self.client.logger.exception('Checklist error')
+                await asyncio.sleep(random.uniform(30, 60))
         except asyncio.CancelledError:
             pass
 
     async def _loop_quest(self):
         try:
             while self._running:
-                if self.client.can_run() and self.client.config['quest']:
-                    if self.client.cooldown_quest <= time.time():
-                        try:
-                            await Quest.do_quest(self.client)
-                        except Exception:
-                            self.client.logger.exception('Quest error')
-                await asyncio.sleep(60)
+                if self.client.can_run():
+                    try:
+                        await Quest.do_quest(self.client)
+                    except Exception:
+                        self.client.logger.exception('Quest error')
+                await asyncio.sleep(random.uniform(30, 60))
+        except asyncio.CancelledError:
+            pass
+
+    async def _loop_vote(self):
+        try:
+            while self._running:
+                if self.client.can_run():
+                    try:
+                        await Vote.vote(self.client)
+                    except Exception:
+                        self.client.logger.exception('Vote error')
+                await asyncio.sleep(random.uniform(30, 60))
+        except asyncio.CancelledError:
+            pass
+
+    async def _loop_daily(self):
+        try:
+            while self._running:
+                if self.client.can_run():
+                    try:
+                        await Daily.claim(self.client)
+                    except Exception:
+                        self.client.logger.exception('Daily error')
+                await asyncio.sleep(random.uniform(30, 60))
         except asyncio.CancelledError:
             pass
 
     async def _loop_huntbot(self):
         try:
             while self._running:
-                if self.client.can_run() and self.client.config['huntbot']:
+                if self.client.can_run():
                     try:
                         await Huntbot.claim_submit(self.client)
                     except Exception:
                         self.client.logger.exception('Huntbot error')
-                await asyncio.sleep(60)
+                await asyncio.sleep(random.uniform(30, 60))
         except asyncio.CancelledError:
             pass
 
@@ -127,21 +169,22 @@ class TaskManager:
                     except Exception:
                         self.client.logger.exception('Spam error')
                     spam = self.client.config['spam']
-                    await asyncio.sleep(random.randint(int(spam['cooldown']['min']), int(spam['cooldown']['max'])))
+                    await asyncio.sleep(random.uniform(int(spam['cooldown']['min']),
+                                                       int(spam['cooldown']['max'])))
                 else:
-                    await asyncio.sleep(60)
+                    await asyncio.sleep(random.uniform(30, 60))
         except asyncio.CancelledError:
             pass
 
     async def _loop_glitch(self):
         try:
             while self._running:
-                if self.client.can_run() and self.client.config['gem']['glitch']:
+                if self.client.can_run():
                     try:
                         await Gem.check_glitch(self.client)
                     except Exception:
                         self.client.logger.exception('Glitch error')
-                await asyncio.sleep(random.randint(600, 1200))
+                await asyncio.sleep(random.uniform(30, 60))
         except asyncio.CancelledError:
             pass
 
@@ -150,17 +193,14 @@ class TaskManager:
             while self._running:
                 if self.client.can_run():
                     gamble = self.client.config['gamble']
-                    cooldown_min = gamble['cooldown']['min']
-                    cooldown_max = gamble['cooldown']['max']
-
                     try:
                         await Gamble.gamble_cycle(self.client)
                     except Exception:
                         self.client.logger.exception('Gamble error')
-
-                    await asyncio.sleep(random.randint(int(cooldown_min), int(cooldown_max)))
+                    await asyncio.sleep(random.uniform(int(gamble['cooldown']['min']),
+                                                       int(gamble['cooldown']['max'])))
                 else:
-                    await asyncio.sleep(60)
+                    await asyncio.sleep(random.uniform(30, 60))
         except asyncio.CancelledError:
             pass
 
@@ -173,7 +213,7 @@ class TaskManager:
                             await self._check_owo_alive()
                         except Exception:
                             self.client.logger.exception('Offline check error')
-                await asyncio.sleep(60)
+                await asyncio.sleep(random.uniform(30, 60))
         except asyncio.CancelledError:
             pass
 
@@ -193,9 +233,8 @@ class TaskManager:
             )
             self.client.logger.info('OWO bot is online')
         except asyncio.TimeoutError:
-            self.client.logger.warning('OWO bot is offline')
-            wait = random.randint(300, 600)
-            self.client.logger.info(f'Pausing for {wait}s')
+            wait = random.uniform(300, 600)
+            self.client.logger.info(f'OWO bot is offline, pausing for {datetime.timedelta(seconds=wait)}')
             self.client.paused = True
             await asyncio.sleep(wait)
             self.client.paused = False

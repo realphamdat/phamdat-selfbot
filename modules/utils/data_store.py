@@ -1,6 +1,9 @@
 import json
 import os
 import tempfile
+import aiohttp
+
+from copy import deepcopy
 
 
 def read_text(path, default=''):
@@ -55,3 +58,29 @@ def write_json(path, data):
 
 def validate_json_text(content):
     return json.loads(content)
+
+
+def deep_merge(defaults, user_config):
+    base = deepcopy(defaults or {})
+    if not isinstance(user_config, dict):
+        return base
+    for key, value in user_config.items():
+        if isinstance(value, dict) and isinstance(base.get(key), dict):
+            base[key] = deep_merge(base[key], value)
+        else:
+            base[key] = deepcopy(value)
+    return base
+
+
+async def validate_token(token_text):
+    headers = {'Authorization': token_text, 'Content-Type': 'application/json'}
+    timeout = aiohttp.ClientTimeout(total=10, connect=5)
+    try:
+        async with aiohttp.ClientSession(timeout=timeout) as session:
+            async with session.get('https://discord.com/api/v9/users/@me', headers=headers) as resp:
+                if resp.status != 200:
+                    return None
+                user = await resp.json()
+                return user.get('username') or user.get('global_name')
+    except Exception:
+        return None

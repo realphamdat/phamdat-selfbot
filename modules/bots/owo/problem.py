@@ -20,4 +20,4 @@ class Problem:
 
         if "don't have enough cowoncy" in content and str(client.nickname) in content and 'you silly hooman' not in content:
             client.is_blocked = True
-            client.logger.critical('Out of cowoncy, macro stopped')
+            client.logger.critical('Run out of cowoncy, macro stopped')

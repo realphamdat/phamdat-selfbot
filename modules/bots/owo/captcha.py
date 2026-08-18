@@ -62,7 +62,7 @@ class Captcha:
             'body': f'{captcha_type} captcha detected!',
             'tag': f'captcha-{user.id}',
         })
-        client.logger.warning(f'Captcha sent to web ({captcha_type}) for {user.name}')
+        client.logger.info(f'Captcha sent to web ({captcha_type}) for {user.name}')
 
         settings = read_json('data/settings.json', {}) or {}
         if 'discord_webhook' in settings:

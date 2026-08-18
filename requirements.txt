@@ -10,5 +10,4 @@ numpy
 tzlocal
 discord_protos
 audioop-lts
-PyNaCl
-davey
+DrissionPage

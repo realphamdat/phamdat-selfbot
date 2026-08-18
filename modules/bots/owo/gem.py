@@ -138,7 +138,7 @@ class Gem:
             await Gem._open_items(client, inv)
             return inv
         except asyncio.TimeoutError:
-            client.logger.error("Couldn't get inventory")
+            client.logger.warning("Couldn't get inventory")
             return []
 
     @staticmethod
@@ -146,28 +146,28 @@ class Gem:
         if not client.can_run() or not client.current_channel:
             return
         opening = client.config['gem']['openning']
-        if opening['box'] and 50 in inv:
+        if opening['box'] and 50 in inv and client.can_run():
             await client.current_channel.send(f'{client.prefix}lb all')
             client.logger.info(f'Sent {client.prefix}lb all')
             await asyncio.sleep(2)
-        if opening['crate'] and 100 in inv:
+        if opening['crate'] and 100 in inv and client.can_run():
             await client.current_channel.send(f'{client.prefix}wc all')
             client.logger.info(f'Sent {client.prefix}wc all')
             await asyncio.sleep(2)
-        if opening['flootbox'] and 49 in inv:
+        if opening['flootbox'] and 49 in inv and client.can_run():
             await client.current_channel.send(f'{client.prefix}lb f')
             client.logger.info(f'Sent {client.prefix}lb f')
         await asyncio.sleep(2)
 
     @staticmethod
     def glitch_available(client):
-        return client.config['gem']['glitch'] and client.cooldown_glitch - time.time() > 0
+        return client.config['gem']['glitch'] and client.cooldown_glitch > time.time()
 
     @staticmethod
     async def check_glitch(client):
         if not client.can_run() or not client.current_channel:
             return
-        if client.cooldown_glitch - time.time() > 0:
+        if client.cooldown_glitch > time.time():
             return
         await client.current_channel.send(f'{client.prefix}dt')
         client.logger.info(f'Sent {client.prefix}dt')
@@ -194,6 +194,8 @@ class Gem:
                 client.cooldown_glitch = duration + time.time()
                 client.logger.info(f"Glitch is available ({datetime.timedelta(seconds=duration)})")
             elif 'not available' in message.content:
-                client.logger.info("Glitch isn't available")
+                wait = random.uniform(600, 1200)
+                client.logger.info(f"Glitch isn't available, recheck in {datetime.timedelta(seconds=wait)}")
+                await asyncio.sleep(wait)
         except asyncio.TimeoutError:
-            client.logger.error("Couldn't get glitch message")
+            client.logger.warning("Couldn't get glitch message")

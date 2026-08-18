@@ -13,9 +13,9 @@ OWO_DEFAULT_CONFIG = {
     'quest': True,
     'vote': True,
     'daily': True,
+    'boss': True,
     'huntbot': True,
     'giveaway': True,
-    'boss': True,
 
     'spam': {
         'hunt': True,

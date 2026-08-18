@@ -15,9 +15,8 @@ class Spam:
     async def send_hunt(client):
         if not client.can_run() or not client.current_channel:
             return
-        cmd = random.choice(['h', 'hunt'])
-        await client.current_channel.send(f'{client.prefix}{cmd}')
-        client.logger.info(f'Sent {client.prefix}{cmd}')
+        await client.current_channel.send(f'{client.prefix}h')
+        client.logger.info(f'Sent {client.prefix}h')
 
     @staticmethod
     async def send_battle(client):
@@ -25,24 +24,23 @@ class Spam:
             return
         if client.block_battle:
             return
-        cmd = random.choice(['b', 'battle'])
-        await client.current_channel.send(f'{client.prefix}{cmd}')
-        client.logger.info(f'Sent {client.prefix}{cmd}')
+        await client.current_channel.send(f'{client.prefix}b')
+        client.logger.info(f'Sent {client.prefix}b')
 
     @staticmethod
     async def spam_cycle(client):
         spam = client.config['spam']
-        delay_min = spam['delay']['min']
-        delay_max = spam['delay']['max']
+        delay_min = float(spam['delay']['min'])
+        delay_max = float(spam['delay']['max'])
 
         try:
-            if spam['owo/uwu'] or client.quest_flags.get('owo'):
+            if spam['owo/uwu'] or client.checklist_spam or client.quest_flags.get('owo'):
                 await Spam.send_owo(client)
                 await asyncio.sleep(random.uniform(delay_min, delay_max))
-            if spam['hunt'] or client.quest_flags.get('hunt'):
+            if spam['hunt'] or client.checklist_spam or client.quest_flags.get('hunt'):
                 await Spam.send_hunt(client)
                 await asyncio.sleep(random.uniform(delay_min, delay_max))
-            if spam['battle'] or client.quest_flags.get('battle'):
+            if spam['battle'] or client.checklist_spam or client.quest_flags.get('battle'):
                 await Spam.send_battle(client)
                 await asyncio.sleep(random.uniform(delay_min, delay_max))
         except Exception:

@@ -3,8 +3,7 @@ import time
 import discord
 
 from modules.utils.logger import get_logger
-from modules.utils.data_store import read_lines
-from modules.utils.config import deep_merge
+from modules.utils.data_store import read_lines, deep_merge
 from modules.bots.owo.defaults import OWO_DEFAULT_CONFIG
 from modules.bots.owo.channel import Channel
 from modules.bots.owo.captcha import Captcha
@@ -12,19 +11,20 @@ from modules.bots.owo.task import TaskManager
 from modules.bots.owo.problem import Problem
 from modules.bots.owo.quest import Quest
 from modules.bots.owo.boss import Boss
-from modules.bots.owo.gem import Gem
 from modules.bots.owo.giveaway import Giveaway
+from modules.bots.owo.gem import Gem
 from modules.bots.owo.gamble import Gamble
 
 
 class OWOClient(discord.Client):
     OWO_BOT_ID = 408785106942164992
 
-    def __init__(self, token, config, clients):
+    def __init__(self, token, config, clients, interaction):
         super().__init__()
         self.token = token
         self.config = deep_merge(OWO_DEFAULT_CONFIG, config or {})
         self.clients = clients
+        self.interaction = interaction
         self.bot_name = 'owo'
         self.prefix = self.config['prefix']
 
@@ -38,16 +38,24 @@ class OWOClient(discord.Client):
         self.paused = False
         self.is_blocked = False
 
-        self.cooldown_daily = 0
         self.cooldown_quest = 0
+        self.cooldown_daily = 0
+        self.cooldown_boss = 0
         self.cooldown_huntbot = 0
         self.cooldown_glitch = 0
         self.cooldown_lottery = 0
         self.cooldown_reset = 0
-        self.cooldown_boss = 0
+
+        if self.config['checklist']:
+            self.config['quest'] = self.config['vote'] = self.config['daily'] = self.config['boss'] = True
+        self.checklist_spam = False
+        self.cookie_available = False
+        self.cookie_cooldown = 0
+        self.interaction_cd = {'pray': 0, 'curse': 0, 'battle': 0, 'action': 0}
 
         self.doing_quest = False
-        self.current_quest = None
+        self.quest_fetched = False
+        self.current_quest = []
         self.quest_flags = {
             'owo': False, 'hunt': False, 'battle': False,
             'gamble': False, 'action_someone': False,
@@ -57,7 +65,6 @@ class OWOClient(discord.Client):
 
         if int(self.config['gamble']['highlow']['bet']) < 10:
             self.config['gamble']['highlow']['bet'] = 10
-
         self.bet_slot = int(self.config['gamble']['slot']['bet'])
         self.bet_coinflip = int(self.config['gamble']['coinflip']['bet'])
         self.bet_blackjack = int(self.config['gamble']['blackjack']['bet'])
@@ -130,7 +137,7 @@ class OWOClient(discord.Client):
         if self.config['quest']:
             Quest.quest_progress(self, message)
 
-        if self.config['boss'] and time.time() >= self.cooldown_boss:
+        if self.config['boss']:
             await Boss.handle(self, message)
 
         if self.config['gem']['use'] or Gem.glitch_available(self):
@@ -172,6 +179,10 @@ class OWOClient(discord.Client):
 
     def reset_quest_state(self):
         self.doing_quest = False
-        self.current_quest = None
+        self.quest_fetched = False
+        self.current_quest = []
+        if self.interaction:
+            for kind in ('pray', 'curse', 'battle', 'action', 'cookie'):
+                self.interaction.unregister(self, kind)
         self.quest_flags = {k: False for k in self.quest_flags}
         self.block_battle = False
