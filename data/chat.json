@@ -1,7 +1,0 @@
-{
-    "token": {
-        "chat_channel_id": [1, 2, 3],
-        "cooldown": {"min": 60, "max": 120},
-        "exist": false
-    }
-}
