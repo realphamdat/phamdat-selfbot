@@ -14,7 +14,7 @@ class Gem:
             client.no_gem = True
             wait = Daily.reset_time(client.cooldown_reset)
             client.no_gem_since = wait + time.time()
-            client.logger.info(f"No gem available, retry in {datetime.timedelta(seconds=wait)}")
+            client.logger.info(f'No gem available, retry in {datetime.timedelta(seconds=wait)}')
             return
         if not client.can_run() or not client.current_channel:
             return
@@ -192,7 +192,7 @@ class Gem:
                 else:
                     duration = 600
                 client.cooldown_glitch = duration + time.time()
-                client.logger.info(f"Glitch is available for {datetime.timedelta(seconds=duration)}")
+                client.logger.info(f'Glitch is available for {datetime.timedelta(seconds=duration)}')
             elif 'not available' in message.content:
                 wait = random.uniform(600, 1200)
                 client.logger.info(f"Glitch isn't available, retry in {datetime.timedelta(seconds=wait)}")
