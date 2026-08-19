@@ -30,10 +30,10 @@ def read_accounts():
 
 def vote_account(token, bot_id):
     logger.info(f'Voting for bot {bot_id}')
-    retry = topgg.vote(bot_id, token)
-    if retry > 0:
-        logger.info(f'Voted (next in {retry}s)')
-    return retry
+    if topgg.vote(bot_id, token):
+        logger.info('Voted (next in 12h)')
+        return 12 * 3600
+    return 0
 
 
 def main():

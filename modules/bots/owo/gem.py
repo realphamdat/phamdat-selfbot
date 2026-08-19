@@ -194,7 +194,7 @@ class Gem:
                 client.cooldown_glitch = duration + time.time()
                 client.logger.info(f'Glitch is available for {datetime.timedelta(seconds=duration)}')
             elif 'not available' in message.content:
-                wait = random.uniform(600, 1200)
+                wait = random.randint(600, 1200)
                 client.logger.info(f"Glitch isn't available, retry in {datetime.timedelta(seconds=wait)}")
                 await asyncio.sleep(wait)
         except asyncio.TimeoutError:

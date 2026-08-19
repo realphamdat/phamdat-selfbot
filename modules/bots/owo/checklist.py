@@ -114,14 +114,14 @@ class Checklist:
     @staticmethod
     def schedule(client):
         if client.checklist_spam:
-            return random.uniform(600, 1200)
+            return random.randint(600, 1200)
         now = time.time()
         next_reset = now + Daily.reset_time(client.cooldown_reset)
         prev_reset = next_reset - 86400
         windows = [
-            prev_reset - 7200 + random.uniform(0, 3600),
-            prev_reset + 3600 + random.uniform(0, 3600),
-            next_reset - 7200 + random.uniform(0, 3600),
-            next_reset + 3600 + random.uniform(0, 3600),
+            prev_reset - 7200 + random.randint(0, 3600),
+            prev_reset + 3600 + random.randint(0, 3600),
+            next_reset - 7200 + random.randint(0, 3600),
+            next_reset + 3600 + random.randint(0, 3600),
         ]
         return int(min(w for w in windows if w > now) - now)

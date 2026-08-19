@@ -222,8 +222,8 @@ The full OwO farm: hunt, battle, daily, quests, huntbot, giveaway, boss, gems an
 | `coinflip` | Object | *(below)* | Coin flip |
 | `blackjack` | Object | *(below)* | Blackjack |
 | `highlow` | Object | *(below)* | High / low |
-| `delay` | Object | `{"min": 0.5, "max": 1}` | Pause between games (seconds) |
-| `cooldown` | Object | `{"min": 60, "max": 120}` | Pause between cycles (seconds) |
+| `delay` | Object | `{"min": 10, "max": 15}` | Pause between games (seconds) |
+| `cooldown` | Object | `{"min": 30, "max": 60}` | Pause between cycles (seconds) |
 
 Each game has a `mode` switch (default `false`) to turn it on. All games are off by default.
 

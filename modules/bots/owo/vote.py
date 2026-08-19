@@ -13,11 +13,10 @@ class Vote:
         if not bot_id:
             return
         client.logger.info('Voting on top.gg')
-        retry = await asyncio.to_thread(topgg.vote, bot_id, client.token)
-        if retry > 0:
-            client.logger.info(f'Voted (next in {retry}s)')
-            await asyncio.sleep(retry)
+        if await asyncio.to_thread(topgg.vote, bot_id, client.token):
+            client.logger.info('Voted (next in 12h)')
+            await asyncio.sleep(12 * 3600)
         else:
-            wait = random.uniform(600, 1200)
+            wait = random.randint(600, 1200)
             client.logger.warning(f'Vote failed, retry in {wait}s')
             await asyncio.sleep(wait)
