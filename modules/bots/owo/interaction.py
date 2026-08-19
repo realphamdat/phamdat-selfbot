@@ -95,7 +95,7 @@ class Interaction:
                     sender.is_owo_message(m, in_channel=True)
                     and sender.message_contains(m.content, any_of=['You need to wait', 'You got a cookie'])
                 ),
-                timeout=4,
+                timeout=5,
             )
         except asyncio.TimeoutError:
             pass
