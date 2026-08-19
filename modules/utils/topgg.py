@@ -109,7 +109,7 @@ def _vote(bot_id, token):
         button = _wait_vote_ready(page)
         if button == 'already':
             logger.info('Already voted')
-            return False
+            return True
         if button is None:
             logger.warning('Vote button never became ready within timeout')
             return False
