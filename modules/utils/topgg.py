@@ -121,6 +121,7 @@ def _vote(bot_id, token):
 
         success = _wait_confirmation(page)
         logger.info(f'Vote: success={success}')
+        time.sleep(1)
         return success
     finally:
         try:
