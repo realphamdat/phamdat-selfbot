@@ -40,7 +40,7 @@ OWO_DEFAULT_CONFIG = {
         'coinflip': {'mode': False, 'bet': 1, 'rate': 2, 'max': 250000},
         'blackjack': {'mode': False, 'bet': 1, 'rate': 2, 'max': 250000},
         'highlow': {'mode': False, 'bet': 10, 'rate': 2, 'max': 250000},
-        'delay': {'min': 0.5, 'max': 1},
-        'cooldown': {'min': 60, 'max': 120},
+        'delay': {'min': 10, 'max': 15},
+        'cooldown': {'min': 30, 'max': 60},
     }
 }
