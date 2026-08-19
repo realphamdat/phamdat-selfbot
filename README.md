@@ -305,7 +305,7 @@ Each alert sends your `content` mentions plus an embed titled **CAPTCHA DETECTED
 
 ### OwO
 
-- **Do not let the inventory become too large**. An overloaded inventory can trigger excessive message overflow, and the system may only recognize the first inventory message while later ones are skipped. This prevents important information from being scanned correctly. Avoid buying large quantities of rings, stacking thousands of boxes, crates, and other bulk inventory items.
+- **Do not let the inventory become too large**. An overloaded inventory can trigger excessive message overflow, and the system may only recognize the first inventory message while later ones are skipped. This prevents important information from being scanned correctly. Avoid buying large quantities of rings, stacking thousands of boxes, crates, and other bulk inventory items. A case in point is [assets/tips/owo_inventory.png](assets/tips/owo_inventory.png)
 - **Checklist/Quest features require the correct OWO settings**. To make checklist/quest work properly, you must configure the settings from the `owobs` command, as shown in the image at [assets/tips/owo_settings.png](assets/tips/owo_settings.png). Without this setup, the checklist/quest system may not function correctly.
 
 ---
