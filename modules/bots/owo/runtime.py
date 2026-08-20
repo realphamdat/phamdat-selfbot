@@ -1,7 +1,7 @@
 import asyncio
 import threading
 
-from modules.utils.data_store import read_json, deep_merge, validate_token
+from modules.utils.data_store import read_json, deep_merge
 from modules.utils import cache
 from modules.utils.logger import get_logger
 from modules.bots.owo.client import OWOClient
@@ -51,19 +51,15 @@ async def start_accounts():
         logger.warning('No OWO accounts configured')
         return
 
-    total = len(accounts)
-    names = await asyncio.gather(*(validate_token(t) for t in accounts))
     index = 0
-    for (token_text, config), name in zip(accounts.items(), names):
+    total = len(accounts)
+    for token_text, config in accounts.items():
         await asyncio.sleep(1)
-        if not name:
-            logger.warning(f'Invalid token, skipping account ({token_text[:10]}...)')
-            continue
         index += 1
         client = OWOClient(token=token_text, config=config, clients=clients, interaction=interaction)
         clients.append(client)
         asyncio.create_task(run_client(client, token_text), name=f'owo_account_{index}')
-        logger.info(f'Initializing {name} ({index}/{total})')
+        logger.info(f'Initializing account ({index}/{total})')
 
 
 def load_accounts():

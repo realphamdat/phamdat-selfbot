@@ -89,7 +89,7 @@ class Quest:
                 if not quest_text:
                     continue
                 if re.search(r"Defeat [0-9]+ boss(es)?!", quest_text):
-                    client.logger.warning('Detect and skip boss quest')
+                    client.logger.info('Detect and skip boss quest')
                     client.config['boss'] = True
                     continue
                 if not (Quest.is_single_quest(quest_text) or Quest.is_multi_quest(quest_text)):

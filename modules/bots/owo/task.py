@@ -86,7 +86,7 @@ class TaskManager:
                 if self.client.can_run() and len(channels) > 1:
                     changing_channel = self.client.config['changing_channel']
                     cooldown = random.randint(int(changing_channel['after_elapsed_time']['min']), int(changing_channel['after_elapsed_time']['max']))
-                    self.client.logger.info(f'Next channel change in {cooldown}s')
+                    self.client.logger.info(f'Next channel change in {datetime.timedelta(seconds=cooldown)}s')
                     await asyncio.sleep(cooldown)
                     try:
                         await Channel.change_channel(self.client)
@@ -232,7 +232,7 @@ class TaskManager:
             self.client.logger.info('OWO bot is online')
         except asyncio.TimeoutError:
             wait = random.randint(300, 600)
-            self.client.logger.info(f'OWO bot is offline, pausing for {datetime.timedelta(seconds=wait)}')
+            self.client.logger.warning(f'OWO bot is offline, pausing for {datetime.timedelta(seconds=wait)}')
             self.client.paused = True
             await asyncio.sleep(wait)
             self.client.paused = False

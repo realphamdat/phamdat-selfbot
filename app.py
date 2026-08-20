@@ -201,12 +201,32 @@ def handle_connect():
     ws.emit('captcha_count', {'count': cache.count()}, room=flask.request.sid)
 
 
-def run_server(host, port):
+def _get_lan_ip():
     try:
-        s = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
-        s.connect(('8.8.8.8', 80))
-        ip = s.getsockname()[0]
+        with socket.socket(socket.AF_INET, socket.SOCK_DGRAM) as sock:
+            sock.connect(('8.8.8.8', 80))
+            return sock.getsockname()[0]
     except Exception:
-        ip = '127.0.0.1'
-    logger.info(f'Website: http://{ip}:{port}')
+        return None
+
+
+def run_server(host, port):
+    local_url = f'http://localhost:{port}'
+    loopback_url = f'http://127.0.0.1:{port}'
+    lan_ip = _get_lan_ip()
+    urls = [local_url]
+    if loopback_url not in urls:
+        urls.append(loopback_url)
+    if lan_ip:
+        urls.append(f'http://{lan_ip}:{port}')
+
+    logger.info('Website server started')
+    logger.info(f'  Local:    {urls[0]} (this computer)')
+    if len(urls) > 1:
+        logger.info(f'  Loopback: {urls[1]} (this computer)')
+    if lan_ip:
+        logger.info(f'  Network:  {urls[-1]} (devices on the same network)')
+    else:
+        logger.info('  Network:  LAN address unavailable')
+    logger.info(f'  Binding:  {host}:{port} (0.0.0.0 means all network interfaces)')
     socketio.run(app, host=host, port=port, debug=False, use_reloader=False, allow_unsafe_werkzeug=True)
