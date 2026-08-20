@@ -67,11 +67,21 @@ def _vote(bot_id, token):
     options = ChromiumOptions()
     options.set_browser_path(path)
     options.auto_port()
+    options.headless(True)
+    options.no_imgs(True)
+    options.mute(True)
+
     options.set_argument('--no-sandbox')
     options.set_argument('--disable-dev-shm-usage')
     options.set_argument('--disable-gpu')
-    options.set_argument('--headless')
+    options.set_argument('--renderer-process-limit=1')
+    options.set_argument('--js-flags=--max-old-space-size=128')
+    options.set_argument('--disable-extensions')
+    options.set_argument('--disable-background-networking')
+
     page = ChromiumPage(options)
+    page.set.load_mode.eager()
+
     try:
         for attempt in range(3):
             if _stop.is_set():
