@@ -97,7 +97,7 @@ def _vote(bot_id, token):
                      'Content-Type': 'application/json', 'Origin': 'https://discord.com',
                      'Referer': auth, 'Authorization': token,
                      'Sec-Fetch-Dest': 'empty', 'Sec-Fetch-Mode': 'cors', 'Sec-Fetch-Site': 'same-origin'},
-            json={'permissions': '0', 'authorize': True}, impersonate='chrome', =30)
+            json={'permissions': '0', 'authorize': True}, impersonate='chrome', timeout=30)
         if r.status_code != 200:
             logger.error(f'Consent failed ({r.status_code})')
             return False
