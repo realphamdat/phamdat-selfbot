@@ -1,6 +1,5 @@
 import asyncio
 import threading
-import random
 
 from modules.utils.data_store import read_json, deep_merge
 from modules.utils import cache
@@ -55,7 +54,6 @@ async def start_accounts():
     index = 0
     total = len(accounts)
     for token_text, config in accounts.items():
-        await asyncio.sleep(random.randint(2, 5))
         index += 1
         client = OWOClient(token=token_text, config=config, clients=clients, interaction=interaction)
         clients.append(client)
