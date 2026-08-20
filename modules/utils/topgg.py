@@ -67,10 +67,10 @@ def _vote(bot_id, token):
     options = ChromiumOptions()
     options.set_browser_path(path)
     options.auto_port()
-    options.add_argument('--no-sandbox')
-    options.add_argument('--disable-dev-shm-usage')
-    options.add_argument('--disable-gpu')
-    options.add_argument('--headless=new')
+    options.set_argument('--no-sandbox')
+    options.set_argument('--disable-dev-shm-usage')
+    options.set_argument('--disable-gpu')
+    options.set_argument('--headless')
     page = ChromiumPage(options)
     try:
         for attempt in range(3):

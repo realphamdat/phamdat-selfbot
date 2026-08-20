@@ -87,7 +87,7 @@ class Gamble:
 
         wait = Daily.reset_time(client.cooldown_reset)
         client.cooldown_lottery = wait + time.time()
-        client.logger.info(f'Lottery reset in {datetime.timedelta(seconds=wait)}')
+        client.logger.info(f'Lottery ends in {datetime.timedelta(seconds=wait)}')
 
     @staticmethod
     async def play_slot(client):

@@ -86,7 +86,7 @@ class TaskManager:
                 if self.client.can_run() and len(channels) > 1:
                     changing_channel = self.client.config['changing_channel']
                     cooldown = random.randint(int(changing_channel['after_elapsed_time']['min']), int(changing_channel['after_elapsed_time']['max']))
-                    self.client.logger.info(f'Next channel change in {datetime.timedelta(seconds=cooldown)}s')
+                    self.client.logger.info(f'Next channel change in {datetime.timedelta(seconds=cooldown)}')
                     await asyncio.sleep(cooldown)
                     try:
                         await Channel.change_channel(self.client)
