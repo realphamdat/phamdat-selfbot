@@ -64,7 +64,14 @@ def _vote(bot_id, token):
     vote_url = f'https://top.gg/bot/{bot_id}/vote'
     login_url = f'https://top.gg/auth/login?redir=%2Fbot%2F{bot_id}%2Fvote'
 
-    page = ChromiumPage(ChromiumOptions().set_browser_path(path).auto_port())
+    options = ChromiumOptions()
+    options.set_browser_path(path)
+    options.auto_port()
+    options.add_argument('--no-sandbox')
+    options.add_argument('--disable-dev-shm-usage')
+    options.add_argument('--disable-gpu')
+    options.add_argument('--headless=new')
+    page = ChromiumPage(options)
     try:
         for attempt in range(3):
             if _stop.is_set():
