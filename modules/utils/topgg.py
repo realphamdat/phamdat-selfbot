@@ -73,11 +73,21 @@ def _vote(bot_id, token):
 
     options.set_argument('--no-sandbox')
     options.set_argument('--disable-dev-shm-usage')
+    options.set_argument('--no-zygote')
     options.set_argument('--disable-gpu')
+    options.set_argument('--disable-software-rasterizer')
+
     options.set_argument('--renderer-process-limit=1')
-    options.set_argument('--js-flags=--max-old-space-size=128')
+    options.set_argument('--js-flags=--max-old-space-size=64')
+    options.set_argument('--disable-site-isolation-trials')
+    options.set_argument('--memory-pressure-off')
+    options.set_argument('--disk-cache-size=1')
+
     options.set_argument('--disable-extensions')
-    options.set_argument('--disable-background-networking')
+    options.set_argument('--disable-background-timer-throttling')
+    options.set_argument('--disable-backgrounding-occluded-windows')
+    options.set_argument('--disable-ipc-flooding-protection')
+    options.set_argument('--disable-features=TranslateUI,BlinkGenPropertyTrees,IsolateOrigins,site-per-process,OptimizationHints')
 
     page = ChromiumPage(options)
     page.set.load_mode.eager()
@@ -88,7 +98,7 @@ def _vote(bot_id, token):
                 return False
             logger.info(f'Attempt {attempt + 1}/3, opening login')
             page.get(login_url)
-            if not page.wait.ele_displayed('xpath://button[contains(., "Login with Discord")]', timeout=25):
+            if not page.wait.ele_displayed('xpath://button[contains(., "Login with Discord")]', timeout=60):
                 continue
             page.run_js('document.querySelectorAll("button").forEach(e=>{let t=(e.textContent||"").trim().toLowerCase();if(t.indexOf("login with discord")>=0)e.click();});')
             if _wait_url(page, 'discord.com/oauth2/authorize', 30):
@@ -115,11 +125,11 @@ def _vote(bot_id, token):
         if _stop.is_set():
             return False
         page.get(r.json()['location'])
-        page.wait.doc_loaded(timeout=20)
+        page.wait.doc_loaded(timeout=60)
         if _stop.is_set():
             return False
         page.get(vote_url)
-        page.wait.doc_loaded(timeout=20)
+        page.wait.doc_loaded(timeout=60)
         logger.info('On vote page')
 
         _dismiss_consent(page)
@@ -142,6 +152,7 @@ def _vote(bot_id, token):
         return success
     finally:
         try:
+            page.clear_cache()
             page.quit()
         except Exception:
             pass
