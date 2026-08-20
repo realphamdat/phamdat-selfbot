@@ -67,30 +67,11 @@ def _vote(bot_id, token):
     options = ChromiumOptions()
     options.set_browser_path(path)
     options.auto_port()
-    options.headless(True)
-    options.no_imgs(True)
-    options.mute(True)
-
     options.set_argument('--no-sandbox')
     options.set_argument('--disable-dev-shm-usage')
-    options.set_argument('--no-zygote')
     options.set_argument('--disable-gpu')
-    options.set_argument('--disable-software-rasterizer')
-
-    options.set_argument('--renderer-process-limit=1')
-    options.set_argument('--js-flags=--max-old-space-size=64')
-    options.set_argument('--disable-site-isolation-trials')
-    options.set_argument('--memory-pressure-off')
-    options.set_argument('--disk-cache-size=1')
-
-    options.set_argument('--disable-extensions')
-    options.set_argument('--disable-background-timer-throttling')
-    options.set_argument('--disable-backgrounding-occluded-windows')
-    options.set_argument('--disable-ipc-flooding-protection')
-    options.set_argument('--disable-features=TranslateUI,BlinkGenPropertyTrees,IsolateOrigins,site-per-process,OptimizationHints')
-
+    options.set_argument('--headless=new')
     page = ChromiumPage(options)
-    page.set.load_mode.eager()
 
     try:
         for attempt in range(3):
@@ -98,7 +79,7 @@ def _vote(bot_id, token):
                 return False
             logger.info(f'Attempt {attempt + 1}/3, opening login')
             page.get(login_url)
-            if not page.wait.ele_displayed('xpath://button[contains(., "Login with Discord")]', timeout=60):
+            if not page.wait.ele_displayed('xpath://button[contains(., "Login with Discord")]', timeout=30):
                 continue
             page.run_js('document.querySelectorAll("button").forEach(e=>{let t=(e.textContent||"").trim().toLowerCase();if(t.indexOf("login with discord")>=0)e.click();});')
             if _wait_url(page, 'discord.com/oauth2/authorize', 30):
@@ -116,7 +97,7 @@ def _vote(bot_id, token):
                      'Content-Type': 'application/json', 'Origin': 'https://discord.com',
                      'Referer': auth, 'Authorization': token,
                      'Sec-Fetch-Dest': 'empty', 'Sec-Fetch-Mode': 'cors', 'Sec-Fetch-Site': 'same-origin'},
-            json={'permissions': '0', 'authorize': True}, impersonate='chrome', timeout=30)
+            json={'permissions': '0', 'authorize': True}, impersonate='chrome', =30)
         if r.status_code != 200:
             logger.error(f'Consent failed ({r.status_code})')
             return False
@@ -125,11 +106,11 @@ def _vote(bot_id, token):
         if _stop.is_set():
             return False
         page.get(r.json()['location'])
-        page.wait.doc_loaded(timeout=60)
+        page.wait.doc_loaded(timeout=30)
         if _stop.is_set():
             return False
         page.get(vote_url)
-        page.wait.doc_loaded(timeout=60)
+        page.wait.doc_loaded(timeout=30)
         logger.info('On vote page')
 
         _dismiss_consent(page)
