@@ -18,11 +18,15 @@ stop_event = threading.Event()
 
 API_BASE = 'https://discord.com/api/v9'
 POLL_INTERVAL = 3600
-HEARTBEAT_INTERVAL = 300
+HEARTBEAT_INTERVAL = 30
 AUTO_ACCEPT = True
 MAX_WORKERS = 3
 
 SUPPORTED_TASKS = ('WATCH_VIDEO', 'PLAY_ON_DESKTOP', 'STREAM_ON_DESKTOP', 'PLAY_ACTIVITY', 'WATCH_VIDEO_ON_MOBILE')
+
+UA_CLIENT = ('Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 '
+             '(KHTML, like Gecko) discord/1.0.9175 Chrome/128.0.6613.186 '
+             'Electron/32.2.7 Safari/537.36')
 
 
 def read_tokens():
@@ -65,7 +69,7 @@ def make_super_properties(build_number):
         'os_arch': 'x64',
         'app_arch': 'x64',
         'system_locale': 'en-US',
-        'browser_user_agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) discord/1.0.9175 Chrome/128.0.6613.186 Electron/32.2.7 Safari/537.36',
+        'browser_user_agent': UA_CLIENT,
         'browser_version': '32.2.7',
         'client_build_number': build_number,
         'native_build_number': 59498,
@@ -84,7 +88,7 @@ class DiscordAPI:
             'Content-Type': 'application/json',
             'Accept': '*/*',
             'Accept-Language': 'en-US,en;q=0.9',
-            'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) discord/1.0.9175 Chrome/128.0.6613.186 Electron/32.2.7 Safari/537.36',
+            'User-Agent': UA_CLIENT,
             'X-Super-Properties': make_super_properties(build_number),
             'X-Discord-Locale': 'en-US',
             'X-Discord-Timezone': 'Asia/Ho_Chi_Minh',
@@ -125,15 +129,15 @@ def get_task_config(quest):
 
 
 def get_quest_name(quest):
-    config = quest.get('config', {})
-    msgs = config.get('messages', {})
+    cfg = quest.get('config', {})
+    msgs = cfg.get('messages', {})
     name = _get(msgs, 'questName', 'quest_name')
     if name:
         return name.strip()
     game = _get(msgs, 'gameTitle', 'game_title')
     if game:
         return game.strip()
-    return config.get('application', {}).get('name') or f"Quest#{quest.get('id', '?')}"
+    return cfg.get('application', {}).get('name') or f"Quest#{quest.get('id', '?')}"
 
 
 def get_expires_at(quest):
@@ -175,9 +179,9 @@ def get_task_type(quest):
 
 
 def get_seconds_needed(quest):
+    tc = get_task_config(quest)
     task_type = get_task_type(quest)
-    tasks = get_task_config(quest)
-    return tasks['tasks'][task_type].get('target', 0) if tasks and task_type else 0
+    return tc['tasks'][task_type].get('target', 0) if tc and task_type else 0
 
 
 def get_seconds_done(quest):
@@ -290,7 +294,7 @@ class QuestAutocompleter:
         unaccepted = [q for q in quests if not is_enrolled(q) and not is_completed(q) and is_completable(q)]
         if not unaccepted:
             return quests
-        logger.info(f'Auto-accepting {len(unaccepted)} unaccepted quest(s)')
+        logger.info(f'Auto-accepting {len(unaccepted)} quest(s)')
         for q in unaccepted:
             if not running:
                 return quests
@@ -301,10 +305,11 @@ class QuestAutocompleter:
             return quests
         return self.fetch_quests()
 
-
     def complete_video(self, quest):
-        name, qid = get_quest_name(quest), quest['id']
-        needed, done = get_seconds_needed(quest), get_seconds_done(quest)
+        name = get_quest_name(quest)
+        qid = quest['id']
+        needed = get_seconds_needed(quest)
+        done = get_seconds_done(quest)
         enrolled = get_enrolled_at(quest)
         enrolled_ts = datetime.fromisoformat(enrolled.replace('Z', '+00:00')).timestamp() if enrolled else time.time()
         logger.info(f'Video: {name} ({done:.0f}/{needed}s)')
@@ -361,10 +366,11 @@ class QuestAutocompleter:
             pass
         self._mark_done(qid, name)
 
-
     def _heartbeat_loop(self, quest, stream_key, progress_key):
-        name, qid = get_quest_name(quest), quest['id']
-        needed, done = get_seconds_needed(quest), get_seconds_done(quest)
+        name = get_quest_name(quest)
+        qid = quest['id']
+        needed = get_seconds_needed(quest)
+        done = get_seconds_done(quest)
         logger.info(f'[{get_task_type(quest)}] {name} (~{max(0, needed - done) // 60} min left)')
 
         fails = 0
@@ -416,11 +422,10 @@ class QuestAutocompleter:
         self._mark_done(qid, name)
 
     def complete_heartbeat(self, quest):
-        self._heartbeat_loop(quest, f"call:0:{random.randint(1000, 30000)}", get_task_type(quest))
+        self._heartbeat_loop(quest, f'call:0:{random.randint(1000, 30000)}', get_task_type(quest))
 
     def complete_activity(self, quest):
         self._heartbeat_loop(quest, 'call:0:1', 'PLAY_ACTIVITY')
-
 
     def process_quest(self, quest):
         qid = quest.get('id')
@@ -458,7 +463,7 @@ class QuestAutocompleter:
         logger.info(f'Started {len(quests)} quest(s) with {min(len(quests), MAX_WORKERS)} worker(s)')
 
     def run(self):
-        logger.info(f'Discord Quest Auto-Completer | Auto-accept: {"ON" if AUTO_ACCEPT else "OFF"} | Poll: {POLL_INTERVAL}s')
+        logger.info(f'Quest Auto-Completer | Auto-accept: {"ON" if AUTO_ACCEPT else "OFF"} | Poll: {POLL_INTERVAL}s')
         cycle = 0
         while running:
             cycle += 1
