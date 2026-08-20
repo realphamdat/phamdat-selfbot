@@ -67,7 +67,7 @@ def _vote(bot_id, token):
     options = ChromiumOptions()
     options.set_browser_path(path)
     options.auto_port()
-    options.headless(True) 
+    options.set_argument('--headless=new')
     options.set_argument('--no-sandbox')
     options.set_argument('--disable-dev-shm-usage')
     options.set_argument('--disable-gpu')
