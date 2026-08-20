@@ -7,6 +7,5 @@ flask
 flask-socketio
 Pillow
 numpy
-tzlocal
 discord_protos
 DrissionPage
