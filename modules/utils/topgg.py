@@ -64,22 +64,14 @@ def _vote(bot_id, token):
     vote_url = f'https://top.gg/bot/{bot_id}/vote'
     login_url = f'https://top.gg/auth/login?redir=%2Fbot%2F{bot_id}%2Fvote'
 
-    options = ChromiumOptions()
-    options.set_browser_path(path)
-    options.auto_port()
-    options.set_argument('--headless=new')
-    options.set_argument('--no-sandbox')
-    options.set_argument('--disable-dev-shm-usage')
-    options.set_argument('--disable-gpu')
-    page = ChromiumPage(options)
-
+    page = ChromiumPage(ChromiumOptions().set_browser_path(path).auto_port())
     try:
         for attempt in range(3):
             if _stop.is_set():
                 return False
             logger.info(f'Attempt {attempt + 1}/3, opening login')
             page.get(login_url)
-            if not page.wait.ele_displayed('xpath://button[contains(., "Login with Discord")]', timeout=30):
+            if not page.wait.ele_displayed('xpath://button[contains(., "Login with Discord")]', timeout=25):
                 continue
             page.run_js('document.querySelectorAll("button").forEach(e=>{let t=(e.textContent||"").trim().toLowerCase();if(t.indexOf("login with discord")>=0)e.click();});')
             if _wait_url(page, 'discord.com/oauth2/authorize', 30):
@@ -106,11 +98,11 @@ def _vote(bot_id, token):
         if _stop.is_set():
             return False
         page.get(r.json()['location'])
-        page.wait.doc_loaded(timeout=30)
+        page.wait.doc_loaded(timeout=20)
         if _stop.is_set():
             return False
         page.get(vote_url)
-        page.wait.doc_loaded(timeout=30)
+        page.wait.doc_loaded(timeout=20)
         logger.info('On vote page')
 
         _dismiss_consent(page)
@@ -128,12 +120,11 @@ def _vote(bot_id, token):
         logger.info('Clicked, waiting for confirmation...')
 
         success = _wait_confirmation(page)
-        logger.info(f'Vote: success={success}')
+        logger.info(f'Vote: {success}')
         time.sleep(1)
         return success
     finally:
         try:
-            page.clear_cache()
             page.quit()
         except Exception:
             pass
