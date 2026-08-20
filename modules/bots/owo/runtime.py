@@ -55,6 +55,7 @@ async def start_accounts():
     names = await asyncio.gather(*(validate_token(t) for t in accounts))
     index = 0
     for (token_text, config), name in zip(accounts.items(), names):
+        await asyncio.sleep(1)
         if not name:
             logger.warning(f'Invalid token, skipping account ({token_text[:10]}...)')
             continue
