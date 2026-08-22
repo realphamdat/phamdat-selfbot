@@ -67,7 +67,6 @@ class TerminalStream:
 
     def write(self, text):
         self.stream.write(text)
-        self.stream.flush()
         self.line += text
         while '\n' in self.line:
             line, self.line = self.line.split('\n', 1)

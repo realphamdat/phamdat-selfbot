@@ -6,11 +6,12 @@ from modules.utils import topgg
 from modules.bots.owo import runtime as owo
 from modules.extensions.quest import runtime as quest
 from modules.extensions.topgg import runtime as topgg_runtime
+from modules.extensions.command import runtime as command_runtime
 
 logger = get_logger('bot')
 
 BOTS = {'owo': owo}
-EXTENSIONS = {'quest': quest, 'topgg': topgg_runtime}
+EXTENSIONS = {'quest': quest, 'topgg': topgg_runtime, 'command': command_runtime}
 
 _running = False
 _lock = threading.Lock()

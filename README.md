@@ -93,26 +93,21 @@ The tool starts a local web page. Open `http://localhost:2010` in your browser t
 
 ## SETUP
 
+Everything lives in the `data/` folder. Edit the files, then press **Start** on the web UI - every start reloads all accounts from disk. Fill a file to turn its module on, empty it to turn it off.
+
 <details>
-<summary><b>HOW DATA WORKS</b></summary>
+<summary><b>MODULES & MULTI-ACCOUNT</b></summary>
 
-All settings live in the `data/` folder. You edit these files, then start the bot.
+| Module | Kind | File | Purpose |
+|--------|------|------|---------|
+| OwO | Bot | `owo.json` | Full OwO farm (daily, quests, hunt, gamble...) |
+| Quest | Extension | `quest.txt` | Discord quest auto-completer |
+| Top.gg | Extension | `topgg.txt` | Top.gg voter |
+| Command | Extension | `command.txt` | Multi-account command runner |
 
-**Bot and extensions**
+Each module reads only its own file - list an account in each file where you want it to work.
 
-The tool has one **bot** and two **extensions**. Each module reads only its own file - a token in `owo.json` does not appear in the other files by itself. List an account in each file where you want it to work.
-
-| Kind | Name | Config file |
-|------|------|-------------|
-| Bot | OwO | `data/owo.json` |
-| Extension | Quest | `data/quest.txt` |
-| Extension | Top.gg | `data/topgg.txt` |
-
-The **bot** farms OwO (daily, quests, checklists, vote, huntbot, boss, gems, gambling...). The **extensions** run separate tasks - Discord quests and top.gg voting. They are independent - fill a file to turn a module on, empty it to turn it off.
-
-**Multi-account**
-
-In the JSON files, the **top-level key is a Discord account token** - each key is one account, handled on its own. To add an account, add a token key. To remove one, delete that key.
+In `owo.json` the top-level key is a Discord account token - each key is one account. Add a key to add an account, delete it to remove one.
 
 ```json
 {
@@ -121,7 +116,9 @@ In the JSON files, the **top-level key is a Discord account token** - each key i
 }
 ```
 
-**Data types**
+The plain-text files take one entry per line, `#` starts a comment.
+
+**Data types** (JSON files)
 
 | Type | Meaning | Example |
 |------|---------|---------|
@@ -135,10 +132,7 @@ In the JSON files, the **top-level key is a Discord account token** - each key i
 
 - A key you leave out keeps its **default** value. A minimal account is just `"YOUR_TOKEN": {}`.
 - Use a **list** to allow several IDs (channels, ...). Use a plain number for a single ID.
-- `quest.txt` and `topgg.txt` are plain text, not JSON: one entry per line, `#` for comments.
-- `settings.json` is **global** and is not keyed by token.
-- `caches.json` is written by the tool - do not edit it.
-- Edit the files first, then start the tool. Starting always reloads every account from the data files.
+- `settings.json` is **global** and is not keyed by token. `caches.json` is written by the tool - do not edit it.
 
 </details>
 <details>
@@ -250,7 +244,7 @@ TOKEN_A
 TOKEN_B
 ```
 
-Plain text, one token per line. Lines starting with `#` are ignored. There is nothing else to configure.
+There is nothing else to configure.
 
 </details>
 <details>
@@ -264,7 +258,40 @@ TOKEN_A 408785106942164992
 TOKEN_B 408785106942164992
 ```
 
-Plain text, one token and one bot id per line. Lines starting with `#` are ignored. After a successful vote, the account waits for the top.gg cooldown before it votes again. There is nothing else to configure.
+After a successful vote, the account waits for the top.gg cooldown before it votes again. There is nothing else to configure.
+
+</details>
+<details>
+<summary><b>Command</b>  -  Extension  -  <code>data/command.txt</code></summary>
+
+Runs many accounts from one message. Each account listens to its listed owners; when an owner sends a message starting with one of the listed prefixes, every account under that owner executes the same command, staggered by a random 1-2 second delay so the sends do not look synchronized.
+
+```txt
+# TOKEN  owner_ids(comma separated)  prefixes(comma separated)
+TOKEN_A 111222333444555666,999888777666555444 !,.
+TOKEN_B 111222333444555666 .
+```
+
+Messages sent by your own configured accounts are ignored - always send commands from an account that is not listed in this file.
+
+Commands (with your prefix, e.g. `!say hello`):
+
+| Command | Usage | Action |
+|---------|-------|--------|
+| `say` | `say [channel_id] <content>` | Send a message (current channel, or another channel by id) |
+| `reply` | `reply <target> <content>` | Reply to a specific message |
+| `edit` | `edit <target> <content>` | Edit your own message |
+| `delete` | `delete <target>` | Delete your own message |
+| `react` | `react <emoji> <target>` | Add a reaction |
+| `unreact` | `unreact <emoji> <target>` | Remove your reaction |
+| `click` | `click <target> [button]` | Click a button on a message (first one by default) |
+| `select` | `select <target> <option> [menu]` | Choose an option from a select menu |
+| `items` | `items <target>` | List the buttons and menus of a message to the terminal log |
+| `accounts` | `accounts` | Report account status to the terminal log |
+
+`<target>` is flexible: `.` = the newest message in the channel, a bare message id searches recent history, or use a jump link (`https://discord.com/channels/@me/123/456`) / `channelID-messageID` for any channel. Buttons and menus are matched by number, label or custom_id and are found inside nested components (action rows, containers, sections...) automatically.
+
+Examples: `!click .`, `!react 👍 .`, `!items .`, `!select . 2`
 
 </details>
 
