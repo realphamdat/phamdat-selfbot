@@ -274,6 +274,8 @@ TOKEN_B 111222333444555666 .
 
 Messages sent by your own configured accounts are ignored - always send commands from an account that is not listed in this file.
 
+The prefix can be a text prefix from the file **or a mention of the account itself** - both `<@USER_ID> say hello` and `<@!USER_ID> say hello` work, so you can just ping the account followed by the command.
+
 Commands (with your prefix, e.g. `!say hello`):
 
 | Command | Usage | Action |
