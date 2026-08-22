@@ -63,7 +63,8 @@ class CommandClient(discord.Client):
         if author_id in _active_ids or author_id not in self.owners:
             return
 
-        prefix = next((p for p in self.prefixes if message.content.startswith(p)), None)
+        prefix = next((p for p in (*self.prefixes, self.user.mention, f'<@!{self.user.id}>')
+                       if message.content.startswith(p)), None)
         if not prefix:
             return
 
@@ -80,8 +81,6 @@ class CommandClient(discord.Client):
 
 
 async def find_target(client, message, ref):
-    # '.' = newest message in this channel, a bare id searches recent history,
-    # otherwise a jump link or channelID-messageID points at any channel.
     ref = ref.strip()
     if not ref or ref == '.':
         async for msg in message.channel.history(limit=1):
@@ -118,7 +117,6 @@ def interactive(message):
 
 
 def pick(items, selector):
-    # match by 1-based index, label or custom_id; an empty selector takes the first
     if not items:
         raise ValueError('nothing to choose from')
     selector = selector.strip().lower()
