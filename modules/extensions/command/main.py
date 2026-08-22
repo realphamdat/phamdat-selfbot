@@ -63,7 +63,7 @@ class CommandClient(discord.Client):
         if author_id in _active_ids or author_id not in self.owners:
             return
 
-        prefix = next((p for p in (*self.prefixes, self.user.mention, f'<@!{self.user.id}>')
+        prefix = next((p for p in (*self.prefixes, self.user.mention, f'<@{self.user.id}>')
                        if message.content.startswith(p)), None)
         if not prefix:
             return
