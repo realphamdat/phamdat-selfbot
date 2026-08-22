@@ -42,7 +42,7 @@ def read_entries():
 
 
 _active_ids = set()
-_command_lock = asyncio.Lock()
+_command_lock = None
 
 
 class CommandClient(discord.Client):
@@ -258,7 +258,8 @@ async def run_client(client):
 
 
 async def main():
-    global running
+    global running, _command_lock
+    _command_lock = asyncio.Lock()
     entries = read_entries()
     if not entries:
         logger.warning('No command accounts configured')
