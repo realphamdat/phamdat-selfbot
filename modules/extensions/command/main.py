@@ -220,11 +220,12 @@ async def cmd_items(client, message, args):
         parts.append('menus: ' + ', '.join(
             f'{i}. {m.placeholder or m.custom_id} ({len(m.options)} option(s))'
             for i, m in enumerate(menus, 1)))
-    client.logger.info(f'Message {ref.id}: ' + (' | '.join(parts) if parts else 'no interactive component'))
+    await message.author.send(
+        f'Message {ref.id}: ' + (' | '.join(parts) if parts else 'no interactive component'))
 
 
 async def cmd_accounts(client, message, args):
-    client.logger.info('Online')
+    await message.author.send('Online')
 
 
 HANDLERS = {
