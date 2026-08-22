@@ -42,6 +42,7 @@ def read_entries():
 
 
 _active_ids = set()
+_command_lock = asyncio.Lock()
 
 
 class CommandClient(discord.Client):
@@ -73,11 +74,12 @@ class CommandClient(discord.Client):
         if not handler:
             return
 
-        await asyncio.sleep(random.uniform(STAGGER_MIN, STAGGER_MAX))
-        try:
-            await handler(self, message, args.strip())
-        except Exception as exc:
-            self.logger.warning(f'{name} failed: {exc}')
+        async with _command_lock:
+            try:
+                await handler(self, message, args.strip())
+                await asyncio.sleep(random.uniform(STAGGER_MIN, STAGGER_MAX))
+            except Exception as exc:
+                self.logger.warning(f'{name} failed: {exc}')
 
 
 async def find_target(client, message, ref):
