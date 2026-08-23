@@ -95,7 +95,7 @@ class Gamble:
             return
 
         max_bet = int(client.config['gamble']['slot']['max'])
-        if client.bet_slot >= max_bet:
+        if client.bet_slot > max_bet:
             client.bet_slot = int(client.config['gamble']['slot']['bet'])
 
         await client.current_channel.send(f'{client.prefix}s {client.bet_slot}')
@@ -107,7 +107,7 @@ class Gamble:
             return
 
         max_bet = int(client.config['gamble']['coinflip']['max'])
-        if client.bet_coinflip >= max_bet:
+        if client.bet_coinflip > max_bet:
             client.bet_coinflip = int(client.config['gamble']['coinflip']['bet'])
 
         await client.current_channel.send(f'{client.prefix}cf {client.bet_coinflip}')
@@ -119,7 +119,7 @@ class Gamble:
             return
 
         max_bet = int(client.config['gamble']['blackjack']['max'])
-        if client.bet_blackjack >= max_bet:
+        if client.bet_blackjack > max_bet:
             client.bet_blackjack = int(client.config['gamble']['blackjack']['bet'])
 
         await client.current_channel.send(f'{client.prefix}bj {client.bet_blackjack}')
@@ -194,7 +194,7 @@ class Gamble:
             return
 
         highlow = client.config['gamble']['highlow']
-        if client.bet_highlow >= int(highlow['max']):
+        if client.bet_highlow > int(highlow['max']):
             client.bet_highlow = int(highlow['bet'])
 
         await client.current_channel.send(f'{client.prefix}hl {client.bet_highlow}')
