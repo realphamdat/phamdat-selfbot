@@ -12,8 +12,8 @@ logger = get_logger('command')
 
 running = False
 
-STAGGER_MIN = 1.0
-STAGGER_MAX = 2.0
+STAGGER_MIN = 0.5
+STAGGER_MAX = 1.0
 TYPING_MIN = 0.5
 TYPING_MAX = 1.0
 
@@ -58,6 +58,12 @@ class CommandClient(discord.Client):
         if not self.logger:
             self.logger = get_logger(self.user.name)
             self.logger.info(f'Ready | {len(self.owners)} owner(s) | prefixes: {" ".join(self.prefixes)}')
+        for owner_id in self.owners:
+            try:
+                owner = self.get_user(owner_id) or await self.fetch_user(owner_id)
+                await owner.create_dm()
+            except Exception:
+                self.logger.exception(f'Failed to open owner DM ({owner_id})')
 
     async def on_message(self, message):
         author_id = message.author.id
