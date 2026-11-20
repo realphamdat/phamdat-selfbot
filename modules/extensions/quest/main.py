@@ -7,9 +7,12 @@ import threading
 import time
 from concurrent.futures import ThreadPoolExecutor
 from datetime import datetime, timezone
+from urllib.parse import parse_qs, quote, urlparse
 
 import requests
 from requests.adapters import HTTPAdapter
+
+from modules.utils.data_store import read_lines
 
 logger = logging.getLogger('quest')
 
@@ -18,27 +21,32 @@ stop_event = threading.Event()
 
 API_BASE = 'https://discord.com/api/v9'
 POLL_INTERVAL = 300
-HEARTBEAT_INTERVAL = 30
 AUTO_ACCEPT = True
-MAX_WORKERS = 3
+CLAIM_REWARDS = True
+ACHIEVEMENT_BYPASS = False
+VIDEO_WORKERS = 2
+GAME_WORKERS = 1
+EXCLUDED_QUESTS = set()
 
-SUPPORTED_TASKS = ('WATCH_VIDEO', 'PLAY_ON_DESKTOP', 'STREAM_ON_DESKTOP', 'PLAY_ACTIVITY', 'WATCH_VIDEO_ON_MOBILE')
+BLACKLISTED_QUEST_ID = '1412491570820812933'
+CONSOLE_KEYS = {'PLAY_ON_XBOX', 'PLAY_ON_PLAYSTATION'}
+UNAUTOMATABLE_KEYS = {'ACHIEVEMENT_IN_GAME': 'needs the game linked and an achievement earned in-game'}
+TASK_FAMILIES = (
+    ('ACHIEVEMENT', lambda k: k == 'ACHIEVEMENT_IN_ACTIVITY', ('ACHIEVEMENT_IN_ACTIVITY',)),
+    ('ACTIVITY', lambda k: k == 'PLAY_ACTIVITY', ('PLAY_ACTIVITY',)),
+    ('VIDEO', lambda k: 'VIDEO' in k, ('WATCH_VIDEO',)),
+    ('GAME', lambda k: k.startswith('PLAY'), ('PLAY_ON_DESKTOP',)),
+    ('STREAM', lambda k: k.startswith('STREAM'), ('STREAM_ON_DESKTOP',)),
+    ('ACTIVITY', lambda k: 'ACTIVITY' in k, ()),
+)
+CLIENT_ERRORS = {400, 403, 404, 409, 410}
+MAX_RETRIES = 3
+MAX_FAILURES = 5
+MAX_TIME = 25 * 60
 
 UA_CLIENT = ('Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 '
              '(KHTML, like Gecko) discord/1.0.9175 Chrome/128.0.6613.186 '
              'Electron/32.2.7 Safari/537.36')
-
-
-def read_tokens():
-    tokens = []
-    try:
-        with open('data/quest.txt', encoding='utf-8') as f:
-            for line in f:
-                if line.strip() and not line.lstrip().startswith('#'):
-                    tokens.append(line.strip())
-    except FileNotFoundError:
-        logger.warning('Quest token file not found: data/quest.txt')
-    return tokens
 
 
 def fetch_latest_build_number():
@@ -80,7 +88,7 @@ def make_super_properties(build_number):
 class DiscordAPI:
     def __init__(self, token, build_number):
         self.session = requests.Session()
-        pool = HTTPAdapter(pool_connections=MAX_WORKERS, pool_maxsize=MAX_WORKERS)
+        pool = HTTPAdapter(pool_connections=4, pool_maxsize=4)
         self.session.mount('https://', pool)
         self.session.mount('http://', pool)
         self.session.headers.update({
@@ -102,17 +110,32 @@ class DiscordAPI:
     def post(self, path, payload=None, **kwargs):
         return self.session.post(f'{API_BASE}{path}', json=payload, timeout=15, **kwargs)
 
+    def delete(self, path, **kwargs):
+        return self.session.delete(f'{API_BASE}{path}', timeout=15, **kwargs)
+
     def validate_token(self):
         try:
             r = self.get('/users/@me')
             if r.status_code == 200:
                 user = r.json()
                 logger.info(f'Logged in as {user["username"]} (ID: {user["id"]})')
-                return True
+                return user
             logger.warning(f'Token invalid (status {r.status_code})')
         except Exception as e:
             logger.warning(f'Connection to Discord failed: {e}')
-        return False
+        return None
+
+
+def build_stream_key(api, user_id):
+    try:
+        r = api.get('/users/@me/channels')
+        if r.status_code == 200:
+            for ch in r.json():
+                if ch.get('type') == 1:
+                    return f'call:{ch["id"]}:{user_id}'
+    except Exception:
+        pass
+    return f'call:0:{user_id}'
 
 
 def _get(source, *keys):
@@ -124,24 +147,23 @@ def _get(source, *keys):
     return None
 
 
-def get_task_config(quest):
-    return _get(quest.get('config', {}), 'taskConfig', 'task_config', 'taskConfigV2', 'task_config_v2')
+def get_task_config(config):
+    v2 = _get(config, 'taskConfigV2', 'task_config_v2')
+    if v2 and v2.get('tasks'):
+        return v2
+    legacy = _get(config, 'taskConfig', 'task_config')
+    if legacy and legacy.get('tasks'):
+        return legacy
+    return v2 or legacy or {}
 
 
 def get_quest_name(quest):
     cfg = quest.get('config', {})
     msgs = cfg.get('messages', {})
-    name = _get(msgs, 'questName', 'quest_name')
+    name = _get(msgs, 'questName', 'quest_name') or _get(msgs, 'gameTitle', 'game_title')
     if name:
         return name.strip()
-    game = _get(msgs, 'gameTitle', 'game_title')
-    if game:
-        return game.strip()
     return cfg.get('application', {}).get('name') or f"Quest#{quest.get('id', '?')}"
-
-
-def get_expires_at(quest):
-    return _get(quest.get('config', {}), 'expiresAt', 'expires_at')
 
 
 def get_user_status(quest):
@@ -149,16 +171,14 @@ def get_user_status(quest):
     return us if isinstance(us, dict) else {}
 
 
-def is_completable(quest):
-    expires = get_expires_at(quest)
-    if expires:
-        try:
-            if datetime.fromisoformat(expires.replace('Z', '+00:00')) <= datetime.now(timezone.utc):
-                return False
-        except ValueError:
-            pass
-    tasks = get_task_config(quest).get('tasks') if get_task_config(quest) else None
-    return bool(tasks) and any(tasks.get(t) is not None for t in SUPPORTED_TASKS)
+def is_expired(quest):
+    expires = _get(quest.get('config', {}), 'expiresAt', 'expires_at')
+    if not expires:
+        return False
+    try:
+        return datetime.fromisoformat(expires.replace('Z', '+00:00')) <= datetime.now(timezone.utc)
+    except ValueError:
+        return False
 
 
 def is_enrolled(quest):
@@ -169,129 +189,226 @@ def is_completed(quest):
     return bool(_get(get_user_status(quest), 'completedAt', 'completed_at'))
 
 
-def get_task_type(quest):
-    tasks = get_task_config(quest).get('tasks') if get_task_config(quest) else None
-    if tasks:
-        for t in SUPPORTED_TASKS:
-            if tasks.get(t) is not None:
-                return t
+def select_task(quest):
+    cfg = quest.get('config', {})
+    tasks = get_task_config(cfg).get('tasks') or {}
+    for family, match, prefer in TASK_FAMILIES:
+        key = next((k for k in prefer if k in tasks), None) or \
+              next((k for k in tasks if match(k) and k not in CONSOLE_KEYS), None)
+        if key:
+            task = tasks[key] or {}
+            apps = task.get('applications') or []
+            app_id = (apps[0].get('id') if apps else None) or cfg.get('application', {}).get('id')
+            return {'family': family, 'key': key, 'target': task.get('target', 0), 'app_id': app_id}
     return None
 
 
-def get_seconds_needed(quest):
-    tc = get_task_config(quest)
-    task_type = get_task_type(quest)
-    return tc['tasks'][task_type].get('target', 0) if tc and task_type else 0
+def quest_blocker(quest):
+    keys = list(get_task_config(quest.get('config', {})).get('tasks') or {})
+    task = select_task(quest)
+    if not task:
+        if not keys:
+            return 'no tasks listed'
+        if all(k in CONSOLE_KEYS for k in keys):
+            return f'console-only ({", ".join(keys)})'
+        named = next((k for k in keys if k in UNAUTOMATABLE_KEYS), None)
+        if named:
+            return f'{named}: {UNAUTOMATABLE_KEYS[named]}'
+        return f'unsupported task type ({", ".join(keys)})'
+    if task['target'] <= 0:
+        return f'invalid target ({task["target"]})'
+    if task['family'] in ('GAME', 'STREAM') and not task['app_id']:
+        return 'no application id in config'
+    return None
 
 
-def get_seconds_done(quest):
-    task_type = get_task_type(quest)
-    if not task_type:
-        return 0
-    return get_user_status(quest).get('progress', {}).get(task_type, {}).get('value', 0)
+def get_progress(quest, key):
+    us = get_user_status(quest)
+    entry = (us.get('progress') or {}).get(key) or {}
+    return entry.get('value') or us.get('streamProgressSeconds') or 0
 
 
-def get_enrolled_at(quest):
-    return _get(get_user_status(quest), 'enrolledAt', 'enrolled_at')
+def quest_orbs(quest):
+    cfg = _get(quest.get('config', {}), 'rewardsConfig', 'rewards_config') or {}
+    return sum(r.get('orbQuantity') or 0 for r in cfg.get('rewards') or [] if isinstance(r, dict))
 
 
-class _HeartbeatThrottle:
-    def __init__(self, gap):
+def _in_future(raw):
+    if not raw:
+        return False
+    try:
+        return datetime.fromisoformat(str(raw).replace('Z', '+00:00')) > datetime.now(timezone.utc)
+    except ValueError:
+        return False
+
+
+class QuestStopped(Exception):
+    pass
+
+
+class QuestHTTPError(Exception):
+    def __init__(self, status, body):
+        self.status = status
+        self.body = body if isinstance(body, dict) else {}
+        super().__init__(f'HTTP {status}: {self.body.get("message") or json.dumps(self.body)[:150]}')
+
+
+class Traffic:
+    def __init__(self, api):
+        self.api = api
         self._lock = threading.Lock()
-        self._gap = gap
-        self._next = 0.0
+        self._next_at = 0.0
+        self._global_until = 0.0
 
-    def wait(self):
+    def _slot(self):
         with self._lock:
-            while True:
-                if not running:
-                    return False
-                wait = self._next - time.time()
-                if wait <= 0:
-                    self._next = time.time() + self._gap
-                    return True
-                if stop_event.wait(wait):
-                    return False
+            now = time.time()
+            start = max(now, self._next_at, self._global_until)
+            self._next_at = start + random.uniform(1.2, 1.8)
+        return start - now
+
+    def post(self, path, payload):
+        for attempt in range(MAX_RETRIES + 1):
+            if not running:
+                raise QuestStopped()
+            wait = self._slot()
+            if wait > 0 and stop_event.wait(wait):
+                raise QuestStopped()
+            try:
+                r = self.api.post(path, payload)
+            except requests.RequestException as e:
+                if attempt >= MAX_RETRIES:
+                    raise QuestHTTPError(0, {'message': str(e)})
+                logger.warning(f'Retry {attempt + 1}/{MAX_RETRIES} for {path}: {e}')
+                if stop_event.wait(2 ** (attempt + 1) + random.uniform(0.2, 0.8)):
+                    raise QuestStopped()
+                continue
+            if r.status_code in (200, 201, 202, 204):
+                return r.json() if r.content else {}
+            try:
+                body = r.json()
+            except ValueError:
+                body = {}
+            if not isinstance(body, dict):
+                body = {}
+            retryable = r.status_code in (408, 429) or r.status_code >= 500
+            if retryable and attempt < MAX_RETRIES:
+                delay = (body.get('retry_after') or 2 ** (attempt + 1)) + random.uniform(0.2, 0.8)
+                if body.get('global'):
+                    with self._lock:
+                        self._global_until = max(self._global_until, time.time() + delay)
+                logger.warning(f'Rate limited ({r.status_code}) on {path}, retry in {delay:.1f}s')
+                if stop_event.wait(delay):
+                    raise QuestStopped()
+                continue
+            raise QuestHTTPError(r.status_code, body)
 
 
 class QuestAutocompleter:
-    def __init__(self, api):
+    def __init__(self, api, stream_key):
         self.api = api
+        self.stream_key = stream_key
+        self.traffic = Traffic(api)
         self.completed_ids = set()
+        self.skipped_ids = set()
         self.in_progress_ids = set()
         self.lock = threading.Lock()
-        self.heartbeat = _HeartbeatThrottle(3.0)
-        self.executor = None
+        self.enrollment_blocked_until = None
+        self.access_suspended_until = None
+        self.access_suspended = False
 
-    def _sleep(self, seconds):
-        return not stop_event.wait(max(0, seconds))
-
-    def _mark_done(self, qid, name):
-        logger.info(f'Completed: {name}')
+    def _skip(self, qid):
         with self.lock:
-            self.completed_ids.add(qid)
+            self.skipped_ids.add(qid)
+
+    def _fail(self, quest, reason):
+        logger.warning(f'Failed "{get_quest_name(quest)}": {reason}')
+        self._skip(quest['id'])
+
+    def _finish(self, quest):
+        name = get_quest_name(quest)
+        orbs = quest_orbs(quest)
+        logger.info(f'Completed: {name}' + (f' (+{orbs} Orbs)' if orbs else ''))
+        with self.lock:
+            self.completed_ids.add(quest['id'])
+        self.claim_reward(quest)
 
     def fetch_quests(self):
         while running:
             try:
                 r = self.api.get('/quests/@me')
-                if r.status_code == 200:
-                    data = r.json()
-                    if isinstance(data, dict):
-                        blocked = _get(data, 'quest_enrollment_blocked_until')
-                        if blocked:
-                            logger.warning(f'Enrollment blocked until: {blocked}')
-                        return data.get('quests', [])
-                    return data if isinstance(data, list) else []
-                if r.status_code == 429:
-                    retry_after = r.json().get('retry_after', 10)
-                    logger.warning(f'Rate limited, waiting {retry_after}s')
-                    if stop_event.wait(retry_after):
-                        return []
-                    continue
-                logger.warning(f'Quest fetch error ({r.status_code}): {r.text[:200]}')
-                return []
             except Exception as e:
                 logger.warning(f'Error fetching quests: {e}')
                 return []
+            if r.status_code == 200:
+                data = r.json()
+                if isinstance(data, dict):
+                    self.enrollment_blocked_until = data.get('quest_enrollment_blocked_until')
+                    self.access_suspended_until = data.get('quest_access_suspended_until')
+                    self.access_suspended = bool(data.get('is_quest_access_suspended'))
+                    return data.get('quests', [])
+                return data if isinstance(data, list) else []
+            if r.status_code == 429:
+                retry_after = r.json().get('retry_after', 10)
+                logger.warning(f'Rate limited, waiting {retry_after}s')
+                if stop_event.wait(retry_after):
+                    return []
+                continue
+            logger.warning(f'Quest fetch error ({r.status_code}): {r.text[:200]}')
+            return []
         return []
 
     def enroll_quest(self, quest):
         name = get_quest_name(quest)
-        qid = quest['id']
-        for attempt in range(1, 4):
-            if not running:
-                return False
-            try:
-                r = self.api.post(f'/quests/{qid}/enroll', {
-                    'location': 11,
-                    'is_targeted': False,
-                    'metadata_raw': None,
-                    'metadata_sealed': None,
-                    'traffic_metadata_raw': quest.get('traffic_metadata_raw'),
-                    'traffic_metadata_sealed': quest.get('traffic_metadata_sealed'),
-                })
-                if r.status_code == 429:
-                    retry_after = r.json().get('retry_after', 5)
-                    logger.warning(f'Rate limited on enroll "{name}" (attempt {attempt}/3), waiting {retry_after + 1}s')
-                    if stop_event.wait(retry_after + 1):
-                        return False
-                    continue
-                if r.status_code in (200, 201, 204):
-                    logger.info(f'Enrolled: {name}')
-                    return True
-                logger.warning(f'Enroll "{name}" failed ({r.status_code}): {r.text[:200]}')
-                return False
-            except Exception as e:
-                logger.warning(f'Enroll error "{name}": {e}')
-                return False
-        logger.warning(f'Skipping "{name}" after 3 rate limits')
-        return False
+        try:
+            self.traffic.post(f'/quests/{quest["id"]}/enroll', {
+                'location': 11,
+                'is_targeted': False,
+                'metadata_sealed': None,
+                'traffic_metadata_sealed': quest.get('traffic_metadata_sealed'),
+            })
+            logger.info(f'Enrolled: {name}')
+            return True
+        except QuestStopped:
+            return False
+        except QuestHTTPError as e:
+            logger.warning(f'Enroll "{name}" failed: {e}')
+            self._skip(quest['id'])
+            return False
+
+    def claim_reward(self, quest):
+        if not CLAIM_REWARDS:
+            return
+        if stop_event.wait(random.uniform(2.5, 6.0)):
+            return
+        name = get_quest_name(quest)
+        try:
+            body = self.traffic.post(f'/quests/{quest["id"]}/claim-reward', {
+                'platform': 0,
+                'location': 11,
+                'is_targeted': False,
+                'metadata_sealed': None,
+                'traffic_metadata_sealed': quest.get('traffic_metadata_sealed'),
+            })
+            if body.get('claimed_at'):
+                logger.info(f'Claimed reward: {name}')
+        except QuestStopped:
+            pass
+        except QuestHTTPError as e:
+            if e.body.get('captcha_key') or e.body.get('captcha_sitekey'):
+                logger.warning(f'Claim "{name}" needs captcha; claim it in Discord\'s Quests page')
+            else:
+                logger.warning(f'Claim "{name}" failed: {e}')
 
     def auto_accept(self, quests):
         if not AUTO_ACCEPT:
             return quests
-        unaccepted = [q for q in quests if not is_enrolled(q) and not is_completed(q) and is_completable(q)]
+        unaccepted = [
+            q for q in quests
+            if not is_enrolled(q) and not is_completed(q) and not is_expired(q)
+            and q['id'] not in self.skipped_ids and q['id'] not in EXCLUDED_QUESTS
+            and q['id'] != BLACKLISTED_QUEST_ID
+        ]
         if not unaccepted:
             return quests
         logger.info(f'Auto-accepting {len(unaccepted)} quest(s)')
@@ -299,219 +416,286 @@ class QuestAutocompleter:
             if not running:
                 return quests
             self.enroll_quest(q)
-            if stop_event.wait(3):
-                return quests
         if stop_event.wait(2):
             return quests
         return self.fetch_quests()
 
-    def complete_video(self, quest):
+    def complete_video(self, quest, task):
         name = get_quest_name(quest)
-        qid = quest['id']
-        needed = get_seconds_needed(quest)
-        done = get_seconds_done(quest)
-        enrolled = get_enrolled_at(quest)
-        enrolled_ts = datetime.fromisoformat(enrolled.replace('Z', '+00:00')).timestamp() if enrolled else time.time()
-        logger.info(f'Video: {name} ({done:.0f}/{needed}s)')
-
-        speed = 7
+        qid, key, target = quest['id'], task['key'], task['target']
+        cur = get_progress(quest, key)
+        logger.info(f'Video: {name} ({cur:.0f}/{target}s)')
         fails = 0
-        while done < needed:
-            if not running:
-                return
-            timestamp = min(needed, done + speed)
-            if (time.time() - enrolled_ts) + 10 >= timestamp:
-                try:
-                    r = self.api.post(f'/quests/{qid}/video-progress', {
-                        'timestamp': min(needed, timestamp + random.random())
-                    })
-                except Exception as e:
-                    logger.warning(f'Video: {e}')
-                    if not self._sleep(1):
-                        return
-                    continue
-                code = r.status_code
-                if code in (200, 202):
-                    fails = 0
-                    if (r.json() if r.content else {}).get('completed_at'):
-                        self._mark_done(qid, name)
-                        return
-                    done = timestamp
-                    logger.info(f'[{name}] {done:.0f}/{needed}s')
-                elif code == 429:
-                    retry_after = r.json().get('retry_after', 5)
-                    logger.warning(f'Video rate limited, retry in {retry_after + 1}s')
-                    if not self._sleep(retry_after + 1):
-                        return
-                    continue
-                elif code >= 500:
-                    fails += 1
-                    if fails >= 5:
-                        logger.warning(f'Giving up "{name}" this cycle after repeated server errors')
-                        return
-                    if not self._sleep(min(60, 2 ** (fails - 1))):
-                        return
-                    continue
-                else:
-                    logger.warning(f'Video rejected ({code}): {r.text[:200]}')
-                    return
-            if done >= needed:
-                break
-            if not self._sleep(1):
-                return
-
-        try:
-            self.api.post(f'/quests/{qid}/video-progress', {'timestamp': needed})
-        except Exception:
-            pass
-        self._mark_done(qid, name)
-
-    def _heartbeat_loop(self, quest, stream_key, progress_key):
-        name = get_quest_name(quest)
-        qid = quest['id']
-        needed = get_seconds_needed(quest)
-        done = get_seconds_done(quest)
-        logger.info(f'[{get_task_type(quest)}] {name} (~{max(0, needed - done) // 60} min left)')
-
-        fails = 0
-        while done < needed:
-            if not running:
-                return
-            if not self.heartbeat.wait():
-                return
+        start = time.time()
+        while cur < target and running:
+            delay = random.uniform(7.0, 9.5)
+            if stop_event.wait(delay):
+                return 'stopped'
+            cur += delay + random.uniform(-0.01, 0.01)
             try:
-                r = self.api.post(f'/quests/{qid}/heartbeat', {'stream_key': stream_key, 'terminal': False})
-            except Exception as e:
-                logger.warning(f'Heartbeat: {e}')
-                if not self._sleep(HEARTBEAT_INTERVAL):
-                    return
-                continue
-            code = r.status_code
-            if code in (200, 202, 204):
-                fails = 0
-                body = r.json() if r.content else {}
-                value = (body.get('progress') or {}).get(progress_key, {}).get('value')
-                if value is not None:
-                    done = value
-                logger.info(f'[{name}] {done:.0f}/{needed}s')
-                if body.get('completed_at') or done >= needed:
-                    self._mark_done(qid, name)
-                    return
-                if not self._sleep(HEARTBEAT_INTERVAL):
-                    return
-            elif code == 429:
-                retry_after = r.json().get('retry_after', 5)
-                logger.warning(f'Heartbeat rate limited, retry in {retry_after + 1}s')
-                if not self._sleep(retry_after + 1):
-                    return
-            elif code >= 500:
+                body = self.traffic.post(f'/quests/{qid}/video-progress', {'timestamp': round(min(target, cur), 6)})
+            except QuestStopped:
+                return 'stopped'
+            except QuestHTTPError as e:
+                if e.status in CLIENT_ERRORS:
+                    self._fail(quest, f'video unavailable (HTTP {e.status})')
+                    return 'failed'
                 fails += 1
-                if fails >= 5:
-                    logger.warning(f'Giving up "{name}" this cycle after repeated server errors')
-                    return
-                if not self._sleep(min(60, HEARTBEAT_INTERVAL * (2 ** (fails - 1)))):
-                    return
-            else:
-                logger.warning(f'Heartbeat rejected ({code}): {r.text[:200]}')
-                return
+                if fails >= MAX_FAILURES:
+                    self._fail(quest, 'too many network failures')
+                    return 'failed'
+                continue
+            if not running:
+                return 'stopped'
+            fails = 0
+            server = ((body.get('progress') or {}).get(key) or {}).get('value')
+            if server is not None and server > cur:
+                cur = min(target, server)
+            if body.get('completed_at'):
+                return 'completed'
+            logger.info(f'[{name}] {cur:.0f}/{target}s')
+            if time.time() - start > MAX_TIME:
+                self._fail(quest, 'timeout exceeded')
+                return 'failed'
+        return 'completed' if cur >= target and running else 'stopped'
 
+    def _heartbeat_abort(self, quest, task, reason):
+        if task['family'] == 'ACHIEVEMENT':
+            return 'rejected'
+        self._fail(quest, reason)
+        return 'failed'
+
+    def complete_heartbeat(self, quest, task):
+        name = get_quest_name(quest)
+        qid, key, target = quest['id'], task['key'], task['target']
+        interval = (19.0, 22.0) if task['family'] in ('ACTIVITY', 'ACHIEVEMENT') else (60.0, 61.0)
+        beat = {'stream_key': self.stream_key, 'application_id': str(task['app_id'] or ''), 'terminal': False}
+        cur = get_progress(quest, key)
+        logger.info(f'[{key}] {name} (~{max(0, target - cur) // 60:.0f} min left)')
+        fails = 0
+        stalled = 0
+        start = time.time()
+        while cur < target and running:
+            try:
+                body = self.traffic.post(f'/quests/{qid}/heartbeat', beat)
+            except QuestStopped:
+                return 'stopped'
+            except QuestHTTPError as e:
+                if e.status in CLIENT_ERRORS:
+                    return self._heartbeat_abort(quest, task, f'heartbeat rejected (HTTP {e.status})')
+                fails += 1
+                if fails >= MAX_FAILURES:
+                    return self._heartbeat_abort(quest, task, 'too many network failures')
+                if stop_event.wait(random.uniform(*interval)):
+                    return 'stopped'
+                continue
+            if not running:
+                return 'stopped'
+            fails = 0
+            value = ((body.get('progress') or {}).get(key) or {}).get('value')
+            if value is not None:
+                stalled = stalled + 1 if value <= cur else 0
+                cur = value
+                if stalled >= MAX_FAILURES:
+                    return self._heartbeat_abort(quest, task, 'Discord credited no progress')
+            logger.info(f'[{name}] {cur:.0f}/{target}s')
+            if body.get('completed_at') or cur >= target:
+                try:
+                    self.traffic.post(f'/quests/{qid}/heartbeat', {**beat, 'terminal': True})
+                except (QuestHTTPError, QuestStopped):
+                    pass
+                return 'completed'
+            if time.time() - start > MAX_TIME:
+                return self._heartbeat_abort(quest, task, 'timeout exceeded')
+            if stop_event.wait(random.uniform(*interval)):
+                return 'stopped'
+        return 'stopped'
+
+    def bypass_achievement(self, quest, task):
+        name = get_quest_name(quest)
+        qid, app_id = quest['id'], str(task['app_id'] or '')
+        if not app_id.isdigit():
+            logger.warning(f'Bypass "{name}": no numeric application id')
+            return False
         try:
-            self.api.post(f'/quests/{qid}/heartbeat', {'stream_key': stream_key, 'terminal': True})
-        except Exception:
-            pass
-        self._mark_done(qid, name)
+            r = self.api.get('/oauth2/tokens')
+            if r.status_code != 200:
+                logger.warning(f'Bypass "{name}": cannot snapshot OAuth grants (HTTP {r.status_code})')
+                return False
+            pre_ids = {t['id'] for t in r.json() if (t.get('application') or {}).get('id') == app_id}
+        except Exception as e:
+            logger.warning(f'Bypass "{name}": grant snapshot failed: {e}')
+            return False
+        authorized = False
+        try:
+            r = self.api.post(
+                f'/oauth2/authorize?response_type=code&client_id={app_id}'
+                '&scope=identify%20applications.commands%20applications.entitlements',
+                {'permissions': '0', 'authorize': True, 'integration_type': 1,
+                 'location_context': {'guild_id': '10000', 'channel_id': '10000', 'channel_type': 10000}})
+            authorized = True
+            if r.status_code != 200:
+                raise QuestHTTPError(r.status_code, r.json() if r.content else {})
+            code = (parse_qs(urlparse(r.json().get('location') or '').query).get('code') or [None])[0]
+            if not code:
+                raise ValueError('no code in authorize response')
+            r = self.api.post(f'/applications/{app_id}/proxy-tickets', {})
+            if r.status_code != 200:
+                raise QuestHTTPError(r.status_code, r.json() if r.content else {})
+            ticket = r.json().get('ticket')
+            if not ticket:
+                raise ValueError('no proxy ticket')
+            referrer = (f'https://{app_id}.discordsays.com/?instance_id=example-cl-instance'
+                        f'&platform=desktop&discord_proxy_ticket={quote(ticket)}')
+            headers = {'Content-Type': 'application/json', 'X-Auth-Token': '',
+                       'X-Discord-Quest-ID': qid, 'Referer': referrer}
+            base = f'https://{app_id}.discordsays.com/.proxy/acf'
+            auth = requests.post(f'{base}/authorize', json={'code': code}, headers=headers, timeout=15, allow_redirects=False)
+            if auth.status_code != 200:
+                raise QuestHTTPError(auth.status_code, auth.json() if auth.content else {})
+            token = auth.json().get('token')
+            if not token:
+                raise ValueError('no discordsays token')
+            headers['X-Auth-Token'] = token
+            prog = requests.post(f'{base}/quest/progress', json={'progress': task['target']}, headers=headers, timeout=15, allow_redirects=False)
+            if prog.status_code != 200:
+                raise QuestHTTPError(prog.status_code, prog.json() if prog.content else {})
+            logger.info(f'Bypass succeeded: {name}')
+            return True
+        except Exception as e:
+            body = e.body if isinstance(e, QuestHTTPError) else {}
+            if body.get('code') == 50165:
+                logger.warning(f'Bypass "{name}": activity is age-gated or delisted on this account')
+            else:
+                logger.warning(f'Bypass "{name}" failed: {e}')
+            return False
+        finally:
+            if authorized:
+                self._revoke_new_grants(app_id, pre_ids)
 
-    def complete_heartbeat(self, quest):
-        self._heartbeat_loop(quest, f'call:0:{random.randint(1000, 30000)}', get_task_type(quest))
-
-    def complete_activity(self, quest):
-        self._heartbeat_loop(quest, 'call:0:1', 'PLAY_ACTIVITY')
+    def _revoke_new_grants(self, app_id, pre_ids):
+        try:
+            r = self.api.get('/oauth2/tokens')
+            if r.status_code != 200:
+                return
+            for t in r.json():
+                if (t.get('application') or {}).get('id') == app_id and t['id'] not in pre_ids:
+                    self.api.delete(f'/oauth2/tokens/{t["id"]}')
+        except Exception as e:
+            logger.warning(f'OAuth grant cleanup failed: {e}')
 
     def process_quest(self, quest):
-        qid = quest.get('id')
+        task = select_task(quest)
+        if not task:
+            return
         name = get_quest_name(quest)
-        task_type = get_task_type(quest)
-        if not task_type:
-            logger.warning(f'"{name}" - unsupported task, skipping')
-            return
-        if qid in self.completed_ids:
-            return
-        logger.info(f'Starting: {name} (task: {task_type})')
-        if task_type in ('WATCH_VIDEO', 'WATCH_VIDEO_ON_MOBILE'):
-            self.complete_video(quest)
-        elif task_type in ('PLAY_ON_DESKTOP', 'STREAM_ON_DESKTOP'):
-            self.complete_heartbeat(quest)
+        logger.info(f'Starting: {name} (task: {task["key"]})')
+        if task['family'] == 'VIDEO':
+            status = self.complete_video(quest, task)
+        elif task['family'] == 'ACHIEVEMENT':
+            status = self.complete_heartbeat(quest, task)
+            if status in ('rejected', 'failed'):
+                if not ACHIEVEMENT_BYPASS:
+                    self._fail(quest, 'heartbeat path failed and ACHIEVEMENT_BYPASS is off')
+                    return
+                logger.info(f'Attempting Discord Says bypass: {name}')
+                if not self.bypass_achievement(quest, task):
+                    self._fail(quest, 'no auto-completion path worked (likely age-gated/delisted)')
+                    return
+                status = 'completed'
         else:
-            self.complete_activity(quest)
+            status = self.complete_heartbeat(quest, task)
+        if status == 'completed':
+            self._finish(quest)
 
     def _process_and_cleanup(self, quest):
-        qid = quest['id']
         try:
             self.process_quest(quest)
+        except QuestStopped:
+            pass
         except Exception as e:
-            logger.warning(f'Unexpected error processing quest {qid}: {e}')
+            logger.warning(f'Unexpected error processing quest {quest["id"]}: {e}')
+            self._skip(quest['id'])
         finally:
             with self.lock:
-                self.in_progress_ids.discard(qid)
+                self.in_progress_ids.discard(quest['id'])
 
-    def _spawn_workers(self, quests):
-        if self.executor is not None:
-            self.executor.shutdown(wait=False)
-        self.executor = ThreadPoolExecutor(max_workers=min(len(quests), MAX_WORKERS))
+    def _mark_blockers(self, quests):
         for q in quests:
-            self.executor.submit(self._process_and_cleanup, q)
-        logger.info(f'Started {len(quests)} quest(s) with {min(len(quests), MAX_WORKERS)} worker(s)')
+            qid = q['id']
+            if qid in self.skipped_ids or qid in self.completed_ids or qid in EXCLUDED_QUESTS \
+                    or qid == BLACKLISTED_QUEST_ID or is_completed(q) or is_expired(q):
+                continue
+            reason = quest_blocker(q)
+            if reason:
+                logger.warning(f'Skipping "{get_quest_name(q)}": {reason}')
+                self._skip(qid)
 
     def run(self):
-        logger.info(f'Quest Auto-Completer | Auto-accept: {"ON" if AUTO_ACCEPT else "OFF"} | Poll: {POLL_INTERVAL}s')
+        logger.info(f'Quest Auto-Completer | Auto-accept: {"ON" if AUTO_ACCEPT else "OFF"} '
+                    f'| Claim: {"ON" if CLAIM_REWARDS else "OFF"} | Poll: {POLL_INTERVAL}s')
+        video_pool = ThreadPoolExecutor(max_workers=VIDEO_WORKERS)
+        game_pool = ThreadPoolExecutor(max_workers=GAME_WORKERS)
         cycle = 0
         while running:
             cycle += 1
             logger.info(f'-- Scan #{cycle} --')
             quests = self.fetch_quests()
+            if self.access_suspended or _in_future(self.access_suspended_until):
+                logger.error('Discord has suspended quest access on this account; stopping')
+                break
+            if _in_future(self.enrollment_blocked_until):
+                logger.error(f'Quest enrollment blocked until {self.enrollment_blocked_until}; stopping')
+                break
             if not quests:
                 logger.info('No quests available')
                 if stop_event.wait(POLL_INTERVAL):
                     break
                 continue
-            enrolled = sum(is_enrolled(q) for q in quests)
-            completed = sum(is_completed(q) for q in quests)
-            completable = sum(is_completable(q) for q in quests)
-            logger.info(f'Total: {len(quests)} | Enrolled: {enrolled} | Completed: {completed} | Completable: {completable}')
-
+            logger.info(f'Total: {len(quests)} | Enrolled: {sum(is_enrolled(q) for q in quests)} '
+                        f'| Completed: {sum(is_completed(q) for q in quests)}')
+            self._mark_blockers(quests)
             quests = self.auto_accept(quests)
             with self.lock:
                 actionable = [
                     q for q in quests
-                    if is_enrolled(q) and not is_completed(q) and is_completable(q)
-                    and q['id'] not in self.completed_ids
-                    and q['id'] not in self.in_progress_ids
+                    if is_enrolled(q) and not is_completed(q) and not is_expired(q)
+                    and q['id'] not in self.completed_ids and q['id'] not in self.skipped_ids
+                    and q['id'] not in self.in_progress_ids and q['id'] not in EXCLUDED_QUESTS
+                    and q['id'] != BLACKLISTED_QUEST_ID
                 ]
                 for q in actionable:
                     self.in_progress_ids.add(q['id'])
-
             if actionable:
-                self._spawn_workers(actionable)
+                for q in actionable:
+                    task = select_task(q)
+                    pool = video_pool if task and task['family'] == 'VIDEO' else game_pool
+                    pool.submit(self._process_and_cleanup, q)
+                logger.info(f'Started {len(actionable)} quest(s) (video x{VIDEO_WORKERS}, game x{GAME_WORKERS})')
+            else:
+                logger.info(f'Nothing left to run. {len(self.completed_ids)} completed, '
+                            f'{len(self.skipped_ids)} skipped/failed this session')
             if stop_event.wait(POLL_INTERVAL):
                 break
-
-        if self.executor is not None:
-            self.executor.shutdown(wait=False)
+        video_pool.shutdown(wait=False)
+        game_pool.shutdown(wait=False)
         logger.info('Quest autocompleter stopped')
 
 
 def run_account(token, build_number):
     api = DiscordAPI(token, build_number)
-    if not api.validate_token():
+    user = api.validate_token()
+    if not user:
         logger.warning('Skipping account, token validation failed')
         return
-    QuestAutocompleter(api).run()
+    QuestAutocompleter(api, build_stream_key(api, user['id'])).run()
 
 
 def main():
     global running
-    tokens = read_tokens()
+    tokens = read_lines('data/quest.txt')
     if not tokens:
+        logger.warning('No quest tokens found in data/quest.txt')
         running = False
         return
     logger.info(f'Loaded {len(tokens)} token(s)')
@@ -519,7 +703,7 @@ def main():
     account_threads = [threading.Thread(target=run_account, args=(t, build_number), daemon=True) for t in tokens]
     for t in account_threads:
         t.start()
-    logger.info(f'Running {len(tokens)} account(s)')
+    logger.info(f'Running {len(account_threads)} account(s)')
     while running and any(t.is_alive() for t in account_threads):
         if stop_event.wait(1):
             break
