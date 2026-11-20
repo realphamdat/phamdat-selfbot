@@ -1,3 +1,4 @@
+import asyncio
 import time
 
 import discord
@@ -20,7 +21,7 @@ class OWOClient(discord.Client):
     OWO_BOT_ID = 408785106942164992
 
     def __init__(self, token, config, clients, interaction):
-        super().__init__()
+        super().__init__(chunk_guilds_at_startup=False)
         self.token = token
         self.config = deep_merge(OWO_DEFAULT_CONFIG, config or {})
         self.clients = clients
@@ -170,6 +171,18 @@ class OWOClient(discord.Client):
         if any_of and not any(content in message for content in any_of):
             return False
         return True
+
+    async def close(self):
+        # _delay_ready outlives close() in discord.py-self and dispatches on a dead loop
+        task = self._connection._ready_task
+        if task is not None:
+            task.cancel()
+            try:
+                await task
+            except (asyncio.CancelledError, Exception):
+                pass
+        await super().close()
+        self._connection.subscriptions._cancel()
 
     async def stop_runtime(self):
         if self.task_manager:
