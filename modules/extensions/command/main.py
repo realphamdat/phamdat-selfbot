@@ -47,7 +47,7 @@ _command_lock = None
 
 class CommandClient(discord.Client):
     def __init__(self, entry):
-        super().__init__()
+        super().__init__(chunk_guilds_at_startup=False)
         self.token = entry['token']
         self.owners = entry['owners']
         self.prefixes = entry['prefixes']
@@ -86,6 +86,18 @@ class CommandClient(discord.Client):
                 await asyncio.sleep(random.uniform(STAGGER_MIN, STAGGER_MAX))
             except Exception as exc:
                 self.logger.warning(f'{name} failed: {exc}')
+
+    async def close(self):
+        # _delay_ready outlives close() in discord.py-self and dispatches on a dead loop
+        task = self._connection._ready_task
+        if task is not None:
+            task.cancel()
+            try:
+                await task
+            except (asyncio.CancelledError, Exception):
+                pass
+        await super().close()
+        self._connection.subscriptions._cancel()
 
 
 async def find_target(client, message, ref):
